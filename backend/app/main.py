@@ -9,7 +9,12 @@ from .routers import admin, auth, lotteries, payments, results, tickets, webhook
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 1. Run column-level migrations on existing tables first.
+    from .migrations import run_migrations
+    run_migrations()
+    # 2. Create any brand-new tables (idempotent).
     init_db()
+    # 3. Seed the admin account.
     from .seed import seed_admin
     seed_admin()
     yield
