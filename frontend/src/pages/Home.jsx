@@ -9,6 +9,8 @@ const STATUS_BADGE = {
   CLOSED: "bg-ink-700 text-cream-400",
 };
 
+function tStatus(t, s) { return t(`status${s}`) || s; }
+
 export default function Home() {
   const { t } = useLang();
   const [lotteries, setLotteries] = useState([]);
@@ -23,25 +25,23 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      {/* Hero */}
+      {/* Hero — no tag pill, clean heading */}
       <section className="mb-12 text-center">
-        <span className="pill bg-green-500/15 text-green-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-          {t("heroTag")}
-        </span>
-        <h1 className="mt-4 text-4xl font-bold text-cream-50 sm:text-5xl">
+        <h1 className="text-4xl font-bold text-cream-50 sm:text-5xl">
           {t("heroTitle")}{" "}
           <span className="bg-gradient-to-r from-green-300 to-green-500 bg-clip-text text-transparent">
             {t("heroTitleAccent")}
           </span>
         </h1>
-        <p className="mx-auto mt-3 max-w-xl text-cream-300">{t("heroDesc")}</p>
+        <p className="mx-auto mt-4 max-w-xl text-cream-300 text-base sm:text-lg">
+          {t("heroDesc")}
+        </p>
       </section>
 
       {/* Active lotteries */}
       <h2 className="mb-5 text-xl font-bold text-cream-50">{t("draws")}</h2>
       {loading ? (
-        <p className="text-cream-300">Loading…</p>
+        <p className="text-cream-300">{t("loading")}</p>
       ) : active.length === 0 ? (
         <div className="card p-10 text-center text-cream-300">{t("noOpenDraws")}</div>
       ) : (
@@ -66,8 +66,14 @@ export default function Home() {
 function LotteryCard({ lottery: l }) {
   const { t } = useLang();
   const badge = STATUS_BADGE[l.status] || "bg-ink-700 text-cream-400";
+
+  // Guard: if id is missing for any reason, don't render a broken link
+  if (!l?.id) return null;
+
+  const href = l.status === "DRAWN" ? `/lottery/${l.id}/results` : `/lottery/${l.id}`;
+
   return (
-    <Link to={l.status === "DRAWN" ? `/lottery/${l.id}/results` : `/lottery/${l.id}`}>
+    <Link to={href}>
       <article className="card flex flex-col overflow-hidden transition hover:border-green-500/50 hover:shadow-glow">
         {l.cover_image_url ? (
           <img src={l.cover_image_url} alt={l.title}
@@ -78,7 +84,7 @@ function LotteryCard({ lottery: l }) {
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-lg font-bold text-cream-50 leading-tight">{l.title}</h3>
-            <span className={`pill shrink-0 ${badge}`}>{l.status}</span>
+            <span className={`pill shrink-0 ${badge}`}>{tStatus(t, l.status)}</span>
           </div>
           <p className="mt-2 line-clamp-2 text-sm text-cream-300">{l.prize_description}</p>
           <div className="mt-auto pt-4 flex items-center justify-between text-sm">
