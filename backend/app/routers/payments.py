@@ -3,6 +3,7 @@
 Users pay directly to the admin's bank/Telebirr account, upload a screenshot
 as proof, then submit a reference number. Admin reviews and confirms.
 """
+import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -22,6 +23,7 @@ from ..notifications import send_ticket_confirmation
 from ..payments import generate_tickets
 from ..schemas import PaymentOut
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
 
@@ -48,6 +50,16 @@ def payment_accounts():
         awash_number=settings.AWASH_ACCOUNT,
         awash_name=settings.AWASH_NAME,
     )
+
+
+@router.get("/debug")
+def debug_tables(db: Session = Depends(get_db)):
+    """Temporary debug endpoint — check DB table columns."""
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.bind)
+    cols = {t: [c["name"] for c in inspector.get_columns(t)]
+            for t in inspector.get_table_names()}
+    return cols
 
 
 @router.post("/submit", response_model=PaymentOut, status_code=201)
@@ -121,10 +133,15 @@ async def submit_payment(
     )
     db.add(txn)
     db.flush()
-    log(db, "payment.submit", actor_id=user.id, entity="payment_transaction",
-        entity_id=txn.id,
-        detail=f"gateway={gw} ref={payment_reference} amount={amount}")
-    db.commit()
+    try:
+        log(db, "payment.submit", actor_id=user.id, entity="payment_transaction",
+            entity_id=txn.id,
+            detail=f"gateway={gw} ref={payment_reference} amount={amount}")
+        db.commit()
+    except Exception as exc:
+        logger.error("payment.submit DB error: %s", exc, exc_info=True)
+        db.rollback()
+        raise HTTPException(500, f"Database error: {exc}")
     db.refresh(txn)
     return txn
 
