@@ -74,20 +74,28 @@ Already pushed to: https://github.com/Y262521/lottery-platform
 > One-click deploy buttons below. They open the platform pre-filled with this
 > repo. You just sign in with your account and confirm.
 
-### 1. Backend on Render (free web service)
+### 1. Backend on Render (free web service, auto-deploys on push)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Y262521/lottery-platform)
 
 - The button reads `render.yaml` at the repo root and provisions `emerald-draw-api`.
 - Or manually: Render dashboard → **New → Blueprint** → pick this repo.
+- During setup, set `DATABASE_URL` to your free **Neon** Postgres connection
+  string (below). The service waits until this is set before starting.
 - Note the service URL, e.g. `https://emerald-draw-api.onrender.com`.
 - Health check at `/health`; API docs at `/docs`.
+- **Auto-deploy**: when you push to `main`, Render pulls and redeploys
+  automatically (`autoDeploy: true` in `render.yaml`) — no manual trigger needed.
 
-> Free-tier note: the web service sleeps when idle and has an **ephemeral
-> filesystem**, so the SQLite DB resets on each deploy/restart (admin is
-> re-seeded on startup, so it always works; user/ticket data is not durable).
-> For persistence, attach a Render Postgres instance and set its internal URL
-> as `DATABASE_URL` — the app already supports Postgres (`psycopg2-binary`).
+**Get a free persistent Postgres from Neon** (so data survives redeploys):
+1. Sign up at https://neon.tech → create a project → copy the connection string
+   (looks like `postgresql://user:pass@ep-xxxx.neon.tech/neondb?sslmode=require`).
+2. Paste it as the `DATABASE_URL` env var on Render.
+3. On first boot the app auto-creates all tables and the admin user.
+
+> The free Render web service has an **ephemeral filesystem**, so SQLite would
+> lose all data on every redeploy. Using an external Postgres (Neon) is what
+> makes this a normal, persistent deployment.
 
 ### 2. Frontend on Vercel (free)
 
@@ -101,6 +109,7 @@ Already pushed to: https://github.com/Y262521/lottery-platform
   (`https://<project>.vercel.app`) so the browser allows the API calls.
 - Deploy. Vercel runs `npm install && npm run build` and serves `dist/`.
   `vercel.json` adds the SPA fallback so deep links (e.g. `/wallet`) work.
+- **Auto-deploy**: Vercel redeploys automatically whenever you push to `main`.
 
 ### Demo admin
 `admin@lottery.local` / `admin12345`
