@@ -1,0 +1,32 @@
+# --- Python / backend ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+backend/.venv/
+backend/venv/
+backend/.env
+backend/*.db
+backend/lottery.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+
+# --- Node / frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vercel/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

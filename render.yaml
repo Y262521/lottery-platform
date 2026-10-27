@@ -1,0 +1,45 @@
+# Render Blueprint — provisions the FastAPI backend as a free web service.
+# Docs: https://render.com/docs/blueprint-spec
+# After connecting this repo to Render ("New > Blueprint"), Render reads this file.
+#
+# NOTE on free tier + SQLite: the free web service has an EPHEMERAL filesystem,
+# so the SQLite DB resets on every deploy/restart (the admin account is re-seeded
+# on startup, so it always works, but user/ticket data is not persistent).
+# For persistence, attach a Render Postgres instance and set DATABASE_URL — the
+# app already supports Postgres (psycopg2-binary is in requirements.txt).
+services:
+  - type: web
+    name: emerald-draw-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      # Random secret generated once on Render. Do not commit a real one.
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "15"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      # SQLite locally; to use Postgres set this to your Render Postgres internal URL.
+      - key: DATABASE_URL
+        value: sqlite:///./lottery.db
+      - key: ADMIN_EMAIL
+        value: admin@lottery.local
+      - key: ADMIN_PASSWORD
+        value: admin12345
+      - key: SIGNUP_BONUS
+        value: "100"
+      # Comma-separated allowed origins. Set this to your Vercel frontend URL,
+      # e.g. https://your-app.vercel.app  (only needed if the frontend calls the
+      # API directly via VITE_API_BASE_URL; the vercel.json proxy avoids CORS).
+      - key: CORS_ORIGINS
+        sync: false

@@ -66,3 +66,41 @@ See `backend/app/draw_engine.py`.
 - Append-only/immutable audit storage (e.g. a dedicated log store)
 
 > This is a demonstration project and is not affiliated with any real lottery.
+
+## Deploy (free tier: Render + Vercel)
+
+### 1. Push to GitHub
+```powershell
+git init
+git add .
+git commit -m "Provably-fair lottery platform"
+# create an empty repo on GitHub, then:
+git remote add origin https://github.com/<you>/lottery-platform.git
+git branch -M main
+git push -u origin main
+```
+
+### 2. Backend on Render (free web service)
+1. Render dashboard → **New → Blueprint** → pick this repo.
+2. Render reads `render.yaml` and provisions `emerald-draw-api`.
+3. Note the service URL, e.g. `https://emerald-draw-api.onrender.com`.
+4. Health check is at `/health`; API docs at `/docs`.
+
+> Free-tier note: the web service sleeps when idle and has an **ephemeral
+> filesystem**, so the SQLite DB resets on each deploy/restart (admin is
+> re-seeded on startup, so it always works; user/ticket data is not durable).
+> For persistence, attach a Render Postgres instance and set its internal URL
+> as `DATABASE_URL` — the app already supports Postgres (`psycopg2-binary`).
+
+### 3. Frontend on Vercel (free)
+1. Vercel → **Add New → Project** → import the same repo.
+2. Set **Root Directory** to `frontend`.
+3. Add env var: `VITE_API_BASE_URL=https://emerald-draw-api.onrender.com`
+   (your Render backend URL).
+4. On Render, set backend `CORS_ORIGINS` to your Vercel URL
+   (`https://<project>.vercel.app`).
+5. Deploy. Vercel runs `npm install && npm run build` and serves `dist/`.
+   `vercel.json` adds the SPA fallback so deep links (e.g. `/wallet`) work.
+
+### Demo admin
+`admin@lottery.local` / `admin12345`
