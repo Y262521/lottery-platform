@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiClient } from "../../api/client";
+import { useLang } from "../../context/LangContext";
 
 export default function AdminLotteryManage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLang();
   const [lottery, setLottery] = useState(null);
   const [result, setResult] = useState(null);
   const [tickets, setTickets] = useState([]);
@@ -31,35 +33,34 @@ export default function AdminLotteryManage() {
   async function publishResults(e) {
     e.preventDefault();
     const nos = winningNos.split(",").map((s) => s.trim()).filter(Boolean);
-    if (!nos.length) { setMsg("Enter at least one winning ticket number"); return; }
+    if (!nos.length) { setMsg(t("winningTicketNos")); return; }
     setBusy(true);
     try {
       const r = await apiClient.publishResults(id, { winning_ticket_nos: nos, notes });
-      setResult(r); setMsg("Results published ✓");
-
+      setResult(r);
       if (videoFile) {
         const fd = new FormData(); fd.append("file", videoFile);
         await apiClient.uploadDrawVideo(id, fd);
-        setMsg("Results + video uploaded ✓");
       }
       if (proofFiles.length > 0) {
         const fd = new FormData();
         proofFiles.forEach((f) => fd.append("files", f));
         await apiClient.uploadProofImages(id, fd);
       }
+      setMsg(t("resultsPublished"));
       await load();
     } catch (e) { setMsg(e.message); }
     finally { setBusy(false); }
   }
 
-  if (!lottery) return <div className="mx-auto mt-24 max-w-4xl px-4 text-cream-300">Loading…</div>;
+  if (!lottery) return <div className="mx-auto mt-24 max-w-4xl px-4 text-cream-300">{t("loading")}</div>;
 
-  const confirmed = tickets.filter((t) => t.status === "CONFIRMED" || t.status === "WON" || t.status === "LOST");
+  const confirmed = tickets.filter((tk) => ["CONFIRMED","WON","LOST"].includes(tk.status));
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <button onClick={() => navigate("/admin/lotteries")} className="mb-4 text-sm text-cream-300 hover:text-cream-100">
-        ← Lotteries
+        {t("backToLotteries")}
       </button>
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -69,65 +70,55 @@ export default function AdminLotteryManage() {
 
       {msg && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-3 py-2 text-sm text-green-300">{msg}</div>}
 
-      {/* Lifecycle actions */}
+      {/* Actions */}
       <div className="card p-5 mb-6">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-3">Actions</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-3">{t("actions")}</h2>
         <div className="flex flex-wrap gap-2">
           {lottery.status === "DRAFT" && (
-            <button className="btn-primary" onClick={() => act(() => apiClient.publishLottery(id), "Published")}>
-              Publish (Open Sales)
-            </button>
+            <button className="btn-primary" onClick={() => act(() => apiClient.publishLottery(id), t("publish"))}>{t("openSales")}</button>
           )}
           {lottery.status === "ACTIVE" && (
-            <button className="btn-ghost" onClick={() => act(() => apiClient.closeLottery(id), "Sales closed")}>
-              Close Ticket Sales
-            </button>
+            <button className="btn-ghost" onClick={() => act(() => apiClient.closeLottery(id), t("closeSales"))}>{t("closeSales")}</button>
           )}
           {["DRAFT","ACTIVE","CLOSED"].includes(lottery.status) && (
-            <button className="btn-danger" onClick={() => { if(confirm("Cancel this lottery?")) act(() => apiClient.cancelLottery(id), "Cancelled"); }}>
-              Cancel Lottery
-            </button>
+            <button className="btn-danger" onClick={() => { if(confirm(t("cancelLottery") + "?")) act(() => apiClient.cancelLottery(id), t("cancel")); }}>{t("cancelLottery")}</button>
           )}
-          <a href={`/lottery/${id}`} target="_blank" rel="noreferrer" className="btn-ghost text-xs">
-            View Public Page ↗
-          </a>
+          <a href={`/lottery/${id}`} target="_blank" rel="noreferrer" className="btn-ghost text-xs">{t("viewPublicPage")}</a>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <Stat label="Tickets Sold" value={lottery.tickets_sold} />
-        <Stat label="Capacity" value={lottery.total_tickets || "Unlimited"} />
-        <Stat label="Revenue" value={`ETB ${(lottery.tickets_sold * lottery.ticket_price).toLocaleString()}`} />
+        <Stat label={t("ticketsSold")} value={lottery.tickets_sold} />
+        <Stat label={t("capacity")} value={lottery.total_tickets || t("unlimited")} />
+        <Stat label={t("revenueLabel")} value={`ETB ${(lottery.tickets_sold * lottery.ticket_price).toLocaleString()}`} />
       </div>
 
       {/* Publish results */}
       {!result && (lottery.status === "CLOSED" || lottery.status === "ACTIVE") && (
         <form onSubmit={publishResults} className="card p-6 mb-6">
-          <h2 className="text-lg font-bold text-cream-50 mb-4">Publish Draw Results</h2>
+          <h2 className="text-lg font-bold text-cream-50 mb-4">{t("publishResults")}</h2>
           <div className="space-y-4">
             <div>
-              <label className="label">Winning Ticket Numbers (comma-separated) *</label>
-              <input className="input font-mono" placeholder="LP001-00042, LP001-00107"
+              <label className="label">{t("winningTicketNos")}</label>
+              <input className="input font-mono" placeholder={t("winningPlaceholder")}
                 value={winningNos} onChange={(e) => setWinningNos(e.target.value)} required />
             </div>
             <div>
-              <label className="label">Notes (optional)</label>
+              <label className="label">{t("notes")}</label>
               <textarea className="input" value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
             <div>
-              <label className="label">Draw Video Proof (optional)</label>
-              <input type="file" accept="video/*" className="input py-2"
-                onChange={(e) => setVideoFile(e.target.files[0])} />
+              <label className="label">{t("drawVideoProofUpload")}</label>
+              <input type="file" accept="video/*" className="input py-2" onChange={(e) => setVideoFile(e.target.files[0])} />
             </div>
             <div>
-              <label className="label">Photo Evidence (optional)</label>
-              <input type="file" accept="image/*" multiple className="input py-2"
-                onChange={(e) => setProofFiles([...e.target.files])} />
+              <label className="label">{t("photoEvidenceUpload")}</label>
+              <input type="file" accept="image/*" multiple className="input py-2" onChange={(e) => setProofFiles([...e.target.files])} />
             </div>
           </div>
           <button className="btn-primary mt-5 w-full" disabled={busy}>
-            {busy ? "Publishing…" : "Publish Results & Notify Winners"}
+            {busy ? t("publishing") : t("publishResultsBtn")}
           </button>
         </form>
       )}
@@ -135,7 +126,7 @@ export default function AdminLotteryManage() {
       {/* Published result summary */}
       {result && (
         <div className="card p-5 mb-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-green-300 mb-3">Results Published ✓</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-green-300 mb-3">{t("resultsPublished")}</h2>
           <div className="flex flex-wrap gap-2">
             {result.winning_ticket_nos.map((no) => (
               <span key={no} className="rounded-lg bg-green-600 px-3 py-1 font-mono text-sm text-ink-900">{no}</span>
@@ -144,18 +135,16 @@ export default function AdminLotteryManage() {
           <div className="mt-3 flex gap-2">
             {!result.draw_video_url && (
               <label className="btn-ghost cursor-pointer px-3 py-1.5 text-xs">
-                Upload Video
+                {t("uploadVideo")}
                 <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
                   const fd = new FormData(); fd.append("file", e.target.files[0]);
-                  try { await apiClient.uploadDrawVideo(id, fd); setMsg("Video uploaded ✓"); await load(); }
+                  try { await apiClient.uploadDrawVideo(id, fd); setMsg(t("uploadVideo") + " ✓"); await load(); }
                   catch (err) { setMsg(err.message); }
                 }} />
               </label>
             )}
             {result.draw_video_url && (
-              <a href={result.draw_video_url} target="_blank" rel="noreferrer" className="btn-ghost px-3 py-1.5 text-xs">
-                View Video ↗
-              </a>
+              <a href={result.draw_video_url} target="_blank" rel="noreferrer" className="btn-ghost px-3 py-1.5 text-xs">{t("viewVideo")}</a>
             )}
           </div>
         </div>
@@ -164,19 +153,19 @@ export default function AdminLotteryManage() {
       {/* Ticket list */}
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-ink-700">
-          <h2 className="font-semibold text-cream-100">Confirmed Tickets ({confirmed.length})</h2>
+          <h2 className="font-semibold text-cream-100">{t("confirmedTickets")} ({confirmed.length})</h2>
         </div>
         <div className="max-h-80 overflow-y-auto divide-y divide-ink-700">
-          {confirmed.map((t) => (
-            <div key={t.id} className="flex items-center justify-between px-5 py-2.5 text-sm">
-              <span className="font-mono text-cream-100">{t.ticket_no}</span>
-              <span className={`pill ${t.status === "WON" ? "bg-green-600 text-ink-900" : t.status === "LOST" ? "bg-ink-700 text-cream-400" : "bg-green-500/15 text-green-300"}`}>
-                {t.status}
+          {confirmed.map((tk) => (
+            <div key={tk.id} className="flex items-center justify-between px-5 py-2.5 text-sm">
+              <span className="font-mono text-cream-100">{tk.ticket_no}</span>
+              <span className={`pill ${tk.status === "WON" ? "bg-green-600 text-ink-900" : tk.status === "LOST" ? "bg-ink-700 text-cream-400" : "bg-green-500/15 text-green-300"}`}>
+                {tk.status}
               </span>
             </div>
           ))}
           {confirmed.length === 0 && (
-            <div className="px-5 py-6 text-sm text-cream-400 text-center">No confirmed tickets yet.</div>
+            <div className="px-5 py-6 text-sm text-cream-400 text-center">{t("noConfirmedTickets")}</div>
           )}
         </div>
       </div>

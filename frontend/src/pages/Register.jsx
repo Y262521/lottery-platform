@@ -22,7 +22,7 @@ export default function Register() {
   const { t } = useLang();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ email: "", full_name: "", password: "" });
+  const [form, setForm] = useState({ email: "", full_name: "", phone: "", password: "" });
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -32,20 +32,15 @@ export default function Register() {
   async function submit(e) {
     e.preventDefault();
     setError("");
-    if (form.password.length < 8) {
-      setError(t("atLeast8"));
-      return;
-    }
+    if (form.password.length < 8) { setError(t("atLeast8")); return; }
     setBusy(true);
     try {
-      await apiClient.register(form);
+      await apiClient.register({ ...form, phone: form.phone || undefined });
       await login(form.email, form.password);
       navigate("/", { replace: true });
     } catch (err) {
       setError(typeof err.message === "string" ? err.message : t("registrationFailed"));
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   }
 
   return (
@@ -56,33 +51,24 @@ export default function Register() {
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
-            <label className="label" htmlFor="name">{t("fullName")}</label>
-            <input id="name" className="input" required
-              value={form.full_name} onChange={set("full_name")} />
+            <label className="label">{t("fullName")}</label>
+            <input className="input" required value={form.full_name} onChange={set("full_name")} />
           </div>
           <div>
-            <label className="label" htmlFor="email">{t("email")}</label>
-            <input id="email" className="input" type="email" required
-              value={form.email} onChange={set("email")} />
+            <label className="label">{t("email")}</label>
+            <input className="input" type="email" required value={form.email} onChange={set("email")} />
           </div>
           <div>
-            <label className="label" htmlFor="password">{t("password")}</label>
+            <label className="label">{t("phone")}</label>
+            <input className="input" type="tel" placeholder="+251..." value={form.phone} onChange={set("phone")} />
+          </div>
+          <div>
+            <label className="label">{t("password")}</label>
             <div className="relative">
-              <input
-                id="password"
-                className="input pr-10"
-                type={showPw ? "text" : "password"}
-                required
-                minLength={8}
-                value={form.password}
-                onChange={set("password")}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-cream-400 hover:text-cream-100 transition"
-                aria-label={showPw ? "Hide password" : "Show password"}
-              >
+              <input className="input pr-10" type={showPw ? "text" : "password"} required minLength={8}
+                value={form.password} onChange={set("password")} />
+              <button type="button" onClick={() => setShowPw(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-cream-400 hover:text-cream-100 transition">
                 <EyeIcon open={showPw} />
               </button>
             </div>
@@ -90,9 +76,7 @@ export default function Register() {
           </div>
 
           {error && (
-            <div className="rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-300">
-              {error}
-            </div>
+            <div className="rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-300">{error}</div>
           )}
 
           <button className="btn-primary w-full" disabled={busy}>
@@ -102,9 +86,7 @@ export default function Register() {
 
         <p className="mt-5 text-center text-sm text-cream-300">
           {t("alreadyHave")}{" "}
-          <Link to="/login" className="font-semibold text-green-300 hover:underline">
-            {t("signIn")}
-          </Link>
+          <Link to="/login" className="font-semibold text-green-300 hover:underline">{t("signIn")}</Link>
         </p>
       </div>
     </div>
