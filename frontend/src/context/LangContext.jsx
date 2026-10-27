@@ -2,6 +2,9 @@ import { createContext, useContext, useState } from "react";
 
 const translations = {
   en: {
+    // Brand
+    brandName: "Emerald Draw",
+    brandSub: "Direct-Purchase Lottery",
     // Navbar
     home: "Home",
     myTickets: "My Tickets",
@@ -178,9 +181,34 @@ const translations = {
     back: "← Back",
     drawAt: "Draw Date",
     status: "Status",
+
+    // Payment proof
+    makePayment: "Make Payment",
+    transferTo: "Transfer ETB {amount} to the account below",
+    telebirrRef: "Telebirr Transaction Reference *",
+    bankRef: "Bank Reference / Slip Number *",
+    senderName: "Sender Name (as on transfer) *",
+    senderNamePh: "Your name",
+    phoneLbl: "Phone Number (optional)",
+    messageLbl: "Message / Note (optional)",
+    messagePh: "e.g. Lottery ticket payment for...",
+    screenshotLbl: "Payment Screenshot (optional but recommended)",
+    screenshotHelp: "Upload a screenshot of your Telebirr/bank receipt as proof",
+    submitRef: "Submit Payment Reference",
+    submitting: "Submitting…",
+    paymentSubmitted: "Payment Submitted!",
+    paymentSubmittedDesc: "Admin will verify your payment and issue your tickets. Keep your reference number safe.",
+    referenceLabel: "Reference:",
+    trackTickets: "Track status in My Tickets",
+    continueBtn: "Continue → Pay ({qty} ticket{s})",
+    backBtn: "← Back",
+    afterTransfer: "After transferring, enter your reference number and optionally upload a screenshot. Admin verifies and issues tickets.",
   },
 
   am: {
+    // Brand
+    brandName: "ኤመራልድ ድሮ",
+    brandSub: "ቀጥታ ሎተሪ መድረክ",
     // Navbar
     home: "ዋና ገጽ",
     myTickets: "የእኔ ቲኬቶች",
@@ -357,6 +385,28 @@ const translations = {
     back: "← ተመለስ",
     drawAt: "የዕጣ ቀን",
     status: "ሁኔታ",
+
+    // Payment proof
+    makePayment: "ክፍያ ያካሂዱ",
+    transferTo: "ETB {amount} ወደ ታች ወደ አለው አካዉንት ያስተላልፉ",
+    telebirrRef: "Telebirr ማጣቀሻ ቁጥር *",
+    bankRef: "የባንክ ማጣቀሻ / ደረሰኝ ቁጥር *",
+    senderName: "የላኪ ስም *",
+    senderNamePh: "ስምዎ",
+    phoneLbl: "ስልክ ቁጥር (አማራጭ)",
+    messageLbl: "መልዕክት / ማስታወሻ (አማራጭ)",
+    messagePh: "ለምሳሌ: ሎተሪ ቲኬት ክፍያ...",
+    screenshotLbl: "የክፍያ ስክሪንሾት (አማራጭ ነገር ግን ይመከራል)",
+    screenshotHelp: "የ Telebirr/ባንክ ደረሰኝ ስክሪንሾት ይስቀሉ",
+    submitRef: "ክፍያ አስረከብ",
+    submitting: "በማስገባት ላይ…",
+    paymentSubmitted: "ክፍያ ቀርቧል!",
+    paymentSubmittedDesc: "አስተዳዳሪ ክፍያዎን ሲያረጋግጥ ቲኬቶቹ ይላካሉ። ማጣቀሻ ቁጥርዎን ያስቀምጡ።",
+    referenceLabel: "ማጣቀሻ:",
+    trackTickets: "የእኔ ቲኬቶች ውስጥ ሁኔታ ይከታተሉ",
+    continueBtn: "ቀጥል → ክፍያ ({qty} ቲኬት{s})",
+    backBtn: "← ተመለስ",
+    afterTransfer: "ካስተላለፉ በኋላ ማጣቀሻ ቁጥሩን ያስገቡ እና ስክሪንሾት ይስቀሉ። አስተዳዳሪ ያረጋግጣል።",
   },
 };
 

@@ -155,7 +155,17 @@ function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
           <Row label={lang === "am" ? "ማጣቀሻ" : "Reference"} value={tx.gateway_ref} />
           <Row label={lang === "am" ? "ላኪ" : "Sender"} value={wp.sender_name} />
           <Row label={lang === "am" ? "ስልክ" : "Phone"} value={wp.phone} />
+          <Row label={lang === "am" ? "መልዕክት" : "Message"} value={wp.message} />
           <Row label={lang === "am" ? "የቀረበ" : "Submitted"} value={wp.submitted_at ? new Date(wp.submitted_at).toLocaleString() : "—"} />
+          {wp.screenshot_url && (
+            <div>
+              <p className="text-cream-400 mb-2">{lang === "am" ? "ስክሪንሾት:" : "Screenshot:"}</p>
+              <a href={wp.screenshot_url} target="_blank" rel="noreferrer">
+                <img src={wp.screenshot_url} alt="proof"
+                  className="max-h-64 w-full rounded-xl object-contain border border-ink-600 hover:opacity-90 transition" />
+              </a>
+            </div>
+          )}
         </div>
       )}
     </div>

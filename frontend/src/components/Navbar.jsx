@@ -4,8 +4,7 @@ import { useLang } from "../context/LangContext";
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
-  const { lang, toggle, t } = useLang();
-  const navigate = useNavigate();
+  const { lang, toggle, t } = useLang();  const navigate = useNavigate();
 
   const link = ({ isActive }) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -16,10 +15,12 @@ export default function Navbar() {
     <header className="sticky top-0 z-30 border-b border-ink-600 bg-ink-900/80 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <NavLink to="/" className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-600 font-mono font-bold text-ink-900 shadow-glow">E</span>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-600 font-mono font-bold text-ink-900 shadow-glow">
+            {lang === "am" ? "ኤ" : "E"}
+          </span>
           <span className="flex flex-col leading-none">
-            <span className="text-sm font-bold tracking-tight text-cream-50">Emerald Draw</span>
-            <span className="text-[10px] uppercase tracking-widest text-cream-400">Direct-Purchase Lottery</span>
+            <span className="text-sm font-bold tracking-tight text-cream-50">{t("brandName")}</span>
+            <span className="text-[10px] uppercase tracking-widest text-cream-400">{t("brandSub")}</span>
           </span>
         </NavLink>
 

@@ -89,7 +89,7 @@ export const apiClient = {
 
   // payments
   paymentAccounts: () => api("/api/payments/accounts", { auth: false }),
-  submitPayment: (b) => api("/api/payments/submit", { method: "POST", body: b }),
+  submitPayment: (formData) => api("/api/payments/submit", { method: "POST", body: formData, form: true }),
   myPayments: () => api("/api/payments/mine"),
   confirmPayment: (id) => api(`/api/payments/${id}/confirm`, { method: "POST" }),
   rejectPayment: (id) => api(`/api/payments/${id}/reject`, { method: "POST" }),

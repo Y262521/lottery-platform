@@ -1,14 +1,11 @@
-"""Manual payment flow.
+"""Manual payment flow with screenshot proof upload.
 
-Users pay directly to the admin's bank/Telebirr account, then submit their
-payment reference. Admin reviews and confirms — tickets are issued on confirm.
-No third-party payment API is called.
+Users pay directly to the admin's bank/Telebirr account, upload a screenshot
+as proof, then submit a reference number. Admin reviews and confirms.
 """
-import secrets
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -16,6 +13,7 @@ from ..audit import log
 from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user, require_roles
+from ..media import upload_image
 from ..models import (
     Gateway, LotteryPost, LotteryStatus,
     PaymentStatus, PaymentTransaction, Role, Ticket, TicketStatus, User,
@@ -27,15 +25,7 @@ from ..schemas import PaymentOut
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
 
-# ── Request / response schemas ────────────────────────────────────────────────
-
-class ManualPaymentRequest(BaseModel):
-    lottery_id: int
-    quantity: int
-    gateway: Gateway          # TELEBIRR or BANK_TRANSFER
-    payment_reference: str    # user-supplied: Telebirr TxRef or bank slip number
-    sender_name: str          # user's name as it appears on the transfer
-    phone: str | None = None
+from pydantic import BaseModel
 
 
 class PaymentAccountsOut(BaseModel):
@@ -47,11 +37,9 @@ class PaymentAccountsOut(BaseModel):
     awash_name: str
 
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
-
 @router.get("/accounts", response_model=PaymentAccountsOut)
 def payment_accounts():
-    """Return the admin's payment account details shown on the checkout page."""
+    """Return admin payment account details shown on checkout."""
     return PaymentAccountsOut(
         telebirr_number=settings.TELEBIRR_ACCOUNT,
         telebirr_name=settings.TELEBIRR_NAME,
@@ -63,49 +51,66 @@ def payment_accounts():
 
 
 @router.post("/submit", response_model=PaymentOut, status_code=201)
-def submit_payment(
-    payload: ManualPaymentRequest,
+async def submit_payment(
+    lottery_id: int = Form(...),
+    quantity: int = Form(...),
+    gateway: Gateway = Form(...),
+    payment_reference: str = Form(...),
+    sender_name: str = Form(...),
+    phone: str = Form(default=""),
+    message: str = Form(default=""),
+    screenshot: UploadFile = File(default=None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """User submits their payment reference after manually transferring money.
-    Tickets remain PENDING until admin confirms the payment.
-    """
-    lottery = db.get(LotteryPost, payload.lottery_id)
+    """Submit a manual payment with optional screenshot proof."""
+    lottery = db.get(LotteryPost, lottery_id)
     if not lottery or lottery.status != LotteryStatus.ACTIVE:
         raise HTTPException(400, "Lottery is not open for purchases")
 
-    # Capacity check
-    if lottery.total_tickets and (lottery.tickets_sold + payload.quantity) > lottery.total_tickets:
+    if lottery.total_tickets and (lottery.tickets_sold + quantity) > lottery.total_tickets:
         raise HTTPException(400, "Not enough tickets remaining")
 
-    # Per-user limit
     user_confirmed = db.scalar(
         select(func.count()).select_from(Ticket).where(
-            Ticket.lottery_id == payload.lottery_id,
+            Ticket.lottery_id == lottery_id,
             Ticket.user_id == user.id,
             Ticket.status == TicketStatus.CONFIRMED,
         )
     ) or 0
-    if user_confirmed + payload.quantity > lottery.max_per_user:
+    if user_confirmed + quantity > lottery.max_per_user:
         raise HTTPException(400, f"Maximum {lottery.max_per_user} tickets per user")
 
-    amount = round(lottery.ticket_price * payload.quantity, 2)
+    amount = round(lottery.ticket_price * quantity, 2)
 
-    # Create a PENDING transaction with the user's reference
+    # Upload screenshot if provided
+    screenshot_url = None
+    if screenshot and screenshot.filename:
+        try:
+            content = await screenshot.read()
+            screenshot_url = upload_image(
+                content,
+                folder="lottery/payment_proofs",
+                public_id=f"proof_u{user.id}_l{lottery_id}_{int(datetime.now(timezone.utc).timestamp())}",
+            )
+        except Exception:
+            pass  # screenshot upload is optional — don't block submission
+
     txn = PaymentTransaction(
         user_id=user.id,
-        lottery_id=lottery.id,
+        lottery_id=lottery_id,
         amount=amount,
         currency="ETB",
-        gateway=payload.gateway,
-        gateway_ref=payload.payment_reference,
+        gateway=gateway,
+        gateway_ref=payment_reference,
         gateway_status=PaymentStatus.PENDING,
-        tickets_count=payload.quantity,
+        tickets_count=quantity,
         webhook_payload={
-            "payment_reference": payload.payment_reference,
-            "sender_name": payload.sender_name,
-            "phone": payload.phone,
+            "payment_reference": payment_reference,
+            "sender_name": sender_name,
+            "phone": phone or None,
+            "message": message or None,
+            "screenshot_url": screenshot_url,
             "submitted_at": datetime.now(timezone.utc).isoformat(),
         },
     )
@@ -113,23 +118,19 @@ def submit_payment(
     db.flush()
     log(db, "payment.submit", actor_id=user.id, entity="payment_transaction",
         entity_id=txn.id,
-        detail=f"gateway={payload.gateway} ref={payload.payment_reference} amount={amount}")
+        detail=f"gateway={gateway} ref={payment_reference} amount={amount}")
     db.commit()
     db.refresh(txn)
     return txn
 
 
 @router.get("/mine", response_model=list[PaymentOut])
-def my_payments(
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user),
-):
-    rows = db.scalars(
+def my_payments(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return db.scalars(
         select(PaymentTransaction)
         .where(PaymentTransaction.user_id == user.id)
         .order_by(PaymentTransaction.created_at.desc())
     ).all()
-    return rows
 
 
 @router.post("/{txn_id}/confirm", response_model=PaymentOut)
@@ -138,25 +139,22 @@ def confirm_payment(
     db: Session = Depends(get_db),
     admin: User = Depends(require_roles(Role.ADMIN)),
 ):
-    """Admin confirms a manual payment — tickets are generated immediately."""
     txn = db.get(PaymentTransaction, txn_id)
     if not txn:
         raise HTTPException(404, "Transaction not found")
     if txn.gateway_status == PaymentStatus.SUCCESS:
-        raise HTTPException(409, "Payment already confirmed")
+        raise HTTPException(409, "Already confirmed")
     if txn.gateway_status == PaymentStatus.FAILED:
-        raise HTTPException(409, "Payment was rejected — cannot confirm")
+        raise HTTPException(409, "Payment was rejected")
 
-    # Lock lottery row and generate tickets
     lottery = db.get(LotteryPost, txn.lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
 
-    # Final capacity check under lock
     if lottery.total_tickets and (lottery.tickets_sold + txn.tickets_count) > lottery.total_tickets:
         txn.gateway_status = PaymentStatus.FAILED
         db.commit()
-        raise HTTPException(400, "Lottery is now full — cannot confirm")
+        raise HTTPException(400, "Lottery is now full")
 
     txn.gateway_status = PaymentStatus.SUCCESS
     txn.verified_at = datetime.now(timezone.utc)
@@ -170,7 +168,6 @@ def confirm_payment(
         user.email, user.full_name, lottery.title,
         ticket_nos, lottery.draw_date.strftime("%Y-%m-%d"),
     )
-
     log(db, "payment.confirmed", actor_id=admin.id, entity="payment_transaction",
         entity_id=txn_id, detail=f"tickets={ticket_nos}")
     db.commit()
@@ -184,15 +181,13 @@ def reject_payment(
     db: Session = Depends(get_db),
     admin: User = Depends(require_roles(Role.ADMIN)),
 ):
-    """Admin rejects a fraudulent or unverifiable payment."""
     txn = db.get(PaymentTransaction, txn_id)
     if not txn:
         raise HTTPException(404, "Transaction not found")
     if txn.gateway_status != PaymentStatus.PENDING:
         raise HTTPException(409, "Only PENDING payments can be rejected")
     txn.gateway_status = PaymentStatus.FAILED
-    log(db, "payment.rejected", actor_id=admin.id, entity="payment_transaction",
-        entity_id=txn_id)
+    log(db, "payment.rejected", actor_id=admin.id, entity="payment_transaction", entity_id=txn_id)
     db.commit()
     db.refresh(txn)
     return txn

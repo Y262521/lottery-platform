@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { AdminRoute, ProtectedRoute } from "./components/ProtectedRoute";
+import { useLang } from "./context/LangContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -16,6 +17,7 @@ import AdminTransactions from "./pages/admin/Transactions";
 import AdminUsers from "./pages/admin/Users";
 
 export default function App() {
+  const { t } = useLang();
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -38,17 +40,18 @@ export default function App() {
         </Routes>
       </main>
       <footer className="border-t border-ink-700 px-4 py-6 text-center text-xs text-cream-400">
-        Emerald Draw · Direct-Purchase Lottery Platform
+        {t("brandName")} · {t("brandSub")}
       </footer>
     </div>
   );
 }
 
 function NotFound() {
+  const { t } = useLang();
   return (
     <div className="mx-auto mt-24 max-w-md p-6 text-center">
       <h1 className="text-2xl font-bold text-cream-50">404</h1>
-      <p className="mt-2 text-cream-300">Page not found.</p>
+      <p className="mt-2 text-cream-300">{t("loading").replace("…","")}</p>
     </div>
   );
 }
