@@ -19,6 +19,7 @@ const translations = {
     heroTitleAccent: "winning",
     heroDesc: "Browse active lottery events, buy tickets directly, and watch transparent draw results with video proof.",
     noOpenDraws: "No active lotteries right now. Check back soon.",
+    draws: "Lotteries",
     pastFrozen: "Past Draws",
     ticket: "Ticket",
     ticketsSold: "tickets sold",
@@ -244,11 +245,11 @@ const translations = {
     signOut: "ውጣ",
 
     // Home hero
-    heroTag: "ቀጥታ ሎተሪ መድረክ",
     heroTitle: "የእድሎን",
     heroTitleAccent: "በእድል ኦንላይን እጣ ይሞክሩ",
     heroDesc: "አሁን ያሉ እጣዎችን ይዬ እና የእጣ ቁጥሮን በቀጥታ ይግዙ",
     noOpenDraws: "አሁን ንቁ ሎተሪ የለም። ቆይተው ይመለሱ።",
+    draws: "ዕጣዎች",
     pastFrozen: "ያለፉ ዕጣዎች",
     ticket: "ቲኬት",
     ticketsSold: "ቲኬቶች ተሸጠዋል",
