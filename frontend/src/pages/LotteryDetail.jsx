@@ -37,6 +37,7 @@ export default function LotteryDetail() {
   }, [id, navigate, user]);  const [lottery, setLottery]           = useState(null);
   const [accounts, setAccounts]         = useState({});
   const [takenNums, setTakenNums]       = useState([]);
+  const [numRange, setNumRange]         = useState(null); // {min, max} or null
   // steps: select → pick (if range defined) → pay → done
   const [step, setStep]                 = useState("select");
   const [quantity, setQuantity]         = useState(1);
@@ -52,13 +53,16 @@ export default function LotteryDetail() {
   const [error, setError]               = useState("");
   const fileRef = useRef();
 
-  const hasNumberRange = lottery?.ticket_number_max != null;
+  const hasNumberRange = numRange != null;
 
   useEffect(() => {
     if (!id || id === "undefined") { navigate("/", { replace: true }); return; }
     apiClient.getLottery(id).then(setLottery).catch(() => navigate("/", { replace: true }));
     apiClient.paymentAccounts().then(setAccounts).catch(() => {});
-    apiClient.takenNumbers(id).then((r) => setTakenNums(r.taken || [])).catch(() => {});
+    apiClient.takenNumbers(id).then((r) => {
+      setTakenNums(r.taken || []);
+      setNumRange(r.range || null);
+    }).catch(() => {});
     if (user) { setSenderName(user.full_name || ""); setPhone(user.phone || ""); }
   }, [id, navigate, user]);
 
@@ -288,8 +292,8 @@ export default function LotteryDetail() {
 
               {/* Number grid */}
               <NumberGrid
-                min={lottery.ticket_number_min || 1}
-                max={lottery.ticket_number_max}
+                min={numRange?.min || 1}
+                max={numRange?.max || 100}
                 taken={takenNums}
                 selected={selectedNums}
                 maxSelect={quantity}

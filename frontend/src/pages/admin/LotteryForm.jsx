@@ -77,12 +77,6 @@ export default function AdminLotteryForm() {
           <Field label={t("drawDateField")}><input className="input" type="datetime-local" required value={form.draw_date} onChange={set("draw_date")} /></Field>
           <Field label={t("salesOpenAt")}><input className="input" type="datetime-local" value={form.sales_open_at} onChange={set("sales_open_at")} /></Field>
           <Field label={t("salesCloseAt")}><input className="input" type="datetime-local" value={form.sales_close_at} onChange={set("sales_close_at")} /></Field>
-          <Field label={lang === "am" ? "የቲኬት ቁጥር ጀምር (ለምሳሌ 1)" : "Ticket Number Start (e.g. 1)"}>
-            <input className="input" type="number" min={1} placeholder="e.g. 1" value={form.ticket_number_min} onChange={set("ticket_number_min")} />
-          </Field>
-          <Field label={lang === "am" ? "የቲኬት ቁጥር መጨረሻ (ለምሳሌ 500)" : "Ticket Number End (e.g. 500, blank = no picker)"}>
-            <input className="input" type="number" min={1} placeholder="e.g. 500" value={form.ticket_number_max} onChange={set("ticket_number_max")} />
-          </Field>
         </div>
 
         <Field label={t("coverImage")}><input type="file" accept="image/*" className="input py-2" onChange={(e) => setCoverFile(e.target.files[0])} /></Field>

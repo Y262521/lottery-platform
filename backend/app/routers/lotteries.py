@@ -1,13 +1,12 @@
 """Lottery post CRUD + media upload."""
-import io
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from ..audit import log
 from ..database import get_db
-from ..deps import get_current_user, get_optional_user, require_roles
+from ..deps import get_optional_user, require_roles
 from ..media import upload_image
-from ..models import LotteryPost, LotteryStatus, Role, User
+from ..models import LotteryPost, LotteryStatus, Role, Ticket, TicketStatus, User
 from ..schemas import LotteryCreate, LotteryOut, LotteryUpdate
 
 router = APIRouter(prefix="/api/lotteries", tags=["lotteries"])
@@ -15,6 +14,20 @@ router = APIRouter(prefix="/api/lotteries", tags=["lotteries"])
 
 def _to_out(lottery: LotteryPost) -> LotteryOut:
     return LotteryOut.model_validate(lottery)
+
+
+def _effective_range(lottery: LotteryPost) -> tuple[int, int] | None:
+    """Return (min, max) for ticket number selection.
+
+    If admin set an explicit range, use it.
+    Otherwise if total_tickets is set, use 1..total_tickets.
+    Otherwise return None (no picker).
+    """
+    if lottery.ticket_number_max:
+        return (lottery.ticket_number_min or 1, lottery.ticket_number_max)
+    if lottery.total_tickets:
+        return (1, lottery.total_tickets)
+    return None
 
 
 @router.get("", response_model=list[LotteryOut])
@@ -28,7 +41,6 @@ def list_lotteries(
         if status_filter:
             q = q.where(LotteryPost.status == status_filter)
     else:
-        # Public only sees ACTIVE and DRAWN
         q = q.where(LotteryPost.status.in_([LotteryStatus.ACTIVE, LotteryStatus.DRAWN]))
     return [_to_out(l) for l in db.scalars(q).all()]
 
@@ -54,36 +66,30 @@ def create_lottery(
     lottery = LotteryPost(**payload.model_dump(), created_by=admin.id)
     db.add(lottery)
     db.flush()
-    log(db, "lottery.create", actor_id=admin.id, entity="lottery_post", entity_id=lottery.id,
-        detail=f"title={lottery.title}")
+    log(db, "lottery.create", actor_id=admin.id, entity="lottery_post",
+        entity_id=lottery.id, detail=f"title={lottery.title}")
     db.commit()
     return _to_out(lottery)
 
 
 @router.delete("/{lottery_id}", status_code=204)
-def delete_lottery(
-    lottery_id: int,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_roles(Role.ADMIN)),
-):
-    """Permanently delete a DRAFT lottery. Cannot delete active/drawn lotteries."""
+def delete_lottery(lottery_id: int, db: Session = Depends(get_db),
+                   admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
     if lottery.status != LotteryStatus.DRAFT:
-        raise HTTPException(409, "Only DRAFT lotteries can be deleted. Cancel active ones instead.")
-    log(db, "lottery.delete", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id,
-        detail=f"title={lottery.title}")
+        raise HTTPException(409, "Only DRAFT lotteries can be deleted.")
+    log(db, "lottery.delete", actor_id=admin.id, entity="lottery_post",
+        entity_id=lottery_id, detail=f"title={lottery.title}")
     db.delete(lottery)
     db.commit()
 
 
 @router.patch("/{lottery_id}", response_model=LotteryOut)
-def update_lottery(
-    lottery_id: int, payload: LotteryUpdate,
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_roles(Role.ADMIN)),
-):
+def update_lottery(lottery_id: int, payload: LotteryUpdate,
+                   db: Session = Depends(get_db),
+                   admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
@@ -95,10 +101,8 @@ def update_lottery(
 
 
 @router.post("/{lottery_id}/publish", response_model=LotteryOut)
-def publish_lottery(
-    lottery_id: int, db: Session = Depends(get_db),
-    admin: User = Depends(require_roles(Role.ADMIN)),
-):
+def publish_lottery(lottery_id: int, db: Session = Depends(get_db),
+                    admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
@@ -111,10 +115,8 @@ def publish_lottery(
 
 
 @router.post("/{lottery_id}/close", response_model=LotteryOut)
-def close_lottery(
-    lottery_id: int, db: Session = Depends(get_db),
-    admin: User = Depends(require_roles(Role.ADMIN)),
-):
+def close_lottery(lottery_id: int, db: Session = Depends(get_db),
+                  admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
@@ -127,10 +129,8 @@ def close_lottery(
 
 
 @router.post("/{lottery_id}/cancel", response_model=LotteryOut)
-def cancel_lottery(
-    lottery_id: int, db: Session = Depends(get_db),
-    admin: User = Depends(require_roles(Role.ADMIN)),
-):
+def cancel_lottery(lottery_id: int, db: Session = Depends(get_db),
+                   admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
@@ -144,27 +144,37 @@ def cancel_lottery(
 
 @router.get("/{lottery_id}/taken-numbers")
 def taken_numbers(lottery_id: int, db: Session = Depends(get_db)):
-    """Return list of ticket numbers already taken (PENDING or CONFIRMED)."""
-    from ..models import Ticket, TicketStatus
+    """Return taken numbers AND the effective selectable range for this lottery."""
+    lottery = db.get(LotteryPost, lottery_id)
+    if not lottery:
+        raise HTTPException(404, "Lottery not found")
     rows = db.scalars(
         select(Ticket.chosen_number).where(
             Ticket.lottery_id == lottery_id,
             Ticket.chosen_number.is_not(None),
-            Ticket.status.in_([TicketStatus.PENDING_PAYMENT, TicketStatus.CONFIRMED, TicketStatus.WON, TicketStatus.LOST])
+            Ticket.status.in_([
+                TicketStatus.PENDING_PAYMENT, TicketStatus.CONFIRMED,
+                TicketStatus.WON, TicketStatus.LOST,
+            ])
         )
     ).all()
-    return {"taken": list(rows)}
-async def upload_cover(
-    lottery_id: int,
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_roles(Role.ADMIN)),
-):
+    rng = _effective_range(lottery)
+    return {
+        "taken": list(rows),
+        "range": {"min": rng[0], "max": rng[1]} if rng else None,
+    }
+
+
+@router.post("/{lottery_id}/cover-image", response_model=LotteryOut)
+async def upload_cover(lottery_id: int, file: UploadFile = File(...),
+                       db: Session = Depends(get_db),
+                       admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
     content = await file.read()
-    url = upload_image(content, folder="lottery/covers", public_id=f"lottery_{lottery_id}_cover")
+    url = upload_image(content, folder="lottery/covers",
+                       public_id=f"lottery_{lottery_id}_cover")
     if url:
         lottery.cover_image_url = url
         db.commit()
@@ -172,12 +182,9 @@ async def upload_cover(
 
 
 @router.post("/{lottery_id}/prize-images", response_model=LotteryOut)
-async def upload_prize_images(
-    lottery_id: int,
-    files: list[UploadFile] = File(...),
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_roles(Role.ADMIN)),
-):
+async def upload_prize_images(lottery_id: int, files: list[UploadFile] = File(...),
+                               db: Session = Depends(get_db),
+                               admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
