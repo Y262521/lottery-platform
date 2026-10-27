@@ -21,7 +21,7 @@ export default function Login() {
       const user = await login(email, password);
       navigate(user.role === "ADMIN" ? "/admin" : from, { replace: true });
     } catch (err) {
-      setError(err.message || "Login failed");
+      setError(typeof err.message === "string" ? err.message : "Login failed");
     } finally {
       setBusy(false);
     }

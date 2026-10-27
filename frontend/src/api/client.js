@@ -78,11 +78,16 @@ export async function api(path, { method = "GET", body, auth = true } = {}) {
     let detail = res.statusText;
     try {
       const err = await res.json();
-      detail = err.detail || err.message || detail;
+      // FastAPI validation errors return detail as an array of objects.
+      if (Array.isArray(err.detail)) {
+        detail = err.detail.map((d) => d.msg || JSON.stringify(d)).join(", ");
+      } else {
+        detail = err.detail || err.message || detail;
+      }
     } catch {
       /* ignore */
     }
-    const error = new Error(detail);
+    const error = new Error(String(detail));
     error.status = res.status;
     throw error;
   }
