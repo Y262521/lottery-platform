@@ -77,9 +77,17 @@ services:
       - key: TELEBIRR_SHORT_CODE
         sync: false
 
-      # ── Resend (email notifications) ──────────────────────────────────────────
-      # Get free API key at resend.com (3,000 emails/month free)
-      - key: RESEND_API_KEY
+      # ── Manual payment account details ───────────────────────────────────────
+      # These are shown to users on the checkout page so they know where to pay.
+      - key: TELEBIRR_ACCOUNT
+        sync: false          # e.g. 0912345678
+      - key: TELEBIRR_NAME
+        sync: false          # Account holder name
+      - key: CBE_ACCOUNT
+        sync: false          # Commercial Bank of Ethiopia account number
+      - key: CBE_NAME
+        sync: false          # Account holder name
+      - key: AWASH_ACCOUNT
+        sync: false          # Awash Bank (optional, leave blank to hide)
+      - key: AWASH_NAME
         sync: false
-      - key: EMAIL_FROM
-        value: noreply@lottery-platform.com

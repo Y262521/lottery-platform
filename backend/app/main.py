@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .database import init_db
-from .routers import admin, auth, lotteries, payments, results, tickets, webhooks
+from .routers import admin, auth, lotteries, payments, results, tickets
 
 
 @asynccontextmanager
@@ -41,7 +41,6 @@ app.include_router(lotteries.router)
 app.include_router(tickets.router)
 app.include_router(payments.router)
 app.include_router(results.router)
-app.include_router(webhooks.router)
 app.include_router(admin.router)
 
 

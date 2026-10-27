@@ -88,9 +88,11 @@ export const apiClient = {
   lotteryTickets: (lotteryId) => api(`/api/tickets/lottery/${lotteryId}`),
 
   // payments
-  initiatePayment: (b) => api("/api/payments/initiate", { method: "POST", body: b }),
+  paymentAccounts: () => api("/api/payments/accounts", { auth: false }),
+  submitPayment: (b) => api("/api/payments/submit", { method: "POST", body: b }),
   myPayments: () => api("/api/payments/mine"),
   confirmPayment: (id) => api(`/api/payments/${id}/confirm`, { method: "POST" }),
+  rejectPayment: (id) => api(`/api/payments/${id}/reject`, { method: "POST" }),
 
   // results
   getResults: (lotteryId) => api(`/api/lotteries/${lotteryId}/results`),
