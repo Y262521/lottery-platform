@@ -27,6 +27,12 @@ app = FastAPI(
 )
 
 origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+# Always allow the known Vercel deployment URL regardless of env var
+_KNOWN = ["https://lottery-platform-lilac.vercel.app"]
+for _o in _KNOWN:
+    if _o not in origins:
+        origins.append(_o)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -34,6 +40,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.include_router(auth.router)

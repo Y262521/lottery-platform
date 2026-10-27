@@ -3,7 +3,7 @@ import { createContext, useContext, useState } from "react";
 const translations = {
   en: {
     // Brand
-    brandName: "Emerald Draw",
+    brandName: "Yonas & Robel Online Lottery",
     brandSub: "Direct-Purchase Lottery",
     // Navbar
     home: "Home",
@@ -207,7 +207,7 @@ const translations = {
 
   am: {
     // Brand
-    brandName: "ኤመራልድ ድሮ",
+    brandName: "ዮናስ እና ሮቤል ኦንላይን እጣ",
     brandSub: "ቀጥታ ሎተሪ መድረክ",
     // Navbar
     home: "ዋና ገጽ",
