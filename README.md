@@ -1,68 +1,118 @@
-# Emerald Draw — Provably-Fair Lottery Platform
+# Emerald Draw — Direct-Purchase Lottery Platform
 
-A full-stack lottery/sweepstakes demo with a cryptographically secure, auditable
-draw engine. Built around a **dark green + off-white** theme.
+A full-stack lottery/sweepstakes platform with direct payment integration
+(Chapa & Telebirr), Cloudinary media storage, manual draw results with
+video proof, and full admin management.
+
+Dark green + off-white theme. Amharic / English bilingual.
 
 ## Stack
 
-- **Backend** — Python FastAPI, SQLAlchemy, JWT auth (access + refresh), bcrypt,
-  SQLite (swap for PostgreSQL in production). See `backend/`.
-- **Frontend** — React + Vite + Tailwind CSS, React Router. See `frontend/`.
+| Layer | Tech |
+|-------|------|
+| Backend | Python FastAPI + SQLAlchemy + PostgreSQL |
+| Frontend | React + Vite + Tailwind CSS |
+| Payments | Chapa, Telebirr, Bank Transfer |
+| Media | Cloudinary (images + video) |
+| Email | Resend |
+| Database | Neon (free Postgres) |
+| Backend hosting | Render (free tier) |
+| Frontend hosting | Vercel (free tier) |
 
-## Quick start
+## How it works
+
+**Admin flow:**
+1. Admin creates a lottery post with title, prize description, ticket price,
+   draw date, optional ticket limit, and optional cover/prize photos.
+2. Admin publishes the lottery (status: ACTIVE) — it becomes visible to users.
+3. Admin manually closes sales when enough tickets are sold, or the system
+   auto-closes when the ticket limit is reached.
+4. The draw is conducted **offline/physically**.
+5. Admin uploads the draw video proof + winner photos and enters the
+   winning ticket numbers. The system notifies winners by email.
+
+**User flow:**
+1. Users browse active lottery posts with images and prize details.
+2. Users select quantity and payment method (Chapa, Telebirr, or Bank Transfer).
+3. Payment is processed directly — no wallet needed.
+4. On payment verification (via webhook), unique ticket numbers are generated
+   and a confirmation email is sent.
+5. Users can view draw results, video proof, and winner listings.
+
+## Local development
 
 ```powershell
-# 1) Backend
+# Backend
 cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env.example .env
-python run.py          # http://localhost:8000  (docs at /docs)
+copy .env.example .env   # fill in your keys
+python run.py            # http://localhost:8000 — docs at /docs
 
-# 2) Frontend (new terminal)
+# Frontend (new terminal)
 cd frontend
 npm install
-npm run dev           # http://localhost:5173
+npm run dev              # http://localhost:5173
 ```
 
-## Demo credentials
+## Deploy
 
-- Admin: `admin@lottery.local` / `admin12345`
-- Or register a new user (gets a $100 demo wallet bonus)
+### 1. Backend → Render
 
-## How a draw works (provable fairness)
+Render → **New → Blueprint** → connect `Y262521/lottery-platform`
 
-1. **Commit** — An admin creates a draw. The backend generates a 256-bit
-   `server_seed` (OS entropy via `secrets`), stores it privately, and publishes
-   only its SHA-256 hash. Sales open.
-2. **Freeze** — Just before the draw, sales close.
-3. **Draw** — A public `client_seed` is captured (operator-supplied, e.g. a
-   future block hash). Winning numbers are derived from a Fisher-Yates shuffle
-   driven by `HMAC(server_seed, client_seed:nonce)`.
-4. **Reveal** — The server seed is published. Anyone can check
-   `SHA-256(server_seed) == published_hash` and recompute the result. The live
-   draw page does this verification in-browser using `SubtleCrypto`.
+Blueprint name: anything (e.g. `lottery-platform`)
+Blueprint path: `render.yaml`
 
-See `backend/app/draw_engine.py`.
+After creation, go to **Environment tab** and fill in:
 
-## Key features
+| Key | Value |
+|-----|-------|
+| `DATABASE_URL` | Your Neon Postgres URL |
+| `CORS_ORIGINS` | Your Vercel URL (after frontend deploy) |
+| `FRONTEND_URL` | Your Vercel URL |
+| `ADMIN_PASSWORD` | A strong password |
+| `CLOUDINARY_CLOUD_NAME` | From cloudinary.com |
+| `CLOUDINARY_API_KEY` | From cloudinary.com |
+| `CLOUDINARY_API_SECRET` | From cloudinary.com |
+| `CHAPA_SECRET_KEY` | From dashboard.chapa.co |
+| `CHAPA_WEBHOOK_SECRET` | From Chapa webhook settings |
+| `RESEND_API_KEY` | From resend.com (optional) |
 
-- JWT auth with refresh-on-expiry, RBAC (`USER`, `ADMIN`, `AUDITOR`)
-- Wallet with append-only ledger, overdraft protection, row-lock hint for concurrency
-- Ticket purchase, quick-pick (CSPRNG), cart, settlement
-- Draw lifecycle: schedule → freeze → run → cancel (with refunds)
-- Admin: metrics dashboard, draw management, user role/active toggles, audit log
-- Audit log of security/admin actions for regulatory review
-- Live countdowns + animated number reveal
+### 2. Frontend → Vercel
 
-## Production hardening (not done here)
+Vercel → **Add New → Project** → import this repo
 
-- Strong random `SECRET_KEY`; PostgreSQL with pooling
-- Rate limiting / DDoS protection (Cloudflare, API Gateway, slowapi)
-- Real payment-gateway webhooks instead of the demo `/wallet/deposit`
-- KYC, age & geolocation verification, gaming licenses
-- Public, well-known `client_seed` (e.g. a future block hash)
-- Append-only/immutable audit storage (e.g. a dedicated log store)
+- Root Directory: `frontend`
+- Env var: `VITE_API_BASE_URL` = your Render service URL
+  (e.g. `https://lottery-platform-6dv6.onrender.com`)
 
-> This is a demonstration project and is not affiliated with any real lottery.
+### 3. Webhook URLs (register with payment gateways)
+
+After both services are live, register these webhook URLs:
+
+- **Chapa:** `https://YOUR-RENDER-URL/api/webhooks/chapa`
+- **Telebirr:** `https://YOUR-RENDER-URL/api/webhooks/telebirr`
+
+## Admin login
+
+```
+Email:    admin@lottery-platform.com
+Password: (whatever you set as ADMIN_PASSWORD on Render)
+```
+
+## Database schema
+
+| Table | Purpose |
+|-------|---------|
+| `users` | Accounts + roles (USER, ADMIN, AUDITOR) |
+| `lottery_posts` | Events with prize, price, media, ticket limit |
+| `tickets` | Confirmed ticket entries (unique ticket_no per lottery) |
+| `payment_transactions` | One row per payment attempt, holds webhook payload |
+| `draw_results` | Winning ticket numbers + video/photo proof |
+| `audit_logs` | Append-only record of all admin/security actions |
+
+## API docs
+
+Live at `https://YOUR-RENDER-URL/docs` (Swagger UI, auto-generated).

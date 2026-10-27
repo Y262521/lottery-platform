@@ -1,15 +1,12 @@
-# Render Blueprint — provisions the FastAPI backend as a free web service.
-# Docs: https://render.com/docs/blueprint-spec
-# After connecting this repo to Render ("New > Blueprint"), Render reads this file.
-#
-# NOTE on free tier + SQLite: the free web service has an EPHEMERAL filesystem,
-# so the SQLite DB resets on every deploy/restart (the admin account is re-seeded
-# on startup, so it always works, but user/ticket data is not persistent).
-# For persistence, attach a Render Postgres instance and set DATABASE_URL — the
-# app already supports Postgres (psycopg2-binary is in requirements.txt).
+# Render Blueprint — direct-purchase lottery platform backend.
+# Connect this repo on Render: New → Blueprint → select this repo.
+# Render reads this file and provisions the web service automatically.
+# After deploy, set DATABASE_URL, CORS_ORIGINS, and the optional service
+# keys (Cloudinary, Chapa, Telebirr, Resend) in the Environment tab.
+
 services:
   - type: web
-    name: emerald-draw-api
+    name: lottery-platform
     runtime: python
     plan: free
     rootDir: backend
@@ -20,30 +17,69 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
-      # Random secret generated once on Render. Do not commit a real one.
+
+      # ── Auth ────────────────────────────────────────────────────────────────
       - key: SECRET_KEY
-        generateValue: true
+        generateValue: true          # Render generates a random value once
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: "15"
+        value: "30"
       - key: REFRESH_TOKEN_EXPIRE_DAYS
         value: "7"
-      # REQUIRED for a normal (persistent) deployment. The free Render web
-      # service has an EPHEMERAL filesystem, so SQLite loses all data on every
-      # redeploy. Use a free external Postgres instead (e.g. Neon) and paste its
-      # connection string here during blueprint creation, e.g.:
-      #   postgresql://user:password@ep-xxxx.neon.tech/dbname?sslmode=require
+
+      # ── Database ─────────────────────────────────────────────────────────────
+      # REQUIRED: paste your Neon (or other Postgres) connection string.
+      # postgresql://user:pass@ep-xxx.neon.tech/dbname?sslmode=require
       - key: DATABASE_URL
         sync: false
-      - key: ADMIN_EMAIL
-        value: admin@lottery.local
-      - key: ADMIN_PASSWORD
-        value: admin12345
-      - key: SIGNUP_BONUS
-        value: "100"
-      # Comma-separated allowed origins. Set this to your Vercel frontend URL,
-      # e.g. https://your-app.vercel.app  (only needed if the frontend calls the
-      # API directly via VITE_API_BASE_URL; the vercel.json proxy avoids CORS).
+
+      # ── CORS ──────────────────────────────────────────────────────────────────
+      # Set to your Vercel frontend URL after deploying the frontend.
+      # e.g. https://lottery-platform-lilac.vercel.app
       - key: CORS_ORIGINS
         sync: false
+
+      # ── Admin seed account ────────────────────────────────────────────────────
+      - key: ADMIN_EMAIL
+        value: admin@lottery-platform.com
+      - key: ADMIN_PASSWORD
+        sync: false                  # set a real password in the Render dashboard
+
+      # ── App URL (used in payment return URLs) ─────────────────────────────────
+      # Set to your Vercel frontend URL.
+      - key: FRONTEND_URL
+        sync: false
+
+      # ── Cloudinary (images + video) ───────────────────────────────────────────
+      # Get free credentials at cloudinary.com
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # ── Chapa payment gateway ─────────────────────────────────────────────────
+      # Get API keys at dashboard.chapa.co
+      - key: CHAPA_SECRET_KEY
+        sync: false
+      - key: CHAPA_WEBHOOK_SECRET
+        sync: false
+      - key: CHAPA_BASE_URL
+        value: https://api.chapa.co/v1
+
+      # ── Telebirr payment gateway ──────────────────────────────────────────────
+      - key: TELEBIRR_APP_ID
+        sync: false
+      - key: TELEBIRR_APP_KEY
+        sync: false
+      - key: TELEBIRR_SHORT_CODE
+        sync: false
+
+      # ── Resend (email notifications) ──────────────────────────────────────────
+      # Get free API key at resend.com (3,000 emails/month free)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: noreply@lottery-platform.com
