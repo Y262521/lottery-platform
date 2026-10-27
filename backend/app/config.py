@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     # Demo admin (created by the seeder)
-    ADMIN_EMAIL: EmailStr = "admin@lottery.local"
+    ADMIN_EMAIL: str = "admin@lottery.local"
     ADMIN_PASSWORD: str = "admin12345"
 
     # Wallet bonus credited to new demo users
