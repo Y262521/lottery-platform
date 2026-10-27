@@ -72,6 +72,12 @@ export default function AdminLotteries() {
                       <button className="btn-primary px-2 py-1 text-xs"
                         onClick={() => act(() => apiClient.publishLottery(l.id), t("publish"))}>{t("publish")}</button>
                     )}
+                    {l.status === "DRAFT" && (
+                      <button className="btn-danger px-2 py-1 text-xs"
+                        onClick={() => { if(confirm("Delete this draft?")) act(() => apiClient.deleteLottery(l.id), "Deleted"); }}>
+                        Delete
+                      </button>
+                    )}
                     {l.status === "ACTIVE" && (
                       <button className="btn-ghost px-2 py-1 text-xs"
                         onClick={() => act(() => apiClient.closeLottery(l.id), t("closeSales"))}>{t("closeSales")}</button>

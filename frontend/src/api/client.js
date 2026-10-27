@@ -78,6 +78,7 @@ export const apiClient = {
   publishLottery: (id) => api(`/api/lotteries/${id}/publish`, { method: "POST" }),
   closeLottery: (id) => api(`/api/lotteries/${id}/close`, { method: "POST" }),
   cancelLottery: (id) => api(`/api/lotteries/${id}/cancel`, { method: "POST" }),
+  deleteLottery: (id) => api(`/api/lotteries/${id}`, { method: "DELETE" }),
   uploadCover: (id, formData) => api(`/api/lotteries/${id}/cover-image`, { method: "POST", body: formData, form: true }),
   uploadPrizeImages: (id, formData) => api(`/api/lotteries/${id}/prize-images`, { method: "POST", body: formData, form: true }),
 

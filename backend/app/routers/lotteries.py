@@ -60,6 +60,24 @@ def create_lottery(
     return _to_out(lottery)
 
 
+@router.delete("/{lottery_id}", status_code=204)
+def delete_lottery(
+    lottery_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_roles(Role.ADMIN)),
+):
+    """Permanently delete a DRAFT lottery. Cannot delete active/drawn lotteries."""
+    lottery = db.get(LotteryPost, lottery_id)
+    if not lottery:
+        raise HTTPException(404, "Lottery not found")
+    if lottery.status != LotteryStatus.DRAFT:
+        raise HTTPException(409, "Only DRAFT lotteries can be deleted. Cancel active ones instead.")
+    log(db, "lottery.delete", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id,
+        detail=f"title={lottery.title}")
+    db.delete(lottery)
+    db.commit()
+
+
 @router.patch("/{lottery_id}", response_model=LotteryOut)
 def update_lottery(
     lottery_id: int, payload: LotteryUpdate,
