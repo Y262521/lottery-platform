@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useLang } from "../context/LangContext";
 
 function StatusDot() {
   return (
@@ -12,6 +13,7 @@ function StatusDot() {
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
+  const { lang, toggle, t } = useLang();
   const navigate = useNavigate();
 
   const linkClass = ({ isActive }) =>
@@ -37,33 +39,24 @@ export default function Navbar() {
         </NavLink>
 
         <div className="hidden items-center gap-1 md:flex">
-          <NavLink to="/" end className={linkClass}>
-            Home
-          </NavLink>
-          <NavLink to="/draws" className={linkClass}>
-            Draws
-          </NavLink>
-          <NavLink to="/results" className={linkClass}>
-            Results
-          </NavLink>
-          {user && (
-            <NavLink to="/tickets" className={linkClass}>
-              My Tickets
-            </NavLink>
-          )}
-          {user && (
-            <NavLink to="/wallet" className={linkClass}>
-              Wallet
-            </NavLink>
-          )}
-          {isAdmin && (
-            <NavLink to="/admin" className={linkClass}>
-              Admin
-            </NavLink>
-          )}
+          <NavLink to="/" end className={linkClass}>{t("home")}</NavLink>
+          <NavLink to="/draws" className={linkClass}>{t("draws")}</NavLink>
+          <NavLink to="/results" className={linkClass}>{t("results")}</NavLink>
+          {user && <NavLink to="/tickets" className={linkClass}>{t("myTickets")}</NavLink>}
+          {user && <NavLink to="/wallet" className={linkClass}>{t("wallet")}</NavLink>}
+          {isAdmin && <NavLink to="/admin" className={linkClass}>{t("admin")}</NavLink>}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Language toggle */}
+          <button
+            onClick={toggle}
+            className="rounded-lg border border-ink-600 px-2.5 py-1.5 text-xs font-semibold text-cream-300 hover:bg-ink-700 hover:text-cream-100 transition"
+            aria-label="Toggle language"
+          >
+            {lang === "en" ? "አማ" : "EN"}
+          </button>
+
           {user ? (
             <>
               <span className="hidden items-center gap-2 text-xs text-cream-300 sm:flex">
@@ -74,36 +67,29 @@ export default function Navbar() {
                 </span>
               </span>
               <button
-                onClick={() => {
-                  logout();
-                  navigate("/login");
-                }}
+                onClick={() => { logout(); navigate("/login"); }}
                 className="btn-ghost px-3 py-1.5 text-xs"
               >
-                Sign out
+                {t("signOut")}
               </button>
             </>
           ) : (
             <>
-              <NavLink to="/login" className="btn-ghost px-3 py-1.5 text-xs">
-                Sign in
-              </NavLink>
-              <NavLink to="/register" className="btn-primary px-3 py-1.5 text-xs">
-                Get started
-              </NavLink>
+              <NavLink to="/login" className="btn-ghost px-3 py-1.5 text-xs">{t("signIn")}</NavLink>
+              <NavLink to="/register" className="btn-primary px-3 py-1.5 text-xs">{t("getStarted")}</NavLink>
             </>
           )}
         </div>
       </nav>
 
-      {/* mobile nav row */}
+      {/* mobile nav */}
       <div className="flex gap-1 overflow-x-auto border-t border-ink-700 px-3 py-2 md:hidden">
-        <NavLink to="/" end className={linkClass}>Home</NavLink>
-        <NavLink to="/draws" className={linkClass}>Draws</NavLink>
-        <NavLink to="/results" className={linkClass}>Results</NavLink>
-        {user && <NavLink to="/tickets" className={linkClass}>Tickets</NavLink>}
-        {user && <NavLink to="/wallet" className={linkClass}>Wallet</NavLink>}
-        {isAdmin && <NavLink to="/admin" className={linkClass}>Admin</NavLink>}
+        <NavLink to="/" end className={linkClass}>{t("home")}</NavLink>
+        <NavLink to="/draws" className={linkClass}>{t("draws")}</NavLink>
+        <NavLink to="/results" className={linkClass}>{t("results")}</NavLink>
+        {user && <NavLink to="/tickets" className={linkClass}>{t("myTickets")}</NavLink>}
+        {user && <NavLink to="/wallet" className={linkClass}>{t("wallet")}</NavLink>}
+        {isAdmin && <NavLink to="/admin" className={linkClass}>{t("admin")}</NavLink>}
       </div>
     </header>
   );
