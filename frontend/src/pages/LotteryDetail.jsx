@@ -25,14 +25,16 @@ export default function LotteryDetail() {
   const { user } = useAuth();
   const { t, lang } = useLang();
 
-  // Guard against empty/undefined id (e.g. /lottery//)
   useEffect(() => {
     if (!id || id === "undefined") {
       navigate("/", { replace: true });
+      return;
     }
-  }, [id, navigate]);
-
-  const [lottery, setLottery]           = useState(null);
+    apiClient.getLottery(id).then(setLottery).catch(() => navigate("/", { replace: true }));
+    apiClient.paymentAccounts().then(setAccounts).catch(() => {});
+    apiClient.takenNumbers(id).then((r) => setTakenNums(r.taken || [])).catch(() => {});
+    if (user) { setSenderName(user.full_name || ""); setPhone(user.phone || ""); }
+  }, [id, navigate, user]);  const [lottery, setLottery]           = useState(null);
   const [accounts, setAccounts]         = useState({});
   const [takenNums, setTakenNums]       = useState([]);
   // steps: select → pick (if range defined) → pay → done
@@ -53,6 +55,7 @@ export default function LotteryDetail() {
   const hasNumberRange = lottery?.ticket_number_max != null;
 
   useEffect(() => {
+    if (!id || id === "undefined") { navigate("/", { replace: true }); return; }
     apiClient.getLottery(id).then(setLottery).catch(() => navigate("/", { replace: true }));
     apiClient.paymentAccounts().then(setAccounts).catch(() => {});
     apiClient.takenNumbers(id).then((r) => setTakenNums(r.taken || [])).catch(() => {});

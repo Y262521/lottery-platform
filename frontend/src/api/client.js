@@ -73,6 +73,7 @@ export const apiClient = {
   // lotteries
   listLotteries: (status) => api(`/api/lotteries${status ? `?status=${status}` : ""}`),
   getLottery: (id) => api(`/api/lotteries/${id}`),
+  takenNumbers: (id) => api(`/api/lotteries/${id}/taken-numbers`, { auth: false }),
   createLottery: (b) => api("/api/lotteries", { method: "POST", body: b }),
   updateLottery: (id, b) => api(`/api/lotteries/${id}`, { method: "PATCH", body: b }),
   publishLottery: (id) => api(`/api/lotteries/${id}/publish`, { method: "POST" }),
