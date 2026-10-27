@@ -25,6 +25,13 @@ export default function LotteryDetail() {
   const { user } = useAuth();
   const { t, lang } = useLang();
 
+  // Guard against empty/undefined id (e.g. /lottery//)
+  useEffect(() => {
+    if (!id || id === "undefined") {
+      navigate("/", { replace: true });
+    }
+  }, [id, navigate]);
+
   const [lottery, setLottery]           = useState(null);
   const [accounts, setAccounts]         = useState({});
   const [takenNums, setTakenNums]       = useState([]);

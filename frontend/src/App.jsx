@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { AdminRoute, ProtectedRoute } from "./components/ProtectedRoute";
 import { useLang } from "./context/LangContext";
@@ -28,6 +28,9 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/lottery/:id" element={<LotteryDetail />} />
           <Route path="/lottery/:id/results" element={<DrawResults />} />
+          {/* Catch empty or invalid lottery paths → redirect home */}
+          <Route path="/lottery" element={<Navigate to="/" replace />} />
+          <Route path="/lottery/" element={<Navigate to="/" replace />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
           <Route path="/my-tickets" element={<ProtectedRoute><MyTickets /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
