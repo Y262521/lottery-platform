@@ -36,14 +36,23 @@ export default function AdminLotteryForm() {
         sales_close_at: toISO(form.sales_close_at) || null,
       };
       const lottery = await apiClient.createLottery(body);
+      // Upload images after creation — non-fatal if Cloudinary not configured
       if (coverFile) {
-        const fd = new FormData(); fd.append("file", coverFile);
-        await apiClient.uploadCover(lottery.id, fd);
+        try {
+          const fd = new FormData(); fd.append("file", coverFile);
+          await apiClient.uploadCover(lottery.id, fd);
+        } catch (e) {
+          console.warn("Cover upload skipped:", e.message);
+        }
       }
       if (prizeFiles.length > 0) {
-        const fd = new FormData();
-        prizeFiles.forEach((f) => fd.append("files", f));
-        await apiClient.uploadPrizeImages(lottery.id, fd);
+        try {
+          const fd = new FormData();
+          prizeFiles.forEach((f) => fd.append("files", f));
+          await apiClient.uploadPrizeImages(lottery.id, fd);
+        } catch (e) {
+          console.warn("Prize images upload skipped:", e.message);
+        }
       }
       navigate(`/admin/lotteries/${lottery.id}`);
     } catch (e) { setError(e.message); }

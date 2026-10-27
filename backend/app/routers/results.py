@@ -68,9 +68,10 @@ async def upload_draw_video(
     content = await file.read()
     url = upload_video(content, folder="lottery/draw_videos",
                        public_id=f"lottery_{lottery_id}_draw_video")
-    result.draw_video_url = url
-    db.commit()
-    db.refresh(result)
+    if url:
+        result.draw_video_url = url
+        db.commit()
+        db.refresh(result)
     return result
 
 
@@ -89,10 +90,12 @@ async def upload_proof_images(
         content = await f.read()
         url = upload_image(content, folder="lottery/proof",
                            public_id=f"lottery_{lottery_id}_proof_{len(urls)+i}")
-        urls.append(url)
-    result.proof_image_urls = urls
-    db.commit()
-    db.refresh(result)
+        if url:
+            urls.append(url)
+    if urls != (result.proof_image_urls or []):
+        result.proof_image_urls = urls
+        db.commit()
+        db.refresh(result)
     return result
 
 

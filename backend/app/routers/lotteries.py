@@ -136,8 +136,9 @@ async def upload_cover(
         raise HTTPException(404, "Lottery not found")
     content = await file.read()
     url = upload_image(content, folder="lottery/covers", public_id=f"lottery_{lottery_id}_cover")
-    lottery.cover_image_url = url
-    db.commit()
+    if url:
+        lottery.cover_image_url = url
+        db.commit()
     return _to_out(lottery)
 
 
@@ -156,7 +157,9 @@ async def upload_prize_images(
         content = await f.read()
         url = upload_image(content, folder="lottery/prizes",
                            public_id=f"lottery_{lottery_id}_prize_{len(urls)+i}")
-        urls.append(url)
-    lottery.prize_image_urls = urls
-    db.commit()
+        if url:
+            urls.append(url)
+    if urls:
+        lottery.prize_image_urls = urls
+        db.commit()
     return _to_out(lottery)

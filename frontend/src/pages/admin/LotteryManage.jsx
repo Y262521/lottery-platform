@@ -39,13 +39,17 @@ export default function AdminLotteryManage() {
       const r = await apiClient.publishResults(id, { winning_ticket_nos: nos, notes });
       setResult(r);
       if (videoFile) {
-        const fd = new FormData(); fd.append("file", videoFile);
-        await apiClient.uploadDrawVideo(id, fd);
+        try {
+          const fd = new FormData(); fd.append("file", videoFile);
+          await apiClient.uploadDrawVideo(id, fd);
+        } catch (e) { console.warn("Video upload skipped:", e.message); }
       }
       if (proofFiles.length > 0) {
-        const fd = new FormData();
-        proofFiles.forEach((f) => fd.append("files", f));
-        await apiClient.uploadProofImages(id, fd);
+        try {
+          const fd = new FormData();
+          proofFiles.forEach((f) => fd.append("files", f));
+          await apiClient.uploadProofImages(id, fd);
+        } catch (e) { console.warn("Proof images skipped:", e.message); }
       }
       setMsg(t("resultsPublished"));
       await load();
