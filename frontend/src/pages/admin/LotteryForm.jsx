@@ -9,11 +9,12 @@ function toISO(local) {
 
 export default function AdminLotteryForm() {
   const navigate = useNavigate();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [form, setForm] = useState({
     title: "", description: "", prize_description: "",
     ticket_price: 50, total_tickets: "", max_per_user: 10,
     draw_date: "", sales_open_at: "", sales_close_at: "",
+    ticket_number_min: "1", ticket_number_max: "",
   });
   const [coverFile, setCoverFile] = useState(null);
   const [prizeFiles, setPrizeFiles] = useState([]);
@@ -34,6 +35,8 @@ export default function AdminLotteryForm() {
         draw_date: toISO(form.draw_date),
         sales_open_at: toISO(form.sales_open_at) || null,
         sales_close_at: toISO(form.sales_close_at) || null,
+        ticket_number_min: form.ticket_number_min ? Number(form.ticket_number_min) : 1,
+        ticket_number_max: form.ticket_number_max ? Number(form.ticket_number_max) : null,
       };
       const lottery = await apiClient.createLottery(body);
       // Upload images after creation — non-fatal if Cloudinary not configured
@@ -74,6 +77,12 @@ export default function AdminLotteryForm() {
           <Field label={t("drawDateField")}><input className="input" type="datetime-local" required value={form.draw_date} onChange={set("draw_date")} /></Field>
           <Field label={t("salesOpenAt")}><input className="input" type="datetime-local" value={form.sales_open_at} onChange={set("sales_open_at")} /></Field>
           <Field label={t("salesCloseAt")}><input className="input" type="datetime-local" value={form.sales_close_at} onChange={set("sales_close_at")} /></Field>
+          <Field label={lang === "am" ? "የቲኬት ቁጥር ጀምር (ለምሳሌ 1)" : "Ticket Number Start (e.g. 1)"}>
+            <input className="input" type="number" min={1} placeholder="e.g. 1" value={form.ticket_number_min} onChange={set("ticket_number_min")} />
+          </Field>
+          <Field label={lang === "am" ? "የቲኬት ቁጥር መጨረሻ (ለምሳሌ 500)" : "Ticket Number End (e.g. 500, blank = no picker)"}>
+            <input className="input" type="number" min={1} placeholder="e.g. 500" value={form.ticket_number_max} onChange={set("ticket_number_max")} />
+          </Field>
         </div>
 
         <Field label={t("coverImage")}><input type="file" accept="image/*" className="input py-2" onChange={(e) => setCoverFile(e.target.files[0])} /></Field>
