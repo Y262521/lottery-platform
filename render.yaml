@@ -19,7 +19,7 @@ services:
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
-        value: "3.12.0"
+        value: "3.11.9"
       # Random secret generated once on Render. Do not commit a real one.
       - key: SECRET_KEY
         generateValue: true
