@@ -30,6 +30,26 @@ def _exec(db, sql: str, label: str = "") -> bool:
         return False
 
 
+def _add_enum_value(db, enum_type: str, value: str) -> None:
+    """Add a value to a PostgreSQL enum type.
+
+    ALTER TYPE ADD VALUE cannot run inside a transaction, so we use a
+    raw connection with AUTOCOMMIT to bypass the transaction wrapper.
+    Safe to call even if the value already exists (IF NOT EXISTS).
+    """
+    try:
+        # Get the underlying DBAPI connection and set autocommit
+        connection = db.connection()
+        connection.execute(
+            text(f"ALTER TYPE {enum_type} ADD VALUE IF NOT EXISTS '{value}'")
+        )
+        db.commit()
+        logger.info("Enum OK: %s.%s", enum_type, value)
+    except Exception as exc:
+        db.rollback()
+        logger.debug("Enum skipped (%s): %s.%s", type(exc).__name__, enum_type, value)
+
+
 def _column_exists(db, table: str, column: str) -> bool:
     """Return True if a column exists in a table (PostgreSQL)."""
     try:
@@ -88,8 +108,28 @@ def run_migrations() -> None:
         # Leftover tables from early design iterations
         _exec(db, "DROP TABLE IF EXISTS lottery_events CASCADE", "drop lottery_events")
 
-        # ── 3. Add missing columns to v2 tables that may have been created ─────
-        #    before a model update was deployed
+        # ── 3. Fix PostgreSQL enum types ──────────────────────────────────────
+        # ALTER TYPE ADD VALUE cannot run inside a transaction in PostgreSQL.
+        # We use autocommit-style execution to add missing enum values.
+        _add_enum_value(db, "ticketstatus", "PENDING_PAYMENT")
+        _add_enum_value(db, "ticketstatus", "CONFIRMED")
+        _add_enum_value(db, "ticketstatus", "CANCELLED")
+        _add_enum_value(db, "ticketstatus", "WON")
+        _add_enum_value(db, "ticketstatus", "LOST")
+        _add_enum_value(db, "gateway", "CHAPA")
+        _add_enum_value(db, "gateway", "TELEBIRR")
+        _add_enum_value(db, "gateway", "BANK_TRANSFER")
+        _add_enum_value(db, "paymentstatus", "PENDING")
+        _add_enum_value(db, "paymentstatus", "SUCCESS")
+        _add_enum_value(db, "paymentstatus", "FAILED")
+        _add_enum_value(db, "paymentstatus", "REFUNDED")
+        _add_enum_value(db, "lotterystatus", "DRAFT")
+        _add_enum_value(db, "lotterystatus", "ACTIVE")
+        _add_enum_value(db, "lotterystatus", "CLOSED")
+        _add_enum_value(db, "lotterystatus", "DRAWN")
+        _add_enum_value(db, "lotterystatus", "CANCELLED")
+
+        # ── 4. Add missing columns to v2 tables ───────────────────────────────
         if _table_exists(db, "payment_transactions"):
             _exec(db, "ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS webhook_payload JSONB",
                   "payment_transactions.webhook_payload")
