@@ -54,7 +54,7 @@ def payment_accounts():
 async def submit_payment(
     lottery_id: int = Form(...),
     quantity: int = Form(...),
-    gateway: Gateway = Form(...),
+    gateway: str = Form(...),          # plain string, validated below
     payment_reference: str = Form(...),
     sender_name: str = Form(...),
     phone: str = Form(default=""),
@@ -64,6 +64,11 @@ async def submit_payment(
     user: User = Depends(get_current_user),
 ):
     """Submit a manual payment with optional screenshot proof."""
+    # Validate gateway value
+    try:
+        gw = Gateway(gateway.upper())
+    except ValueError:
+        raise HTTPException(400, f"Invalid gateway '{gateway}'. Use TELEBIRR or BANK_TRANSFER")
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery or lottery.status != LotteryStatus.ACTIVE:
         raise HTTPException(400, "Lottery is not open for purchases")
@@ -101,7 +106,7 @@ async def submit_payment(
         lottery_id=lottery_id,
         amount=amount,
         currency="ETB",
-        gateway=gateway,
+        gateway=gw,
         gateway_ref=payment_reference,
         gateway_status=PaymentStatus.PENDING,
         tickets_count=quantity,
@@ -118,7 +123,7 @@ async def submit_payment(
     db.flush()
     log(db, "payment.submit", actor_id=user.id, entity="payment_transaction",
         entity_id=txn.id,
-        detail=f"gateway={gateway} ref={payment_reference} amount={amount}")
+        detail=f"gateway={gw} ref={payment_reference} amount={amount}")
     db.commit()
     db.refresh(txn)
     return txn
