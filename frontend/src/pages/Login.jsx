@@ -8,7 +8,7 @@ export default function Login() {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-  const [email, setEmail] = useState("admin@lottery.local");
+  const [email, setEmail] = useState("admin@lottery-platform.com");
   const [password, setPassword] = useState("admin12345");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
