@@ -74,6 +74,7 @@ def all_transactions(db: Session = Depends(get_db),
             "amount": t.amount, "gateway": t.gateway, "gateway_ref": t.gateway_ref,
             "status": t.gateway_status, "tickets_count": t.tickets_count,
             "created_at": t.created_at, "verified_at": t.verified_at,
+            "webhook_payload": t.webhook_payload,  # includes sender, phone, message, screenshot
         }
         for t in rows
     ]

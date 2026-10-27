@@ -13,7 +13,8 @@ export default function AdminTransactions() {
   const { t, lang } = useLang();
   const [txns, setTxns] = useState([]);
   const [msg, setMsg] = useState("");
-  const [expanded, setExpanded] = useState(null);
+  // Pending cards start expanded by default
+  const [expanded, setExpanded] = useState("all-pending");
 
   const load = () => apiClient.allTransactions().then(setTxns).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -54,7 +55,7 @@ export default function AdminTransactions() {
           <div className="space-y-3">
             {pending.map((tx) => (
               <PendingCard key={tx.id} tx={tx} lang={lang} t={t}
-                expanded={expanded === tx.id}
+                expanded={expanded === tx.id || expanded === "all-pending"}
                 onExpand={() => setExpanded(expanded === tx.id ? null : tx.id)}
                 onConfirm={() => confirm(tx.id)}
                 onReject={() => reject(tx.id)}
@@ -122,22 +123,26 @@ export default function AdminTransactions() {
 
 function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
   const wp = tx.webhook_payload || {};
+  const hasDetails = tx.webhook_payload && Object.keys(tx.webhook_payload).length > 0;
+
   return (
     <div className="card border-yellow-500/30 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-cream-100">#{tx.id}</span>
             <span className="pill bg-yellow-500/15 text-yellow-300">PENDING</span>
             <span className="text-cream-300 text-sm">{tx.gateway}</span>
+            <span className="font-mono text-green-300 text-sm">ETB {tx.amount}</span>
           </div>
           <div className="mt-1 text-xs text-cream-400">
-            {lang === "am" ? "ሎተሪ" : "Lottery"} #{tx.lottery_id} ·
-            <span className="font-mono text-green-300 ml-1">ETB {tx.amount}</span> ·
-            {tx.tickets_count} {lang === "am" ? "ቲኬቶች" : "ticket(s)"}
+            {lang === "am" ? "ሎተሪ" : "Lottery"} #{tx.lottery_id} ·{" "}
+            {tx.tickets_count} {lang === "am" ? "ቲኬቶች" : "ticket(s)"} ·{" "}
+            {lang === "am" ? "ማጣቀሻ:" : "Ref:"}{" "}
+            <span className="font-mono text-cream-200">{tx.gateway_ref}</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button className="btn-ghost px-2 py-1 text-xs" onClick={onExpand}>
             {expanded ? "▲" : "▼"} {lang === "am" ? "ዝርዝር" : "Details"}
           </button>
@@ -152,19 +157,30 @@ function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
 
       {expanded && (
         <div className="mt-4 rounded-xl bg-ink-800 p-4 text-sm space-y-2">
-          <Row label={lang === "am" ? "ማጣቀሻ" : "Reference"} value={tx.gateway_ref} />
-          <Row label={lang === "am" ? "ላኪ" : "Sender"} value={wp.sender_name} />
-          <Row label={lang === "am" ? "ስልክ" : "Phone"} value={wp.phone} />
-          <Row label={lang === "am" ? "መልዕክት" : "Message"} value={wp.message} />
-          <Row label={lang === "am" ? "የቀረበ" : "Submitted"} value={wp.submitted_at ? new Date(wp.submitted_at).toLocaleString() : "—"} />
-          {wp.screenshot_url && (
-            <div>
-              <p className="text-cream-400 mb-2">{lang === "am" ? "ስክሪንሾት:" : "Screenshot:"}</p>
-              <a href={wp.screenshot_url} target="_blank" rel="noreferrer">
-                <img src={wp.screenshot_url} alt="proof"
-                  className="max-h-64 w-full rounded-xl object-contain border border-ink-600 hover:opacity-90 transition" />
-              </a>
-            </div>
+          {!hasDetails ? (
+            <p className="text-cream-400 text-xs italic">
+              {lang === "am"
+                ? "ዝርዝር መረጃ አልተቀመጠም። ከዚህ ቀደም የቀረበ ክፍያ ሊሆን ይችላል።"
+                : "No detail info saved. This may be an older submission. Check your Telebirr/bank directly."}
+            </p>
+          ) : (
+            <>
+              <Row label={lang === "am" ? "ማጣቀሻ" : "Reference"} value={wp.payment_reference || tx.gateway_ref} />
+              <Row label={lang === "am" ? "ላኪ" : "Sender"} value={wp.sender_name} />
+              <Row label={lang === "am" ? "ስልክ" : "Phone"} value={wp.phone} />
+              <Row label={lang === "am" ? "መልዕክት" : "Message"} value={wp.message} />
+              <Row label={lang === "am" ? "የቀረበ" : "Submitted"}
+                value={wp.submitted_at ? new Date(wp.submitted_at).toLocaleString() : "—"} />
+              {wp.screenshot_url && (
+                <div>
+                  <p className="text-cream-400 mb-2">{lang === "am" ? "ስክሪንሾት:" : "Screenshot:"}</p>
+                  <a href={wp.screenshot_url} target="_blank" rel="noreferrer">
+                    <img src={wp.screenshot_url} alt="proof"
+                      className="max-h-64 w-full rounded-xl object-contain border border-ink-600 hover:opacity-90 transition" />
+                  </a>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
