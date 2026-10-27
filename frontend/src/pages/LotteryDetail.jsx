@@ -123,7 +123,6 @@ export default function LotteryDetail() {
 
   if (!lottery) return <div className="flex min-h-[60vh] items-center justify-center text-cream-300">{t("loading")}</div>;
 
-  const remaining = lottery.total_tickets ? lottery.total_tickets - lottery.tickets_sold : null;
   const total = (lottery.ticket_price * quantity).toLocaleString();
   const isOpen = lottery.status === "ACTIVE";
   const acct = accounts;
@@ -165,7 +164,11 @@ export default function LotteryDetail() {
           <div className="mt-4 grid grid-cols-3 gap-2">
             <Stat label={t("ticket")} value={`ETB ${lottery.ticket_price.toLocaleString()}`} />
             <Stat label={t("drawDate")} value={new Date(lottery.draw_date).toLocaleDateString()} />
-            {remaining !== null ? <Stat label={t("remaining")} value={remaining} />
+            {lottery.total_tickets != null
+              ? <Stat
+                  label={lang === "am" ? "ቀሪ ቲኬቶች" : "Remaining"}
+                  value={`${lottery.total_tickets - lottery.tickets_sold} / ${lottery.total_tickets}`}
+                />
               : <Stat label={t("ticketsSold")} value={lottery.tickets_sold} />}
           </div>
         </div>

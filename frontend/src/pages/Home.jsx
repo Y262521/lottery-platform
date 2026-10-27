@@ -64,7 +64,7 @@ export default function Home() {
 }
 
 function LotteryCard({ lottery: l }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const badge = STATUS_BADGE[l.status] || "bg-ink-700 text-cream-400";
 
   // Guard: if id is missing for any reason, don't render a broken link
@@ -95,7 +95,11 @@ function LotteryCard({ lottery: l }) {
           </div>
           {l.total_tickets && (
             <div className="mt-2 text-xs text-cream-400">
-              {l.tickets_sold} / {l.total_tickets} {t("ticketsSold")}
+              {lang === "am" ? "ቀሪ:" : "Remaining:"}{" "}
+              <span className="font-mono text-green-300">
+                {l.total_tickets - l.tickets_sold}
+              </span>
+              {" / "}{l.total_tickets}
             </div>
           )}
           <div className="mt-3 btn-primary w-full text-center">
