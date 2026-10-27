@@ -15,9 +15,11 @@ export default function Navbar() {
     <header className="sticky top-0 z-30 border-b border-ink-600 bg-ink-900/80 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <NavLink to="/" className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 font-mono font-bold text-ink-900 shadow-glow text-sm">
-            {lang === "am" ? "ዮ" : "YR"}
-          </span>
+          <img 
+          src={Logo.png}
+          alt="Brand Logo" 
+          className="h-9 w-9 shrink-0 rounded-xl object-contain" 
+        />
           <span className="flex flex-col leading-none min-w-0">
             <span className="text-sm font-bold tracking-tight text-cream-50 truncate">{t("brandName")}</span>
             <span className="text-[10px] uppercase tracking-widest text-cream-400">{t("brandSub")}</span>
