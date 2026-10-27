@@ -233,8 +233,8 @@ const translations = {
 
   am: {
     // Brand
-    brandName: "ዮናስ እና ሮቤል ኦንላይን እጣ",
-    brandSub: "ቀጥታ ሎተሪ መድረክ",
+    brandName: "እድል ኦንላይን እጣ",
+    brandSub: "እድል የኦንላይን መድረክ",
     // Navbar
     home: "ዋና ገጽ",
     myTickets: "የእኔ ቲኬቶች",
@@ -245,9 +245,9 @@ const translations = {
 
     // Home hero
     heroTag: "ቀጥታ ሎተሪ መድረክ",
-    heroTitle: "ለማሸነፍ",
-    heroTitleAccent: "ቲኬትዎ",
-    heroDesc: "ንቁ ሎተሪዎችን ይዳስሱ፣ ቲኬቶችን በቀጥታ ይግዙ እና ግልጽ የሆኑ የዕጣ ውጤቶችን ይመልከቱ።",
+    heroTitle: "የእድሎን",
+    heroTitleAccent: "በእድል ኦንላይን እጣ ይሞክሩ",
+    heroDesc: "አሁን ያሉ እጣዎችን ይዬ እና የእጣ ቁጥሮን በቀጥታ ይግዙ",
     noOpenDraws: "አሁን ንቁ ሎተሪ የለም። ቆይተው ይመለሱ።",
     pastFrozen: "ያለፉ ዕጣዎች",
     ticket: "ቲኬት",
