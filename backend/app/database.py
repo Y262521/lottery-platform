@@ -1,27 +1,20 @@
-"""Database session + engine setup (SQLAlchemy 2.x style)."""
+"""Database engine + session factory."""
 from collections.abc import Generator
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
-
 from .config import settings
 
 
-def _normalize_db_url(url: str) -> str:
-    """Render/Heroku expose postgres as `postgres://` (or `postgresql://`),
-    which SQLAlchemy rejects. Re-route to the psycopg2 driver."""
+def _normalize(url: str) -> str:
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql+psycopg2://", 1)
-    if url.startswith("postgresql://"):
+    if url.startswith("postgresql://") and "+psycopg2" not in url:
         return url.replace("postgresql://", "postgresql+psycopg2://", 1)
     return url
 
 
-DB_URL = _normalize_db_url(settings.DATABASE_URL)
-
-# check_same_thread=False lets FastAPI request threads share the SQLite connection.
+DB_URL = _normalize(settings.DATABASE_URL)
 connect_args = {"check_same_thread": False} if DB_URL.startswith("sqlite") else {}
-
 engine = create_engine(DB_URL, connect_args=connect_args, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
@@ -39,7 +32,5 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    """Create all tables. Safe to call repeatedly."""
-    from . import models  # noqa: F401  ensure models are registered
-
+    from . import models  # noqa: F401
     Base.metadata.create_all(bind=engine)

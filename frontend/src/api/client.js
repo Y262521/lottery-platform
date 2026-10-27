@@ -1,39 +1,18 @@
-// Thin fetch wrapper with JWT handling, refresh-on-401, and typed-ish helpers.
-// Tokens live in localStorage (demo). Production should use HttpOnly cookies.
-//
-// API base: defaults to "" (relative paths). In dev, Vite proxies /api to the
-// backend. In prod (Vercel), vercel.json rewrites /api/* to the Render backend —
-// so relative paths work without any code change. Override with VITE_API_BASE_URL
-// to call the backend directly instead (then configure CORS accordingly).
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
-
 const ACCESS_KEY = "lp_access";
 const REFRESH_KEY = "lp_refresh";
 
 export const token = {
-  get access() {
-    return localStorage.getItem(ACCESS_KEY);
-  },
-  get refresh() {
-    return localStorage.getItem(REFRESH_KEY);
-  },
-  set(access, refresh) {
-    localStorage.setItem(ACCESS_KEY, access);
-    if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
-  },
-  clear() {
-    localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-  },
+  get access() { return localStorage.getItem(ACCESS_KEY); },
+  get refresh() { return localStorage.getItem(REFRESH_KEY); },
+  set(a, r) { localStorage.setItem(ACCESS_KEY, a); if (r) localStorage.setItem(REFRESH_KEY, r); },
+  clear() { localStorage.removeItem(ACCESS_KEY); localStorage.removeItem(REFRESH_KEY); },
 };
-
-let refreshing = Promise.resolve(null);
 
 async function refreshAccess() {
   const r = token.refresh;
   if (!r) return null;
-  // Dedupe concurrent refresh attempts.
-  refreshing = refreshing.catch(async () => {
+  try {
     const res = await fetch(API_BASE + "/api/auth/refresh", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -43,33 +22,27 @@ async function refreshAccess() {
     const data = await res.json();
     token.set(data.access_token, data.refresh_token);
     return data.access_token;
-  });
-  try {
-    return await refreshing;
-  } finally {
-    refreshing = Promise.resolve(null);
-  }
+  } catch { return null; }
 }
 
-export async function api(path, { method = "GET", body, auth = true } = {}) {
-  const headers = { "Content-Type": "application/json" };
+export async function api(path, { method = "GET", body, auth = true, form = false } = {}) {
+  const headers = {};
+  if (!form) headers["Content-Type"] = "application/json";
   if (auth && token.access) headers.Authorization = `Bearer ${token.access}`;
 
   let res = await fetch(API_BASE + path, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: form ? body : body ? JSON.stringify(body) : undefined,
   });
 
-  // Transparent token refresh on expiry.
   if (res.status === 401 && auth && token.refresh) {
     const fresh = await refreshAccess();
     if (fresh) {
       headers.Authorization = `Bearer ${fresh}`;
       res = await fetch(API_BASE + path, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
+        method, headers,
+        body: form ? body : body ? JSON.stringify(body) : undefined,
       });
     }
   }
@@ -78,15 +51,10 @@ export async function api(path, { method = "GET", body, auth = true } = {}) {
     let detail = res.statusText;
     try {
       const err = await res.json();
-      // FastAPI validation errors return detail as an array of objects.
-      if (Array.isArray(err.detail)) {
-        detail = err.detail.map((d) => d.msg || JSON.stringify(d)).join(", ");
-      } else {
-        detail = err.detail || err.message || detail;
-      }
-    } catch {
-      /* ignore */
-    }
+      detail = Array.isArray(err.detail)
+        ? err.detail.map((d) => d.msg || JSON.stringify(d)).join(", ")
+        : err.detail || err.message || detail;
+    } catch { /* ignore */ }
     const error = new Error(String(detail));
     error.status = res.status;
     throw error;
@@ -95,32 +63,45 @@ export async function api(path, { method = "GET", body, auth = true } = {}) {
   return res.json();
 }
 
-// High-level endpoint helpers -----------------------------------------------
+// ── Endpoint helpers ──────────────────────────────────────────────────────────
 export const apiClient = {
-  register: (body) => api("/api/auth/register", { method: "POST", body, auth: false }),
-  login: (body) => api("/api/auth/login", { method: "POST", body, auth: false }),
+  // auth
+  register: (b) => api("/api/auth/register", { method: "POST", body: b, auth: false }),
+  login: (b) => api("/api/auth/login", { method: "POST", body: b, auth: false }),
   me: () => api("/api/auth/me"),
-  // draws
-  listDraws: () => api("/api/draws"),
-  getDraw: (id) => api(`/api/draws/${id}`),
-  createDraw: (body) => api("/api/draws", { method: "POST", body }),
-  freezeDraw: (id) => api(`/api/draws/${id}/freeze`, { method: "POST" }),
-  runDraw: (id, clientSeed) =>
-    api(`/api/draws/${id}/run?${clientSeed ? `client_seed=${encodeURIComponent(clientSeed)}` : ""}`, {
-      method: "POST",
-    }),
-  cancelDraw: (id) => api(`/api/draws/${id}/cancel`, { method: "POST" }),
+
+  // lotteries
+  listLotteries: (status) => api(`/api/lotteries${status ? `?status=${status}` : ""}`),
+  getLottery: (id) => api(`/api/lotteries/${id}`),
+  createLottery: (b) => api("/api/lotteries", { method: "POST", body: b }),
+  updateLottery: (id, b) => api(`/api/lotteries/${id}`, { method: "PATCH", body: b }),
+  publishLottery: (id) => api(`/api/lotteries/${id}/publish`, { method: "POST" }),
+  closeLottery: (id) => api(`/api/lotteries/${id}/close`, { method: "POST" }),
+  cancelLottery: (id) => api(`/api/lotteries/${id}/cancel`, { method: "POST" }),
+  uploadCover: (id, formData) => api(`/api/lotteries/${id}/cover-image`, { method: "POST", body: formData, form: true }),
+  uploadPrizeImages: (id, formData) => api(`/api/lotteries/${id}/prize-images`, { method: "POST", body: formData, form: true }),
+
   // tickets
-  buyTicket: (body) => api("/api/tickets", { method: "POST", body }),
-  quickPick: (drawId) => api(`/api/tickets/quick-pick/${drawId}`),
   myTickets: () => api("/api/tickets/mine"),
-  // wallet
-  myWallet: () => api("/api/wallet"),
-  deposit: (amount) => api("/api/wallet/deposit", { method: "POST", body: { amount } }),
-  transactions: () => api("/api/wallet/transactions"),
+  getTicket: (id) => api(`/api/tickets/${id}`),
+  lotteryTickets: (lotteryId) => api(`/api/tickets/lottery/${lotteryId}`),
+
+  // payments
+  initiatePayment: (b) => api("/api/payments/initiate", { method: "POST", body: b }),
+  myPayments: () => api("/api/payments/mine"),
+  confirmPayment: (id) => api(`/api/payments/${id}/confirm`, { method: "POST" }),
+
+  // results
+  getResults: (lotteryId) => api(`/api/lotteries/${lotteryId}/results`),
+  getWinners: (lotteryId) => api(`/api/lotteries/${lotteryId}/winners`),
+  publishResults: (lotteryId, b) => api(`/api/lotteries/${lotteryId}/results`, { method: "POST", body: b }),
+  uploadDrawVideo: (id, formData) => api(`/api/lotteries/${id}/results/video`, { method: "POST", body: formData, form: true }),
+  uploadProofImages: (id, formData) => api(`/api/lotteries/${id}/results/proof-images`, { method: "POST", body: formData, form: true }),
+
   // admin
-  listUsers: () => api("/api/admin/users"),
-  updateUser: (id, body) => api(`/api/admin/users/${id}`, { method: "PATCH", body }),
-  auditLogs: () => api("/api/admin/audit"),
   metrics: () => api("/api/admin/metrics"),
+  listUsers: () => api("/api/admin/users"),
+  updateUser: (id, b) => api(`/api/admin/users/${id}`, { method: "PATCH", body: b }),
+  allTransactions: () => api("/api/admin/transactions"),
+  auditLogs: () => api("/api/admin/audit"),
 };

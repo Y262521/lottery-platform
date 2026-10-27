@@ -1,29 +1,24 @@
-"""Pydantic request/response schemas (validation + serialization)."""
+"""Pydantic request/response schemas."""
 from datetime import datetime
 from typing import Literal
-
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, conlist, field_validator
-
-from .config import settings
-from .models import DrawStatus, Role, TicketStatus, TxnType
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from .models import Gateway, LotteryStatus, PaymentStatus, Role, TicketStatus
 
 
-# --------------------------------------------------------------------------- #
-# Auth
-# --------------------------------------------------------------------------- #
+# ── Auth ──────────────────────────────────────────────────────────────────────
 class UserCreate(BaseModel):
     email: EmailStr
     full_name: str = Field(min_length=1, max_length=255)
+    phone: str | None = None
     password: str = Field(min_length=8, max_length=128)
-    role: Literal[Role.USER] = Role.USER  # self-registration only ever USER
 
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     email: EmailStr
     full_name: str
+    phone: str | None
     role: Role
     is_active: bool
     created_at: datetime
@@ -44,138 +39,120 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
-# --------------------------------------------------------------------------- #
-# Wallet
-# --------------------------------------------------------------------------- #
-class WalletOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    balance: float
-    updated_at: datetime
-
-
-class DepositRequest(BaseModel):
-    amount: float = Field(gt=0, le=100000)
-
-
-class TransactionOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    type: TxnType
-    amount: float
-    balance_after: float
-    reference: str | None
-    created_at: datetime
-
-
-# --------------------------------------------------------------------------- #
-# Draws
-# --------------------------------------------------------------------------- #
-class DrawCreate(BaseModel):
+# ── Lottery Posts ─────────────────────────────────────────────────────────────
+class LotteryCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
+    description: str | None = None
+    prize_description: str = Field(min_length=1)
     ticket_price: float = Field(gt=0)
-    jackpot: float = Field(default=0, ge=0)
-    numbers_per_ticket: int = Field(default=settings.NUMBERS_PER_TICKET, ge=1, le=10)
-    number_min: int = Field(default=settings.NUMBER_RANGE_MIN, ge=0)
-    number_max: int = Field(default=settings.NUMBER_RANGE_MAX, ge=1)
-    sales_close_at: datetime
-    draw_at: datetime
-
-    @field_validator("number_max")
-    @classmethod
-    def range_valid(cls, v, info):
-        mn = info.data.get("number_min")
-        npt = info.data.get("numbers_per_ticket")
-        if mn is not None and v <= mn:
-            raise ValueError("number_max must be greater than number_min")
-        # need enough distinct numbers in range
-        if mn is not None and npt is not None and (v - mn) + 1 < npt:
-            raise ValueError("number range too small for numbers_per_ticket")
-        return v
-
-    @field_validator("draw_at")
-    @classmethod
-    def draw_after_close(cls, v, info):
-        close = info.data.get("sales_close_at")
-        if close is not None and v <= close:
-            raise ValueError("draw_at must be after sales_close_at")
-        return v
+    total_tickets: int | None = Field(default=None, gt=0)
+    max_per_user: int = Field(default=10, ge=1)
+    draw_date: datetime
+    sales_open_at: datetime | None = None
+    sales_close_at: datetime | None = None
 
 
-class DrawOut(BaseModel):
+class LotteryUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    prize_description: str | None = None
+    ticket_price: float | None = Field(default=None, gt=0)
+    total_tickets: int | None = Field(default=None, gt=0)
+    max_per_user: int | None = Field(default=None, ge=1)
+    draw_date: datetime | None = None
+    sales_open_at: datetime | None = None
+    sales_close_at: datetime | None = None
+
+
+class LotteryOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     title: str
-    status: DrawStatus
+    description: str | None
+    cover_image_url: str | None
+    prize_description: str
+    prize_image_urls: list | None
     ticket_price: float
-    jackpot: float
-    numbers_per_ticket: int
-    number_min: int
-    number_max: int
-    sales_open_at: datetime
-    sales_close_at: datetime
-    draw_at: datetime
-    # server_seed stays hidden until reveal; only the hash is exposed
-    server_seed_hash: str | None
-    winning_numbers: list[int] | None
+    total_tickets: int | None
+    tickets_sold: int
+    max_per_user: int
+    status: LotteryStatus
+    draw_date: datetime
+    sales_open_at: datetime | None
+    sales_close_at: datetime | None
     created_at: datetime
-    completed_at: datetime | None
-    ticket_count: int = 0
 
 
-class DrawRevealOut(BaseModel):
-    """Full reveal bundle so a user can cryptographically verify a completed draw."""
-    id: int
-    server_seed: str
-    server_seed_hash: str
-    client_seed: str | None
-    nonce: int
-    winning_numbers: list[int]
-
-
-# --------------------------------------------------------------------------- #
-# Tickets
-# --------------------------------------------------------------------------- #
-class TicketCreate(BaseModel):
-    draw_id: int
-    numbers: conlist(int, min_length=1, max_length=10)
-
-    @field_validator("numbers")
-    @classmethod
-    def validate_numbers(cls, v):
-        if len(set(v)) != len(v):
-            raise ValueError("numbers must be unique")
-        return sorted(v)
-
-
+# ── Tickets ───────────────────────────────────────────────────────────────────
 class TicketOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
-    draw_id: int
-    numbers: list[int]
+    ticket_no: str
+    lottery_id: int
     status: TicketStatus
-    matched_count: int | None
-    prize: float
-    purchased_at: datetime
+    created_at: datetime
+    confirmed_at: datetime | None
 
 
-# --------------------------------------------------------------------------- #
-# Admin
-# --------------------------------------------------------------------------- #
-class AdminUpdateUser(BaseModel):
+# ── Payments ──────────────────────────────────────────────────────────────────
+class PaymentInitiate(BaseModel):
+    lottery_id: int
+    quantity: int = Field(ge=1, le=50)
+    gateway: Gateway
+    phone: str | None = None           # required for Telebirr
+    return_url: str | None = None      # optional override
+
+
+class PaymentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    lottery_id: int
+    amount: float
+    currency: str
+    gateway: Gateway
+    gateway_ref: str | None
+    gateway_status: PaymentStatus
+    tickets_count: int
+    created_at: datetime
+    verified_at: datetime | None
+
+
+class PaymentInitiateResponse(BaseModel):
+    transaction_id: int
+    gateway_ref: str
+    checkout_url: str | None    # Chapa hosted page URL
+    ussd_push: bool             # True if Telebirr USSD was triggered
+
+
+# ── Draw Results ──────────────────────────────────────────────────────────────
+class DrawResultCreate(BaseModel):
+    winning_ticket_nos: list[str] = Field(min_length=1)
+    notes: str | None = None
+
+
+class DrawResultOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    lottery_id: int
+    winning_ticket_nos: list
+    draw_video_url: str | None
+    proof_image_urls: list | None
+    notes: str | None
+    published_at: datetime
+
+
+# ── Admin ─────────────────────────────────────────────────────────────────────
+class AdminUserUpdate(BaseModel):
     role: Role | None = None
     is_active: bool | None = None
 
 
-class AdminAuditOut(BaseModel):
+class AuditOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     actor_id: int | None
     action: str
+    entity: str | None
+    entity_id: int | None
     detail: str | None
     created_at: datetime
