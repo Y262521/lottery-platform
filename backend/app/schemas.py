@@ -50,6 +50,9 @@ class LotteryCreate(BaseModel):
     draw_date: datetime
     sales_open_at: datetime | None = None
     sales_close_at: datetime | None = None
+    # Optional ticket number range for user selection
+    ticket_number_min: int | None = Field(default=1, ge=1)
+    ticket_number_max: int | None = Field(default=None, ge=1)
 
 
 class LotteryUpdate(BaseModel):
@@ -81,6 +84,8 @@ class LotteryOut(BaseModel):
     sales_open_at: datetime | None
     sales_close_at: datetime | None
     created_at: datetime
+    ticket_number_min: int | None
+    ticket_number_max: int | None
 
 
 # ── Tickets ───────────────────────────────────────────────────────────────────
@@ -88,6 +93,7 @@ class TicketOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     ticket_no: str
+    chosen_number: int | None
     lottery_id: int
     status: TicketStatus
     created_at: datetime

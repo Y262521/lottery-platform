@@ -66,6 +66,7 @@ async def submit_payment(
     sender_name: str = Form(...),
     phone: str = Form(default=""),
     message: str = Form(default=""),
+    chosen_numbers: str = Form(default=""),  # comma-separated e.g. "42,17"
     screenshot: UploadFile = File(default=None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -92,6 +93,32 @@ async def submit_payment(
     ) or 0
     if user_confirmed + quantity > lottery.max_per_user:
         raise HTTPException(400, f"Maximum {lottery.max_per_user} tickets per user")
+
+    # Parse and validate chosen numbers
+    chosen_list = []
+    if chosen_numbers:
+        try:
+            chosen_list = [int(x.strip()) for x in chosen_numbers.split(",") if x.strip()]
+        except ValueError:
+            raise HTTPException(400, "Invalid chosen numbers format")
+
+    # Check chosen numbers are available
+    if chosen_list:
+        from sqlalchemy import select as _select
+        from ..models import Ticket as _T, TicketStatus as _TS
+        taken = db.scalars(
+            _select(_T.chosen_number).where(
+                _T.lottery_id == lottery_id,
+                _T.chosen_number.in_(chosen_list),
+                _T.status.in_([_TS.PENDING_PAYMENT, _TS.CONFIRMED, _TS.WON, _TS.LOST])
+            )
+        ).all()
+        if taken:
+            taken_str = ", ".join(str(n) for n in taken)
+            raise HTTPException(
+                409,
+                f"ቀደም ብሎ ተወስዷል / Already taken: {taken_str}"
+            )
 
     amount = round(lottery.ticket_price * quantity, 2)
 
@@ -124,6 +151,7 @@ async def submit_payment(
                 "sender_name": sender_name,
                 "phone": phone or None,
                 "message": message or None,
+                "chosen_numbers": chosen_list or None,
                 "screenshot_url": screenshot_url,
                 "submitted_at": datetime.now(timezone.utc).isoformat(),
             },

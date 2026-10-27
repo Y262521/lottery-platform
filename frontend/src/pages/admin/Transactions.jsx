@@ -9,6 +9,8 @@ const STATUS_COLOR = {
   REFUNDED: "bg-ink-700 text-cream-400",
 };
 
+function tStatus(t, s) { return t(`status${s}`) || s; }
+
 export default function AdminTransactions() {
   const { t, lang } = useLang();
   const [txns, setTxns] = useState([]);

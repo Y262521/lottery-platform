@@ -92,6 +92,10 @@ class LotteryPost(Base):
     sales_open_at:     Mapped[datetime|None]= mapped_column(DateTime, nullable=True)
     sales_close_at:    Mapped[datetime|None]= mapped_column(DateTime, nullable=True)
     draw_date:         Mapped[datetime]     = mapped_column(DateTime, nullable=False)
+    # Ticket number range for user selection (e.g. 1–500)
+    # If None, ticket numbers are auto-generated sequentially
+    ticket_number_min: Mapped[int|None]     = mapped_column(Integer, nullable=True, default=1)
+    ticket_number_max: Mapped[int|None]     = mapped_column(Integer, nullable=True)
     created_by:        Mapped[int]          = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at:        Mapped[datetime]     = mapped_column(DateTime, server_default=func.now())
 
@@ -109,6 +113,8 @@ class Ticket(Base):
 
     id:             Mapped[int]         = mapped_column(Integer, primary_key=True)
     ticket_no:      Mapped[str]         = mapped_column(String(50), unique=True, nullable=False, index=True)
+    # The number the user chose (e.g. 42). NULL = auto-assigned
+    chosen_number:  Mapped[int|None]    = mapped_column(Integer, nullable=True, index=True)
     lottery_id:     Mapped[int]         = mapped_column(ForeignKey("lottery_posts.id"), nullable=False)
     user_id:        Mapped[int]         = mapped_column(ForeignKey("users.id"), nullable=False)
     status:         Mapped[TicketStatus]= mapped_column(SAEnum(TicketStatus), default=TicketStatus.PENDING_PAYMENT)

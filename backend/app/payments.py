@@ -1,4 +1,4 @@
-"""Ticket generation helper used by the manual payment confirmation flow."""
+"""Ticket generation helper."""
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from .models import LotteryPost, PaymentTransaction, Ticket, TicketStatus, User
@@ -11,17 +11,19 @@ def generate_tickets(
     txn: PaymentTransaction,
     quantity: int,
 ) -> list[Ticket]:
-    """Generate unique ticket numbers.
+    """Generate confirmed tickets. Assigns chosen_numbers from webhook_payload if present."""
+    chosen_numbers = []
+    if txn.webhook_payload and txn.webhook_payload.get("chosen_numbers"):
+        chosen_numbers = txn.webhook_payload["chosen_numbers"]
 
-    Caller must hold a row lock on the lottery row (or rely on SQLite
-    serialisation) to prevent duplicate sequence numbers.
-    """
     tickets = []
-    for _ in range(quantity):
+    for i in range(quantity):
         seq = lottery.tickets_sold + len(tickets) + 1
         ticket_no = f"LP{lottery.id:03d}-{seq:05d}"
+        chosen = chosen_numbers[i] if i < len(chosen_numbers) else None
         t = Ticket(
             ticket_no=ticket_no,
+            chosen_number=chosen,
             lottery_id=lottery.id,
             user_id=user.id,
             status=TicketStatus.CONFIRMED,

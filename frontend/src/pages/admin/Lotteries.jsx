@@ -11,6 +11,8 @@ const STATUS_COLOR = {
   CANCELLED: "bg-red-500/10 text-red-400",
 };
 
+function tStatus(t, s) { return t(`status${s}`) || s; }
+
 export default function AdminLotteries() {
   const { t } = useLang();
   const [lotteries, setLotteries] = useState([]);
@@ -36,7 +38,7 @@ export default function AdminLotteries() {
           {filters.map((s) => (
             <button key={s} onClick={() => setFilter(s)}
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${filter === s ? "bg-green-600 text-ink-900" : "border border-ink-600 text-cream-300 hover:bg-ink-700"}`}>
-              {s || t("all")}
+              {s ? tStatus(t, s) : t("all")}
             </button>
           ))}
           <Link to="/admin/lotteries/new" className="btn-primary px-3 py-1.5 text-xs">{t("newLottery")}</Link>
@@ -61,7 +63,7 @@ export default function AdminLotteries() {
             {lotteries.map((l) => (
               <tr key={l.id} className="bg-ink-700/40">
                 <td className="px-4 py-3 text-cream-100">{l.title}</td>
-                <td className="px-4 py-3"><span className={`pill ${STATUS_COLOR[l.status]}`}>{l.status}</span></td>
+                <td className="px-4 py-3"><span className={`pill ${STATUS_COLOR[l.status]}`}>{tStatus(t, l.status)}</span></td>
                 <td className="px-4 py-3 font-mono text-cream-200">{l.tickets_sold}{l.total_tickets ? `/${l.total_tickets}` : ""}</td>
                 <td className="px-4 py-3 font-mono text-green-300">ETB {l.ticket_price}</td>
                 <td className="px-4 py-3 text-cream-300">{new Date(l.draw_date).toLocaleDateString()}</td>

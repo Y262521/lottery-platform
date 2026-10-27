@@ -182,6 +182,32 @@ const translations = {
     drawAt: "Draw Date",
     status: "Status",
 
+    // Lottery & ticket statuses (shown in UI)
+    statusDRAFT:           "Draft",
+    statusACTIVE:          "Active",
+    statusCLOSED:          "Closed",
+    statusDRAWN:           "Drawn",
+    statusCANCELLED:       "Cancelled",
+    statusPENDING:         "Pending",
+    statusPENDING_PAYMENT: "In Progress",
+    statusCONFIRMED:       "Confirmed",
+    statusWON:             "Won 🏆",
+    statusLOST:            "Lost",
+    statusSUCCESS:         "Confirmed",
+    statusFAILED:          "Rejected",
+    statusREFUNDED:        "Refunded",
+
+    // My tickets grouped view
+    paymentInProgress:   "Payment In Progress",
+    paymentConfirmedLbl: "Payment Confirmed",
+    paymentRejected:     "Payment Rejected",
+    ticketNo:            "Ticket No.",
+    chosenNo:            "Your number",
+    noTicketsForLottery: "No tickets for this lottery.",
+    paymentRef:          "Ref",
+    submittedOn:         "Submitted",
+    lottery:             "Lottery",
+
     // Payment proof
     makePayment: "Make Payment",
     transferTo: "Transfer ETB {amount} to the account below",
@@ -407,6 +433,32 @@ const translations = {
     continueBtn: "ቀጥል → ክፍያ ({qty} ቲኬት{s})",
     backBtn: "← ተመለስ",
     afterTransfer: "ካስተላለፉ በኋላ ማጣቀሻ ቁጥሩን ያስገቡ እና ስክሪንሾት ይስቀሉ። አስተዳዳሪ ያረጋግጣል።",
+
+    // Lottery & ticket statuses
+    statusDRAFT:           "ረቂቅ",
+    statusACTIVE:          "ንቁ",
+    statusCLOSED:          "ተዘግቷል",
+    statusDRAWN:           "ዕጣ ተወስዷል",
+    statusCANCELLED:       "ተሰርዟል",
+    statusPENDING:         "በሂደት ላይ",
+    statusPENDING_PAYMENT: "በሂደት ላይ",
+    statusCONFIRMED:       "ተረጋግጧል",
+    statusWON:             "አሸንፈዋል 🏆",
+    statusLOST:            "አልተሳካም",
+    statusSUCCESS:         "ተረጋግጧል",
+    statusFAILED:          "ተቀባይነት አላገኘም",
+    statusREFUNDED:        "ተመልሷል",
+
+    // My tickets grouped view
+    paymentInProgress:   "ክፍያ በሂደት ላይ",
+    paymentConfirmedLbl: "ክፍያ ተረጋግጧል",
+    paymentRejected:     "ክፍያ ተቀባይነት አላገኘም",
+    ticketNo:            "የቲኬት ቁጥር",
+    chosenNo:            "የመረጡት ቁጥር",
+    noTicketsForLottery: "ለዚህ ሎተሪ ቲኬት የለም።",
+    paymentRef:          "ማጣቀሻ",
+    submittedOn:         "የቀረበ ቀን",
+    lottery:             "ሎተሪ",
   },
 };
 

@@ -142,5 +142,16 @@ def run_migrations() -> None:
             _exec(db, "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS ip_address VARCHAR(45)",
                   "audit_logs.ip_address")
 
+        # v2.1 additions
+        if _table_exists(db, "lottery_posts"):
+            _exec(db, "ALTER TABLE lottery_posts ADD COLUMN IF NOT EXISTS ticket_number_min INTEGER DEFAULT 1",
+                  "lottery_posts.ticket_number_min")
+            _exec(db, "ALTER TABLE lottery_posts ADD COLUMN IF NOT EXISTS ticket_number_max INTEGER",
+                  "lottery_posts.ticket_number_max")
+
+        if _table_exists(db, "tickets"):
+            _exec(db, "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS chosen_number INTEGER",
+                  "tickets.chosen_number")
+
     finally:
         db.close()

@@ -142,7 +142,18 @@ def cancel_lottery(
     return _to_out(lottery)
 
 
-@router.post("/{lottery_id}/cover-image", response_model=LotteryOut)
+@router.get("/{lottery_id}/taken-numbers")
+def taken_numbers(lottery_id: int, db: Session = Depends(get_db)):
+    """Return list of ticket numbers already taken (PENDING or CONFIRMED)."""
+    from ..models import Ticket, TicketStatus
+    rows = db.scalars(
+        select(Ticket.chosen_number).where(
+            Ticket.lottery_id == lottery_id,
+            Ticket.chosen_number.is_not(None),
+            Ticket.status.in_([TicketStatus.PENDING_PAYMENT, TicketStatus.CONFIRMED, TicketStatus.WON, TicketStatus.LOST])
+        )
+    ).all()
+    return {"taken": list(rows)}
 async def upload_cover(
     lottery_id: int,
     file: UploadFile = File(...),
