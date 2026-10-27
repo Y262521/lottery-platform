@@ -4,7 +4,8 @@ import { useLang } from "../context/LangContext";
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
-  const { lang, toggle, t } = useLang();  const navigate = useNavigate();
+  const { lang, toggle, t } = useLang();
+  const navigate = useNavigate();
 
   const link = ({ isActive }) =>
     `rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -15,11 +16,22 @@ export default function Navbar() {
     <header className="sticky top-0 z-30 border-b border-ink-600 bg-ink-900/80 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <NavLink to="/" className="flex items-center gap-2.5">
-          <img 
-          src={Logo.png}
-          alt="Brand Logo" 
-          className="h-9 w-9 shrink-0 rounded-xl object-contain" 
-        />
+          <img
+            src="/Logo.png"
+            alt="Logo"
+            className="h-9 w-9 shrink-0 rounded-xl object-contain"
+            onError={(e) => {
+              // Fallback to text badge if image fails to load
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
+            }}
+          />
+          <span
+            style={{ display: "none" }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 font-mono font-bold text-ink-900 shadow-glow text-xs"
+          >
+            {lang === "am" ? "ዮ" : "YR"}
+          </span>
           <span className="flex flex-col leading-none min-w-0">
             <span className="text-sm font-bold tracking-tight text-cream-50 truncate">{t("brandName")}</span>
             <span className="text-[10px] uppercase tracking-widest text-cream-400">{t("brandSub")}</span>
@@ -33,8 +45,10 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={toggle}
-            className="rounded-lg border border-ink-600 px-2.5 py-1.5 text-xs font-semibold text-cream-300 hover:bg-ink-700 transition">
+          <button
+            onClick={toggle}
+            className="rounded-lg border border-ink-600 px-2.5 py-1.5 text-xs font-semibold text-cream-300 hover:bg-ink-700 transition"
+          >
             {lang === "en" ? "አማ" : "EN"}
           </button>
           {user ? (
@@ -43,7 +57,10 @@ export default function Navbar() {
                 <span className="h-2 w-2 rounded-full bg-green-500" />
                 {user.email}
               </span>
-              <button onClick={() => { logout(); navigate("/login"); }} className="btn-ghost px-3 py-1.5 text-xs">
+              <button
+                onClick={() => { logout(); navigate("/login"); }}
+                className="btn-ghost px-3 py-1.5 text-xs"
+              >
                 {t("signOut")}
               </button>
             </>
