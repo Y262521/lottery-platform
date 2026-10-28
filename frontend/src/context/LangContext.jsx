@@ -46,6 +46,25 @@ const translations = {
     alreadyHave: "Already have an account?",
     registrationFailed: "Registration failed",
 
+    // Profile
+    profile: "Profile",
+    editProfile: "Personal Profile",
+    personalInfo: "Personal Information",
+    changePassword: "Change Password",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmNewPassword: "Confirm New Password",
+    passwordsDoNotMatch: "Passwords do not match",
+    profileUpdated: "Profile updated successfully ✓",
+    saveChanges: "Save Changes",
+    saving: "Saving…",
+    resetPassword: "Reset Password",
+    enterNewPassword: "Enter new password:",
+    passwordResetSuccess: "Password reset successfully ✓",
+    resetDraw: "Reset to Active",
+    drawResetSuccess: "Draw reset to active successfully",
+    cancel: "Cancel",
+
     // Draw detail
     prize: "Prize",
     drawDate: "Draw Date",
@@ -278,6 +297,25 @@ const translations = {
     creating: "በመፍጠር ላይ…",
     alreadyHave: "መለያ አለዎት?",
     registrationFailed: "ምዝገባ አልተሳካም",
+
+    // Profile
+    profile: "መገለጫ",
+    editProfile: "የግል መገለጫ",
+    personalInfo: "የግል መረጃ",
+    changePassword: "የይለፍ ቃል ቀይር",
+    currentPassword: "የአሁኑ የይለፍ ቃል",
+    newPassword: "አዲስ የይለፍ ቃል",
+    confirmNewPassword: "አዲሱን የይለፍ ቃል አረጋግጥ",
+    passwordsDoNotMatch: "የይለፍ ቃሎች አይዛመዱም",
+    profileUpdated: "መገለጫዎ በተሳካ ሁኔታ ተዘምኗል ✓",
+    saveChanges: "ለውጦችን አስቀምጥ",
+    saving: "በማስቀመጥ ላይ…",
+    resetPassword: "የይለፍ ቃል ቀይር",
+    enterNewPassword: "አዲስ የይለፍ ቃል ያስገቡ:",
+    passwordResetSuccess: "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል ✓",
+    resetDraw: "ወደ ንቁ መልስ",
+    drawResetSuccess: "የእጣው ሁኔታ በተሳካ ሁኔታ ወደ ንቁ ተመልሷል",
+    cancel: "ተወው",
 
     // Draw detail
     prize: "ሽልማት",

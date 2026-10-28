@@ -3,9 +3,12 @@ import { apiClient } from "../../api/client";
 import { useLang } from "../../context/LangContext";
 
 export default function AdminUsers() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [users, setUsers] = useState([]);
   const [msg, setMsg] = useState("");
+  const [resetModalUser, setResetModalUser] = useState(null);
+  const [newPw, setNewPw] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
 
   const load = () => apiClient.listUsers().then(setUsers).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -13,6 +16,22 @@ export default function AdminUsers() {
   async function update(id, body) {
     try { await apiClient.updateUser(id, body); setMsg(t("updated")); load(); }
     catch (e) { setMsg(e.message); }
+  }
+
+  async function handleResetPassword(e) {
+    e.preventDefault();
+    if (!newPw || newPw.length < 6) return;
+    setResetBusy(true);
+    try {
+      await apiClient.resetUserPassword(resetModalUser.id, newPw);
+      setMsg(`${t("passwordResetSuccess")} (${resetModalUser.full_name})`);
+      setResetModalUser(null);
+      setNewPw("");
+    } catch (err) {
+      setMsg(err.message);
+    } finally {
+      setResetBusy(false);
+    }
   }
 
   return (
@@ -55,16 +74,75 @@ export default function AdminUsers() {
                 </td>
                 <td className="px-4 py-3 text-xs text-cream-400">{new Date(u.created_at).toLocaleDateString()}</td>
                 <td className="px-4 py-3 text-right">
-                  <button className="btn-ghost px-2 py-1 text-xs"
-                    onClick={() => update(u.id, { is_active: !u.is_active })}>
-                    {u.is_active ? t("disable") : t("enable")}
-                  </button>
+                  <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                    <button
+                      className="btn-ghost px-2 py-1 text-xs text-yellow-300 hover:text-yellow-200"
+                      onClick={() => { setResetModalUser(u); setNewPw(""); }}
+                      title={t("resetPassword")}
+                    >
+                      🔑 {t("resetPassword")}
+                    </button>
+                    <button
+                      className="btn-ghost px-2 py-1 text-xs"
+                      onClick={() => update(u.id, { is_active: !u.is_active })}
+                    >
+                      {u.is_active ? t("disable") : t("enable")}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Reset Password Modal */}
+      {resetModalUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="card w-full max-w-md p-6 border-yellow-500/30">
+            <h3 className="text-lg font-bold text-cream-50 mb-2">
+              🔑 {t("resetPassword")}
+            </h3>
+            <p className="text-sm text-cream-300 mb-4">
+              {t("enterNewPassword")}{" "}
+              <strong className="text-green-300">{resetModalUser.full_name}</strong> ({resetModalUser.phone || resetModalUser.email})
+            </p>
+
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  required
+                  minLength={6}
+                  placeholder={lang === "am" ? "አዲስ የይለፍ ቃል (ቢያንስ 6 ፊደላት)" : "New password (min 6 chars)"}
+                  className="input font-mono"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  className="btn-ghost text-xs"
+                  onClick={() => setResetModalUser(null)}
+                  disabled={resetBusy}
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-xs"
+                  disabled={resetBusy || newPw.length < 6}
+                >
+                  {resetBusy ? t("saving") : t("resetPassword")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

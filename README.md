@@ -98,8 +98,8 @@ After both services are live, register these webhook URLs:
 ## Admin login
 
 ```
-Email:    admin@lottery-platform.com
-Password: (whatever you set as ADMIN_PASSWORD on Render)
+Email:    yonasteklu284@gmail.com
+Password: (whatever you set as ADMIN_PASSWORD on Render, defaults to yona@1230)
 ```
 
 ## Database schema

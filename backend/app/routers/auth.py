@@ -6,7 +6,7 @@ from ..audit import log
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import Role, User
-from ..schemas import LoginRequest, RefreshRequest, TokenPair, UserCreate, UserOut
+from ..schemas import LoginRequest, ProfileUpdate, RefreshRequest, TokenPair, UserCreate, UserOut
 from ..security import create_access_token, create_refresh_token, decode_token, hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -104,4 +104,41 @@ def refresh(payload: RefreshRequest):
 
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)):
+    return user
+
+
+@router.patch("/profile", response_model=UserOut)
+def update_profile(
+    payload: ProfileUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    if payload.full_name is not None and payload.full_name.strip():
+        user.full_name = payload.full_name.strip()
+
+    if payload.phone is not None and payload.phone.strip():
+        new_phone = payload.phone.strip()
+        existing = db.scalar(select(User).where(User.phone == new_phone, User.id != user.id))
+        if existing:
+            raise HTTPException(409, "Phone number is already registered to another account")
+        user.phone = new_phone
+
+    if payload.email is not None:
+        new_email = str(payload.email).strip().lower() if payload.email else None
+        if new_email:
+            existing = db.scalar(select(User).where(func.lower(User.email) == new_email, User.id != user.id))
+            if existing:
+                raise HTTPException(409, "Email is already registered to another account")
+            user.email = new_email
+        else:
+            user.email = None
+
+    if payload.new_password:
+        if not payload.current_password or not verify_password(payload.current_password, user.hashed_password):
+            raise HTTPException(400, "Current password is incorrect")
+        user.hashed_password = hash_password(payload.new_password)
+
+    log(db, "user.update_profile", actor_id=user.id, entity="user", entity_id=user.id)
+    db.commit()
+    db.refresh(user)
     return user

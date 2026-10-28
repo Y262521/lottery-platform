@@ -41,6 +41,7 @@ export default function Navbar() {
         <div className="hidden items-center gap-1 md:flex">
           <NavLink to="/" end className={link}>{t("home")}</NavLink>
           {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
+          {user && <NavLink to="/profile" className={link}>{t("profile")}</NavLink>}
           {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
         </div>
 
@@ -53,10 +54,14 @@ export default function Navbar() {
           </button>
           {user ? (
             <>
-              <span className="hidden text-xs text-cream-300 sm:flex items-center gap-1.5">
+              <NavLink
+                to="/profile"
+                className="hidden text-xs text-cream-300 hover:text-green-300 sm:flex items-center gap-1.5 transition"
+                title={t("profile")}
+              >
                 <span className="h-2 w-2 rounded-full bg-green-500" />
                 {user.email || user.phone || user.full_name}
-              </span>
+              </NavLink>
               <button
                 onClick={() => { logout(); navigate("/login"); }}
                 className="btn-ghost px-3 py-1.5 text-xs"
@@ -77,6 +82,7 @@ export default function Navbar() {
       <div className="flex gap-1 overflow-x-auto border-t border-ink-700 px-3 py-2 md:hidden">
         <NavLink to="/" end className={link}>{t("home")}</NavLink>
         {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
+        {user && <NavLink to="/profile" className={link}>{t("profile")}</NavLink>}
         {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
       </div>
     </header>

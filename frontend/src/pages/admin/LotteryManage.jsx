@@ -88,6 +88,18 @@ export default function AdminLotteryManage() {
           {lottery.status === "ACTIVE" && (
             <button className="btn-ghost" onClick={() => act(() => apiClient.closeLottery(id), t("closeSales"))}>{t("closeSales")}</button>
           )}
+          {(lottery.status === "CLOSED" || lottery.status === "CANCELLED") && (
+            <button
+              className="btn-ghost text-yellow-300 border-yellow-500/40 hover:bg-yellow-500/10"
+              onClick={() => {
+                if (confirm(`${t("resetDraw")}?`)) {
+                  act(() => apiClient.resetLottery(id), t("resetDraw"));
+                }
+              }}
+            >
+              🔄 {t("resetDraw")}
+            </button>
+          )}
           {["DRAFT","ACTIVE","CLOSED"].includes(lottery.status) && (
             <button className="btn-danger" onClick={() => { if(confirm(t("cancelLottery") + "?")) act(() => apiClient.cancelLottery(id), t("cancel")); }}>{t("cancelLottery")}</button>
           )}

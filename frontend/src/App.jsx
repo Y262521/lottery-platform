@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import LotteryDetail from "./pages/LotteryDetail";
 import PaymentCallback from "./pages/PaymentCallback";
 import DrawResults from "./pages/DrawResults";
+import Profile from "./pages/Profile";
 import MyTickets from "./pages/MyTickets";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminLotteries from "./pages/admin/Lotteries";
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/lottery" element={<Navigate to="/" replace />} />
           <Route path="/lottery/" element={<Navigate to="/" replace />} />
           <Route path="/payment/callback" element={<PaymentCallback />} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/my-tickets" element={<ProtectedRoute><MyTickets /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/lotteries" element={<AdminRoute><AdminLotteries /></AdminRoute>} />

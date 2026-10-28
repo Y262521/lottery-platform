@@ -7,7 +7,8 @@ from ..database import get_db
 from ..deps import require_roles
 from ..models import (AuditLog, LotteryPost, LotteryStatus, PaymentStatus,
                       PaymentTransaction, Role, Ticket, TicketStatus, User)
-from ..schemas import AdminUserUpdate, AuditOut, UserOut
+from ..schemas import AdminResetPassword, AdminUserUpdate, AuditOut, UserOut
+from ..security import hash_password
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -60,6 +61,22 @@ def update_user(user_id: int, payload: AdminUserUpdate, db: Session = Depends(ge
     log(db, "admin.update_user", actor_id=admin.id, entity="user", entity_id=user_id)
     db.commit()
     return user
+
+
+@router.post("/users/{user_id}/reset-password")
+def reset_user_password(
+    user_id: int,
+    payload: AdminResetPassword,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_roles(Role.ADMIN)),
+):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+    user.hashed_password = hash_password(payload.new_password)
+    log(db, "admin.reset_password", actor_id=admin.id, entity="user", entity_id=user_id)
+    db.commit()
+    return {"message": "Password reset successfully", "user_id": user_id}
 
 
 @router.get("/transactions")

@@ -40,8 +40,8 @@ class Settings(BaseSettings):
 
     # App
     FRONTEND_URL: str = "http://localhost:5173"
-    ADMIN_EMAIL: str = "admin@lottery-platform.com"
-    ADMIN_PASSWORD: str = "admin12345"
+    ADMIN_EMAIL: str = "yonasteklu284@gmail.com"
+    ADMIN_PASSWORD: str = "yona@1230"
 
     # ── Manual payment account details (shown to users on checkout) ───────────
     # Set these in your Render environment variables.

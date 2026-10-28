@@ -142,6 +142,20 @@ def cancel_lottery(lottery_id: int, db: Session = Depends(get_db),
     return _to_out(lottery)
 
 
+@router.post("/{lottery_id}/reset", response_model=LotteryOut)
+def reset_lottery(lottery_id: int, db: Session = Depends(get_db),
+                  admin: User = Depends(require_roles(Role.ADMIN))):
+    lottery = db.get(LotteryPost, lottery_id)
+    if not lottery:
+        raise HTTPException(404, "Lottery not found")
+    if lottery.status == LotteryStatus.DRAWN:
+        raise HTTPException(409, "Cannot reset a drawn lottery")
+    lottery.status = LotteryStatus.ACTIVE
+    log(db, "lottery.reset", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id)
+    db.commit()
+    return _to_out(lottery)
+
+
 @router.get("/{lottery_id}/taken-numbers")
 def taken_numbers(lottery_id: int, db: Session = Depends(get_db)):
     """Return taken numbers AND the effective selectable range for this lottery."""

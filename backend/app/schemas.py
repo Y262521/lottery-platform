@@ -34,6 +34,14 @@ class LoginRequest(BaseModel):
         return (self.identifier or self.email or "").strip()
 
 
+class ProfileUpdate(BaseModel):
+    full_name: str | None = Field(default=None, min_length=1, max_length=255)
+    phone: str | None = Field(default=None, min_length=8, max_length=30)
+    email: EmailStr | None = None
+    current_password: str | None = None
+    new_password: str | None = Field(default=None, min_length=8, max_length=128)
+
+
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
@@ -157,6 +165,10 @@ class DrawResultOut(BaseModel):
 class AdminUserUpdate(BaseModel):
     role: Role | None = None
     is_active: bool | None = None
+
+
+class AdminResetPassword(BaseModel):
+    new_password: str = Field(min_length=6, max_length=128)
 
 
 class AuditOut(BaseModel):

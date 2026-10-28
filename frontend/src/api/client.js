@@ -69,6 +69,7 @@ export const apiClient = {
   register: (b) => api("/api/auth/register", { method: "POST", body: b, auth: false }),
   login: (b) => api("/api/auth/login", { method: "POST", body: b, auth: false }),
   me: () => api("/api/auth/me"),
+  updateProfile: (b) => api("/api/auth/profile", { method: "PATCH", body: b }),
 
   // lotteries
   listLotteries: (status) => api(`/api/lotteries${status ? `?status=${status}` : ""}`),
@@ -79,6 +80,7 @@ export const apiClient = {
   publishLottery: (id) => api(`/api/lotteries/${id}/publish`, { method: "POST" }),
   closeLottery: (id) => api(`/api/lotteries/${id}/close`, { method: "POST" }),
   cancelLottery: (id) => api(`/api/lotteries/${id}/cancel`, { method: "POST" }),
+  resetLottery: (id) => api(`/api/lotteries/${id}/reset`, { method: "POST" }),
   deleteLottery: (id) => api(`/api/lotteries/${id}`, { method: "DELETE" }),
   uploadCover: (id, formData) => api(`/api/lotteries/${id}/cover-image`, { method: "POST", body: formData, form: true }),
   uploadPrizeImages: (id, formData) => api(`/api/lotteries/${id}/prize-images`, { method: "POST", body: formData, form: true }),
@@ -107,6 +109,7 @@ export const apiClient = {
   metrics: () => api("/api/admin/metrics"),
   listUsers: () => api("/api/admin/users"),
   updateUser: (id, b) => api(`/api/admin/users/${id}`, { method: "PATCH", body: b }),
+  resetUserPassword: (id, new_password) => api(`/api/admin/users/${id}/reset-password`, { method: "POST", body: { new_password } }),
   allTransactions: () => api("/api/admin/transactions"),
   auditLogs: () => api("/api/admin/audit"),
 };

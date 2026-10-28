@@ -6,7 +6,7 @@ from .database import SessionLocal
 from .models import Role, User
 from .security import hash_password
 
-_OLD_EMAILS = ["admin@lottery.local"]
+_OLD_EMAILS = ["admin@lottery.local", "admin@lottery-platform.com"]
 
 
 def seed_admin() -> None:
