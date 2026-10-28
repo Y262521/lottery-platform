@@ -97,6 +97,7 @@ def update_lottery(lottery_id: int, payload: LotteryUpdate,
         setattr(lottery, k, v)
     log(db, "lottery.update", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id)
     db.commit()
+    db.refresh(lottery)
     return _to_out(lottery)
 
 

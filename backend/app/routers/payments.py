@@ -147,15 +147,7 @@ async def submit_payment(
     if lottery.total_tickets and (lottery.tickets_sold + quantity) > lottery.total_tickets:
         raise HTTPException(400, "Not enough tickets remaining")
 
-    user_confirmed = db.scalar(
-        select(func.count()).select_from(Ticket).where(
-            Ticket.lottery_id == lottery_id,
-            Ticket.user_id == user.id,
-            Ticket.status == TicketStatus.CONFIRMED,
-        )
-    ) or 0
-    if user_confirmed + quantity > lottery.max_per_user:
-        raise HTTPException(400, f"Maximum {lottery.max_per_user} tickets per user")
+    # Note: max tickets per user check removed — users can purchase all tickets up to total availability
 
     # Parse and validate chosen numbers
     chosen_list = []

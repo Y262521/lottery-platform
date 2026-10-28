@@ -17,6 +17,85 @@ export default function AdminLotteryManage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
+  // Edit Draw Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    prize_description: "",
+    ticket_price: 50,
+    total_tickets: "",
+    draw_date: "",
+    sales_open_at: "",
+    sales_close_at: "",
+    ticket_number_min: "",
+    ticket_number_max: "",
+  });
+  const [editError, setEditError] = useState("");
+
+  function toLocalDatetimeString(dateInput) {
+    if (!dateInput) return "";
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const MM = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+  }
+
+  function toISO(local) {
+    return local ? new Date(local).toISOString() : undefined;
+  }
+
+  function openEditModal() {
+    if (!lottery) return;
+    setEditForm({
+      title: lottery.title || "",
+      description: lottery.description || "",
+      prize_description: lottery.prize_description || "",
+      ticket_price: lottery.ticket_price || 50,
+      total_tickets: lottery.total_tickets ?? "",
+      draw_date: toLocalDatetimeString(lottery.draw_date),
+      sales_open_at: toLocalDatetimeString(lottery.sales_open_at),
+      sales_close_at: toLocalDatetimeString(lottery.sales_close_at),
+      ticket_number_min: lottery.ticket_number_min ?? "",
+      ticket_number_max: lottery.ticket_number_max ?? "",
+    });
+    setEditError("");
+    setShowEditModal(true);
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault();
+    setEditError("");
+    setBusy(true);
+    try {
+      const payload = {
+        title: editForm.title.trim(),
+        description: editForm.description.trim() || null,
+        prize_description: editForm.prize_description.trim(),
+        ticket_price: Number(editForm.ticket_price),
+        total_tickets: editForm.total_tickets ? Number(editForm.total_tickets) : null,
+        draw_date: toISO(editForm.draw_date),
+        sales_open_at: editForm.sales_open_at ? toISO(editForm.sales_open_at) : null,
+        sales_close_at: editForm.sales_close_at ? toISO(editForm.sales_close_at) : null,
+        ticket_number_min: editForm.ticket_number_min ? Number(editForm.ticket_number_min) : null,
+        ticket_number_max: editForm.ticket_number_max ? Number(editForm.ticket_number_max) : null,
+      };
+      await apiClient.updateLottery(id, payload);
+      setMsg(t("drawUpdated"));
+      setShowEditModal(false);
+      await load();
+    } catch (err) {
+      setEditError(err.message || "Failed to update draw");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const load = async () => {
     setLottery(await apiClient.getLottery(id));
     apiClient.getResults(id).then(setResult).catch(() => {});
@@ -118,6 +197,14 @@ export default function AdminLotteryManage() {
       <div className="card p-5 mb-6">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-3">{t("actions")}</h2>
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-ghost flex items-center gap-1.5 text-cream-100 hover:text-green-300 border border-ink-600 px-3 py-1.5 text-xs font-semibold"
+            onClick={openEditModal}
+          >
+            <span>✏️</span>
+            <span>{t("editDraw")}</span>
+          </button>
           {lottery.status === "DRAFT" && (
             <button className="btn-primary" onClick={() => act(() => apiClient.publishLottery(id), t("publish"))}>{t("openSales")}</button>
           )}
@@ -362,6 +449,146 @@ export default function AdminLotteryManage() {
           )}
         </div>
       </div>
+      {/* ── Edit Draw Modal ── */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/80 p-4 backdrop-blur-sm overflow-y-auto">
+          <div className="card max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto my-8 border border-green-500/40 shadow-2xl">
+            <div className="flex items-center justify-between pb-4 border-b border-ink-600 mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-cream-50 flex items-center gap-2">
+                  <span>✏️</span>
+                  <span>{t("editDraw")}</span>
+                </h2>
+                <p className="text-xs text-cream-400 mt-0.5">{t("editDrawSub")}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="text-cream-400 hover:text-cream-100 text-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/40 p-3 text-sm text-red-300">
+                {editError}
+              </div>
+            )}
+
+            <form onSubmit={saveEdit} className="space-y-4">
+              <div>
+                <label className="label">{t("titleField")}</label>
+                <input
+                  className="input"
+                  required
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                />
+              </div>
+
+              {/* Draw Date — prominent & editable */}
+              <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-4">
+                <label className="label font-bold text-green-300">📅 {t("drawDateField")}</label>
+                <input
+                  type="datetime-local"
+                  required
+                  className="input border-green-500/60 bg-ink-900 font-semibold text-green-300 text-base py-2.5"
+                  value={editForm.draw_date}
+                  onChange={(e) => setEditForm({ ...editForm, draw_date: e.target.value })}
+                />
+                <p className="mt-1.5 text-xs text-cream-300">
+                  {lang === "am"
+                    ? "የዕጣ ቀን እና ሰዓቱን በማንኛውም ጊዜ ማዘመን ይችላሉ።"
+                    : "You can update or extend the scheduled draw date and time at any time."}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">{t("ticketPrice")}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    className="input"
+                    value={editForm.ticket_price}
+                    onChange={(e) => setEditForm({ ...editForm, ticket_price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="label">{t("totalTickets")}</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="input"
+                    placeholder={t("unlimited")}
+                    value={editForm.total_tickets}
+                    onChange={(e) => setEditForm({ ...editForm, total_tickets: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="label">{t("prizeDescription")}</label>
+                <textarea
+                  className="input min-h-[70px]"
+                  required
+                  value={editForm.prize_description}
+                  onChange={(e) => setEditForm({ ...editForm, prize_description: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="label">{t("description")}</label>
+                <textarea
+                  className="input min-h-[70px]"
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-ink-700">
+                <div>
+                  <label className="label">{t("salesOpenAt")}</label>
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={editForm.sales_open_at}
+                    onChange={(e) => setEditForm({ ...editForm, sales_open_at: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="label">{t("salesCloseAt")}</label>
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={editForm.sales_close_at}
+                    onChange={(e) => setEditForm({ ...editForm, sales_close_at: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-ink-700">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="btn-ghost px-4 py-2 text-xs"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="btn-primary px-5 py-2 text-xs font-semibold"
+                >
+                  {busy ? t("saving") : t("saveChanges")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

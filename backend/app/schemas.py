@@ -59,7 +59,7 @@ class LotteryCreate(BaseModel):
     prize_description: str = Field(min_length=1)
     ticket_price: float = Field(gt=0)
     total_tickets: int | None = Field(default=None, gt=0)
-    max_per_user: int = Field(default=10, ge=1)
+    max_per_user: int = Field(default=1000000000, ge=1)
     draw_date: datetime
     sales_open_at: datetime | None = None
     sales_close_at: datetime | None = None
@@ -78,6 +78,8 @@ class LotteryUpdate(BaseModel):
     draw_date: datetime | None = None
     sales_open_at: datetime | None = None
     sales_close_at: datetime | None = None
+    ticket_number_min: int | None = None
+    ticket_number_max: int | None = None
 
 
 class LotteryOut(BaseModel):

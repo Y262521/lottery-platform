@@ -97,6 +97,32 @@ export default function LotteryDetail() {
     if (!reference.trim()) { setError(lang === "am" ? "ማጣቀሻ ቁጥር ያስፈልጋል" : "Payment reference is required"); return; }
     if (!senderName.trim()) { setError(lang === "am" ? "ስም ያስፈልጋል" : "Sender name is required"); return; }
     if (!phone.trim()) { setError(lang === "am" ? "ስልክ ቁጥር ያስፈልጋል" : "Phone number is required"); return; }
+
+    // Validate provider has an account configured
+    if (paymentType === "BANK_TRANSFER") {
+      const configuredBank = acct?.by_provider?.[selectedBankId];
+      const hasBankAcct = Boolean(
+        configuredBank?.account_number ||
+        (selectedBankId === "CBE" && acct?.cbe_number) ||
+        (selectedBankId === "AWASH" && acct?.awash_number)
+      );
+      if (!hasBankAcct) {
+        setError(t("noBankAccountDesc") || t("noBankAccount"));
+        return;
+      }
+    } else if (paymentType === "DIGITAL_WALLET") {
+      const configuredWallet = acct?.by_provider?.[selectedWallet];
+      const hasWalletAcct = Boolean(
+        configuredWallet?.account_number ||
+        (selectedWallet === "TELEBIRR" && acct?.telebirr_number) ||
+        (selectedWallet === "MPESA" && acct?.mpesa_number)
+      );
+      if (!hasWalletAcct) {
+        setError(t("noWalletAccountDesc") || t("noWalletAccount"));
+        return;
+      }
+    }
+
     setError(""); setBusy(true);
 
     const currentBank = ETHIOPIAN_BANKS.find((b) => b.id === selectedBankId);
@@ -230,13 +256,41 @@ export default function LotteryDetail() {
                 <>
                   <div className="mb-5">
                     <label className="label">{t("quantity")}</label>
-                    <div className="flex items-center gap-4">
-                      <button className="btn-ghost h-10 w-10 text-xl rounded-lg"
-                        onClick={() => { setQuantity(q => Math.max(1, q - 1)); setSelectedNums([]); }}>−</button>
-                      <span className="font-mono text-2xl text-cream-50 w-8 text-center">{quantity}</span>
-                      <button className="btn-ghost h-10 w-10 text-xl rounded-lg"
-                        onClick={() => { setQuantity(q => Math.min(lottery.max_per_user, q + 1)); setSelectedNums([]); }}>+</button>
-                      <span className="text-xs text-cream-400">max {lottery.max_per_user}</span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        className="btn-ghost h-10 w-10 text-xl rounded-lg font-bold"
+                        disabled={quantity <= 1}
+                        onClick={() => { setQuantity(q => Math.max(1, q - 1)); setSelectedNums([]); }}
+                      >−</button>
+                      <input
+                        type="number"
+                        min="1"
+                        max={lottery.total_tickets ? Math.max(1, lottery.total_tickets - lottery.tickets_sold) : undefined}
+                        value={quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          const maxAllowed = lottery.total_tickets ? Math.max(1, lottery.total_tickets - lottery.tickets_sold) : 999999;
+                          setQuantity(Math.max(1, Math.min(maxAllowed, val)));
+                          setSelectedNums([]);
+                        }}
+                        className="input w-24 text-center font-mono text-xl py-1.5"
+                      />
+                      <button
+                        type="button"
+                        className="btn-ghost h-10 w-10 text-xl rounded-lg font-bold"
+                        disabled={lottery.total_tickets && quantity >= (lottery.total_tickets - lottery.tickets_sold)}
+                        onClick={() => {
+                          const maxAllowed = lottery.total_tickets ? Math.max(1, lottery.total_tickets - lottery.tickets_sold) : 999999;
+                          setQuantity(q => Math.min(maxAllowed, q + 1));
+                          setSelectedNums([]);
+                        }}
+                      >+</button>
+                      {lottery.total_tickets && (
+                        <span className="text-xs text-cream-400">
+                          {Math.max(0, lottery.total_tickets - lottery.tickets_sold)} {t("remaining")}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -420,12 +474,10 @@ export default function LotteryDetail() {
                     ) : (
                       <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs text-amber-200">
                         <p className="font-semibold text-amber-300 mb-1">
-                          ⚠️ {lang === "am" ? "የሂሳብ ቁጥር ገና አልተመዘገበም" : "Account not yet configured"}
+                          ⚠️ {t("noWalletAccount")}
                         </p>
                         <p>
-                          {lang === "am"
-                            ? `ለ ${title} የሂሳብ ቁጥር ገና በአስተዳዳሪው አልተጨመረም። እባክዎ ቴሌብር ወይም የኢትዮጵያ ንግድ ባንክ (CBE) ይጠቀሙ።`
-                            : `Account details for ${title} have not been added yet by the admin. Please select Telebirr or Commercial Bank of Ethiopia (CBE).`}
+                          {t("noWalletAccountDesc")}
                         </p>
                       </div>
                     )}
@@ -492,12 +544,10 @@ export default function LotteryDetail() {
                     ) : (
                       <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs text-amber-200">
                         <p className="font-semibold text-amber-300 mb-1">
-                          ⚠️ {lang === "am" ? "የሂሳብ ቁጥር ገና አልተመዘገበም" : "Account not yet configured"}
+                          ⚠️ {t("noBankAccount")}
                         </p>
                         <p>
-                          {lang === "am"
-                            ? `ለ ${bankTitle} የሂሳብ ቁጥር በአስተዳዳሪው ገና አልተጨመረም። እባክዎ የኢትዮጵያ ንግድ ባንክ (CBE) ወይም ቴሌብር ይምረጡ።`
-                            : `Account details for ${bankTitle} have not been added yet by the admin. Please select Commercial Bank of Ethiopia (CBE) or Telebirr.`}
+                          {t("noBankAccountDesc")}
                         </p>
                       </div>
                     )}

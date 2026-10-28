@@ -19,7 +19,6 @@ export default function AdminLotteryForm() {
     prize_description: "",
     ticket_price: 50,
     total_tickets: "",
-    max_per_user: 10,
     draw_date: "",
     sales_open_at: "",
     sales_close_at: "",
@@ -84,7 +83,7 @@ export default function AdminLotteryForm() {
         ...form,
         ticket_price: Number(form.ticket_price),
         total_tickets: form.total_tickets ? Number(form.total_tickets) : null,
-        max_per_user: Number(form.max_per_user),
+        max_per_user: 1000000000,
         draw_date: toISO(form.draw_date),
         sales_open_at: toISO(form.sales_open_at) || null,
         sales_close_at: toISO(form.sales_close_at) || null,
@@ -149,9 +148,6 @@ export default function AdminLotteryForm() {
           </Field>
           <Field label={t("totalTickets")}>
             <input className="input" type="number" min={1} value={form.total_tickets} onChange={set("total_tickets")} />
-          </Field>
-          <Field label={t("maxTicketsPerUser")}>
-            <input className="input" type="number" min={1} required value={form.max_per_user} onChange={set("max_per_user")} />
           </Field>
           <Field label={t("drawDateField")}>
             <input className="input" type="datetime-local" required value={form.draw_date} onChange={set("draw_date")} />
