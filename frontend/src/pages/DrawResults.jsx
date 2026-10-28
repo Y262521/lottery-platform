@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiClient } from "../api/client";
+import { apiClient, mediaUrl } from "../api/client";
 import { useLang } from "../context/LangContext";
 
 export default function DrawResults() {
@@ -60,7 +60,7 @@ export default function DrawResults() {
                       controls
                       playsInline
                       className="w-full rounded-t-xl max-h-48 sm:max-h-56 object-contain bg-black"
-                      src={vUrl}
+                      src={mediaUrl(vUrl)}
                     >
                       Your browser doesn't support video.
                     </video>
@@ -80,7 +80,7 @@ export default function DrawResults() {
               <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-4">{t("photoEvidence")}</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {result.proof_image_urls.map((url, i) => (
-                  <img key={i} src={url} alt={`Proof ${i+1}`} className="rounded-xl object-cover aspect-video" loading="lazy" />
+                  <img key={i} src={mediaUrl(url)} alt={`Proof ${i+1}`} className="rounded-xl object-cover aspect-video" loading="lazy" />
                 ))}
               </div>
             </div>

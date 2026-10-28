@@ -43,9 +43,12 @@ class TicketStatus(str, Enum):
 
 
 class Gateway(str, Enum):
-    CHAPA         = "CHAPA"
-    TELEBIRR      = "TELEBIRR"
-    BANK_TRANSFER = "BANK_TRANSFER"
+    CHAPA          = "CHAPA"
+    TELEBIRR       = "TELEBIRR"
+    MPESA          = "MPESA"
+    DIGITAL_WALLET = "DIGITAL_WALLET"
+    BANK_TRANSFER  = "BANK_TRANSFER"
+    MANUAL         = "MANUAL"
 
 
 class PaymentStatus(str, Enum):
@@ -79,7 +82,7 @@ class LotteryPost(Base):
     id:                Mapped[int]          = mapped_column(Integer, primary_key=True)
     title:             Mapped[str]          = mapped_column(String(255), nullable=False)
     description:       Mapped[str|None]     = mapped_column(Text, nullable=True)
-    cover_image_url:   Mapped[str|None]     = mapped_column(String(500), nullable=True)
+    cover_image_url:   Mapped[str|None]     = mapped_column(Text, nullable=True)
     prize_description: Mapped[str]          = mapped_column(Text, nullable=False)
     # list of Cloudinary image URLs for the prize
     prize_image_urls:  Mapped[list|None]    = mapped_column(JSON, nullable=True, default=list)

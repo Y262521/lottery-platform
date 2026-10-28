@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiClient } from "../api/client";
+import { apiClient, mediaUrl } from "../api/client";
 import { useLang } from "../context/LangContext";
 
 // Map ticket status → style
@@ -113,7 +113,7 @@ export default function MyTickets() {
               <div className="flex items-center justify-between gap-3 border-b border-ink-600 px-5 py-4">
                 <div className="flex items-center gap-3 min-w-0">
                   {lottery?.cover_image_url && (
-                    <img src={lottery.cover_image_url} alt=""
+                    <img src={mediaUrl(lottery.cover_image_url)} alt=""
                       className="h-10 w-10 rounded-lg object-cover shrink-0" />
                   )}
                   <div className="min-w-0">

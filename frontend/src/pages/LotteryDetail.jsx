@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiClient } from "../api/client";
+import { apiClient, mediaUrl } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useLang } from "../context/LangContext";
-
-const GATEWAYS = [
-  { value: "TELEBIRR",      label: "Telebirr",     icon: "📱" },
-  { value: "BANK_TRANSFER", label: "Bank Transfer", icon: "🏦" },
-];
+import { DIGITAL_WALLETS, ETHIOPIAN_BANKS } from "../constants/banks";
 
 function CopyBtn({ value }) {
   const [copied, setCopied] = useState(false);
@@ -33,7 +29,9 @@ export default function LotteryDetail() {
   const [step, setStep]                 = useState("select");
   const [quantity, setQuantity]         = useState(1);
   const [selectedNums, setSelectedNums] = useState([]);   // chosen ticket numbers
-  const [gateway, setGateway]           = useState("TELEBIRR");
+  const [paymentType, setPaymentType]   = useState("DIGITAL_WALLET"); // "DIGITAL_WALLET" | "BANK_TRANSFER"
+  const [selectedWallet, setSelectedWallet] = useState("TELEBIRR");   // "TELEBIRR" | "MPESA"
+  const [selectedBankId, setSelectedBankId] = useState("CBE");        // default CBE
   const [reference, setReference]       = useState("");
   const [senderName, setSenderName]     = useState("");
   const [phone, setPhone]               = useState("");
@@ -100,11 +98,20 @@ export default function LotteryDetail() {
     if (!senderName.trim()) { setError(lang === "am" ? "ስም ያስፈልጋል" : "Sender name is required"); return; }
     if (!phone.trim()) { setError(lang === "am" ? "ስልክ ቁጥር ያስፈልጋል" : "Phone number is required"); return; }
     setError(""); setBusy(true);
+
+    const currentBank = ETHIOPIAN_BANKS.find((b) => b.id === selectedBankId);
+    const selectedProvider = paymentType === "DIGITAL_WALLET"
+      ? (DIGITAL_WALLETS.find((w) => w.id === selectedWallet)?.name || selectedWallet)
+      : (currentBank?.name || selectedBankId);
+
+    const gatewayValue = paymentType === "DIGITAL_WALLET" ? selectedWallet : "BANK_TRANSFER";
+
     try {
       const fd = new FormData();
       fd.append("lottery_id", String(lottery.id));
       fd.append("quantity", String(quantity));
-      fd.append("gateway", gateway);
+      fd.append("gateway", gatewayValue);
+      fd.append("bank_or_wallet", selectedProvider);
       fd.append("payment_reference", reference.trim());
       fd.append("sender_name", senderName.trim());
       fd.append("phone", phone || "");
@@ -139,8 +146,12 @@ export default function LotteryDetail() {
         {/* ── Left: lottery info ── */}
         <div>
           {lottery.cover_image_url && (
-            <img src={lottery.cover_image_url} alt={lottery.title}
-              className="mb-5 w-full rounded-2xl object-cover max-h-64 sm:max-h-80" />
+            <img
+              src={mediaUrl(lottery.cover_image_url)}
+              alt={lottery.title}
+              className="mb-5 w-full rounded-2xl object-cover max-h-64 sm:max-h-80"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
           )}
           <h1 className="text-2xl sm:text-3xl font-bold text-cream-50">{lottery.title}</h1>
           {lottery.description && <p className="mt-2 text-cream-300 leading-relaxed text-sm">{lottery.description}</p>}
@@ -151,7 +162,14 @@ export default function LotteryDetail() {
             {lottery.prize_image_urls?.length > 0 && (
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {lottery.prize_image_urls.map((url, i) => (
-                  <img key={i} src={url} alt="" className="rounded-xl object-cover aspect-square" loading="lazy" />
+                  <img
+                    key={i}
+                    src={mediaUrl(url)}
+                    alt=""
+                    className="rounded-xl object-cover aspect-square"
+                    loading="lazy"
+                    onError={(e) => { e.target.style.display = "none"; }}
+                  />
                 ))}
               </div>
             )}
@@ -225,15 +243,30 @@ export default function LotteryDetail() {
                   <div className="mb-5">
                     <label className="label">{t("paymentMethod")}</label>
                     <div className="grid grid-cols-2 gap-2">
-                      {GATEWAYS.map((g) => (
-                        <button key={g.value} onClick={() => setGateway(g.value)}
-                          className={`rounded-xl border p-3 text-center text-sm font-medium transition ${
-                            gateway === g.value ? "border-green-500 bg-green-500/15 text-green-300" : "border-ink-600 text-cream-300"
-                          }`}>
-                          <div className="text-2xl mb-1">{g.icon}</div>
-                          {g.label}
-                        </button>
-                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentType("DIGITAL_WALLET")}
+                        className={`rounded-xl border p-3 text-center text-sm font-medium transition ${
+                          paymentType === "DIGITAL_WALLET"
+                            ? "border-green-500 bg-green-500/15 text-green-300"
+                            : "border-ink-600 text-cream-300 hover:border-ink-500"
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">📱</div>
+                        {t("digitalWallet")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentType("BANK_TRANSFER")}
+                        className={`rounded-xl border p-3 text-center text-sm font-medium transition ${
+                          paymentType === "BANK_TRANSFER"
+                            ? "border-green-500 bg-green-500/15 text-green-300"
+                            : "border-ink-600 text-cream-300 hover:border-ink-500"
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">🏦</div>
+                        {t("bankTransfer")}
+                      </button>
                     </div>
                   </div>
 
@@ -328,32 +361,98 @@ export default function LotteryDetail() {
                 </div>
               )}
 
-              {/* Account boxes */}
-              {gateway === "TELEBIRR" && (
-                <AccountBox icon="📱" title="Telebirr" rows={[
-                  { label: lang === "am" ? "ቁጥር" : "Number", value: acct.telebirr_number || "—" },
-                  { label: lang === "am" ? "ስም"   : "Name",   value: acct.telebirr_name   || "—" },
-                ]} />
-              )}
-              {gateway === "BANK_TRANSFER" && (
-                <>
-                  {acct.cbe_number && <AccountBox icon="🏦"
-                    title={lang === "am" ? "ንግድ ባንክ (CBE)" : "Commercial Bank of Ethiopia"}
-                    rows={[
-                      { label: lang === "am" ? "አካዉንት" : "Account", value: acct.cbe_number },
-                      { label: lang === "am" ? "ስም"    : "Name",    value: acct.cbe_name },
-                    ]} />}
-                  {acct.awash_number && <AccountBox icon="🏦"
-                    title={lang === "am" ? "አዋሽ ባንክ" : "Awash Bank"}
-                    rows={[
-                      { label: lang === "am" ? "አካዉንት" : "Account", value: acct.awash_number },
-                      { label: lang === "am" ? "ስም"    : "Name",    value: acct.awash_name },
-                    ]} />}
-                </>
+              {/* Account boxes: Digital Wallet vs Bank Transfer */}
+              {paymentType === "DIGITAL_WALLET" && (
+                <div className="space-y-3 mb-4">
+                  <div>
+                    <label className="label">{t("selectWallet")}</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {DIGITAL_WALLETS.map((w) => (
+                        <button
+                          key={w.id}
+                          type="button"
+                          onClick={() => setSelectedWallet(w.id)}
+                          className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-semibold transition ${
+                            selectedWallet === w.id
+                              ? "border-green-500 bg-green-500/15 text-green-300"
+                              : "border-ink-600 bg-ink-800 text-cream-300 hover:border-ink-500"
+                          }`}
+                        >
+                          <span className="text-lg">{w.icon}</span>
+                          <span>{lang === "am" ? w.nameAm : w.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedWallet === "TELEBIRR" ? (
+                    <AccountBox
+                      icon="📱"
+                      title={lang === "am" ? "ቴሌብር (Telebirr)" : "Telebirr"}
+                      rows={[
+                        { label: lang === "am" ? "የስልክ ቁጥር" : "Number", value: acct.telebirr_number || "0912345678" },
+                        { label: lang === "am" ? "የስም መረጃ" : "Name", value: acct.telebirr_name || "Yona Online Draw" },
+                        { label: t("ussdDial"), value: "*127#" },
+                      ]}
+                    />
+                  ) : (
+                    <AccountBox
+                      icon="🟢"
+                      title={lang === "am" ? "ኤም-ፔሳ (M-Pesa)" : "M-Pesa (Safaricom)"}
+                      rows={[
+                        { label: lang === "am" ? "የስልክ ቁጥር" : "Number", value: acct.mpesa_number || acct.telebirr_number || "07..." },
+                        { label: lang === "am" ? "የስም መረጃ" : "Name", value: acct.mpesa_name || acct.telebirr_name || "Yona Online Draw" },
+                        { label: t("ussdDial"), value: "*733#" },
+                      ]}
+                    />
+                  )}
+                </div>
               )}
 
+              {paymentType === "BANK_TRANSFER" && (() => {
+                const currentBank = ETHIOPIAN_BANKS.find((b) => b.id === selectedBankId);
+                const bankAccountNo = (currentBank?.accountKey && acct[currentBank.accountKey]) || acct.cbe_number || "1000...";
+                const bankAccountHolder = (currentBank?.nameKey && acct[currentBank.nameKey]) || acct.cbe_name || "Yona Online Draw";
+
+                return (
+                  <div className="space-y-3 mb-4">
+                    <div>
+                      <label className="label">{t("selectBank")}</label>
+                      <select
+                        className="input"
+                        value={selectedBankId}
+                        onChange={(e) => setSelectedBankId(e.target.value)}
+                      >
+                        {ETHIOPIAN_BANKS.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name} {b.nameAm ? `· ${b.nameAm}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <AccountBox
+                      icon="🏦"
+                      title={lang === "am" ? currentBank?.nameAm || currentBank?.name : currentBank?.name}
+                      rows={[
+                        { label: t("accountNumber"), value: bankAccountNo },
+                        { label: t("accountHolder"), value: bankAccountHolder },
+                      ]}
+                    />
+                  </div>
+                );
+              })()}
+
               <div className="mt-4 space-y-3">
-                <Field label={gateway === "TELEBIRR" ? t("telebirrRef") : t("bankRef")}>
+                <Field
+                  label={
+                    paymentType === "DIGITAL_WALLET"
+                      ? selectedWallet === "TELEBIRR"
+                        ? t("telebirrRef")
+                        : (lang === "am" ? "የኤም-ፔሳ ማጣቀሻ ቁጥር *" : "M-Pesa Transaction Reference *")
+                      : `${ETHIOPIAN_BANKS.find((b) => b.id === selectedBankId)?.short || "Bank"} ${t("bankRef")}`
+                  }
+                >
                   <input className="input font-mono" placeholder="e.g. TXN1234567890"
                     value={reference} onChange={e => setReference(e.target.value)} />
                 </Field>

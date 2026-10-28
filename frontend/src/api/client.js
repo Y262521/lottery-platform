@@ -2,6 +2,15 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 const ACCESS_KEY = "lp_access";
 const REFRESH_KEY = "lp_refresh";
 
+export function mediaUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("blob:")) {
+    return url;
+  }
+  const base = (API_BASE || "").replace(/\/+$/, "");
+  return base + (url.startsWith("/") ? url : "/" + url);
+}
+
 export const token = {
   get access() { return localStorage.getItem(ACCESS_KEY); },
   get refresh() { return localStorage.getItem(REFRESH_KEY); },

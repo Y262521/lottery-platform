@@ -118,7 +118,10 @@ def run_migrations() -> None:
         _add_enum_value(db, "ticketstatus", "LOST")
         _add_enum_value(db, "gateway", "CHAPA")
         _add_enum_value(db, "gateway", "TELEBIRR")
+        _add_enum_value(db, "gateway", "MPESA")
+        _add_enum_value(db, "gateway", "DIGITAL_WALLET")
         _add_enum_value(db, "gateway", "BANK_TRANSFER")
+        _add_enum_value(db, "gateway", "MANUAL")
         _add_enum_value(db, "paymentstatus", "PENDING")
         _add_enum_value(db, "paymentstatus", "SUCCESS")
         _add_enum_value(db, "paymentstatus", "FAILED")
@@ -148,6 +151,8 @@ def run_migrations() -> None:
                   "lottery_posts.ticket_number_min")
             _exec(db, "ALTER TABLE lottery_posts ADD COLUMN IF NOT EXISTS ticket_number_max INTEGER",
                   "lottery_posts.ticket_number_max")
+            _exec(db, "ALTER TABLE lottery_posts ALTER COLUMN cover_image_url TYPE TEXT",
+                  "lottery_posts.cover_image_url type text")
 
         if _table_exists(db, "tickets"):
             _exec(db, "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS chosen_number INTEGER",

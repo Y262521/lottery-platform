@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiClient } from "../api/client";
+import { apiClient, mediaUrl } from "../api/client";
 import { useLang } from "../context/LangContext";
 
 const STATUS_BADGE = {
@@ -76,11 +76,23 @@ function LotteryCard({ lottery: l }) {
     <Link to={href}>
       <article className="card flex flex-col overflow-hidden transition hover:border-green-500/50 hover:shadow-glow">
         {l.cover_image_url ? (
-          <img src={l.cover_image_url} alt={l.title}
-            className="h-44 w-full object-cover" loading="lazy" />
-        ) : (
-          <div className="flex h-44 w-full items-center justify-center bg-ink-800 text-5xl">🎟️</div>
-        )}
+          <img
+            src={mediaUrl(l.cover_image_url)}
+            alt={l.title}
+            className="h-44 w-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
+            }}
+          />
+        ) : null}
+        <div
+          style={{ display: l.cover_image_url ? "none" : "flex" }}
+          className="h-44 w-full items-center justify-center bg-ink-800 text-5xl"
+        >
+          🎟️
+        </div>
         <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-lg font-bold text-cream-50 leading-tight">{l.title}</h3>

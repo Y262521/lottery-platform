@@ -46,11 +46,13 @@ class Settings(BaseSettings):
     # ── Manual payment account details (shown to users on checkout) ───────────
     # Set these in your Render environment variables.
     TELEBIRR_ACCOUNT: str = ""        # e.g. 0912345678
-    TELEBIRR_NAME: str = ""           # Account holder name
+    TELEBIRR_NAME: str = "Yona Online Draw"
+    MPESA_ACCOUNT: str = ""           # e.g. 0712345678
+    MPESA_NAME: str = "Yona Online Draw"
     CBE_ACCOUNT: str = ""             # Commercial Bank of Ethiopia account number
-    CBE_NAME: str = ""                # Account holder name
+    CBE_NAME: str = "Yona Online Draw"
     AWASH_ACCOUNT: str = ""           # Awash Bank account (optional)
-    AWASH_NAME: str = ""
+    AWASH_NAME: str = "Yona Online Draw"
 
 
 @lru_cache

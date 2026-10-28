@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiClient } from "../../api/client";
+import { apiClient, mediaUrl } from "../../api/client";
 import { useLang } from "../../context/LangContext";
 
 export default function AdminLotteryManage() {
@@ -28,6 +28,42 @@ export default function AdminLotteryManage() {
   async function act(fn, label) {
     try { await fn(); setMsg(label + " ✓"); await load(); }
     catch (e) { setMsg(e.message); }
+  }
+
+  async function handleUploadCover(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    setBusy(true);
+    try {
+      await apiClient.uploadCover(id, fd);
+      setMsg(t("coverPhotoUpdated"));
+      await load();
+    } catch (err) {
+      setMsg(err.message);
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleUploadPrizes(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const fd = new FormData();
+    files.forEach((f) => fd.append("files", f));
+    setBusy(true);
+    try {
+      await apiClient.uploadPrizeImages(id, fd);
+      setMsg(t("prizePhotosUploaded"));
+      await load();
+    } catch (err) {
+      setMsg(err.message);
+    } finally {
+      setBusy(false);
+      e.target.value = "";
+    }
   }
 
   async function publishResults(e) {
@@ -112,6 +148,84 @@ export default function AdminLotteryManage() {
         <Stat label={t("ticketsSold")} value={lottery.tickets_sold} />
         <Stat label={t("capacity")} value={lottery.total_tickets || t("unlimited")} />
         <Stat label={t("revenueLabel")} value={`ETB ${(lottery.tickets_sold * lottery.ticket_price).toLocaleString()}`} />
+      </div>
+
+      {/* Draw Cover & Prize Photos Management */}
+      <div className="card p-5 mb-6 space-y-5">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300">
+          🖼️ {t("drawPhotos")}
+        </h2>
+
+        {/* Cover image row */}
+        <div>
+          <div className="text-xs text-cream-400 mb-2 font-medium">{t("currentCover")}</div>
+          <div className="flex flex-wrap items-center gap-4">
+            {lottery.cover_image_url ? (
+              <img
+                src={mediaUrl(lottery.cover_image_url)}
+                alt="Cover"
+                className="h-28 w-44 rounded-xl object-cover border border-ink-600 shadow-sm"
+              />
+            ) : (
+              <div className="flex h-28 w-44 items-center justify-center rounded-xl bg-ink-800 text-3xl border border-dashed border-ink-600 text-cream-400">
+                🎟️
+              </div>
+            )}
+            <div>
+              <label className="btn-primary cursor-pointer px-4 py-2 text-xs inline-flex items-center gap-2">
+                <span>📁 {t("changeCoverPhoto")}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUploadCover}
+                  disabled={busy}
+                />
+              </label>
+              {!lottery.cover_image_url && (
+                <p className="mt-1 text-xs text-yellow-300/80">
+                  {t("noCoverPhoto")}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Prize images row */}
+        <div className="pt-4 border-t border-ink-700">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-cream-400 font-medium">
+              {t("prizePhotos")} ({lottery.prize_image_urls?.length || 0})
+            </span>
+            <label className="btn-ghost cursor-pointer px-3 py-1.5 text-xs inline-flex items-center gap-1.5">
+              <span>+ {t("uploadPrizePhotos")}</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleUploadPrizes}
+                disabled={busy}
+              />
+            </label>
+          </div>
+          {lottery.prize_image_urls?.length > 0 ? (
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {lottery.prize_image_urls.map((pUrl, i) => (
+                <img
+                  key={i}
+                  src={mediaUrl(pUrl)}
+                  alt={`Prize ${i+1}`}
+                  className="rounded-lg object-cover aspect-square border border-ink-600"
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-cream-400 italic">
+              {lang === "am" ? "ገና የተጫነ የሽልማት ፎቶ የለም።" : "No additional prize photos uploaded yet."}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Publish results */}
@@ -210,7 +324,7 @@ export default function AdminLotteryManage() {
                   <div key={i} className="rounded-xl overflow-hidden bg-ink-900 border border-ink-600">
                     <video
                       controls
-                      src={vUrl}
+                      src={mediaUrl(vUrl)}
                       className="w-full max-h-48 object-contain bg-black"
                     />
                     <div className="p-2 flex justify-between items-center text-[11px] text-cream-300">

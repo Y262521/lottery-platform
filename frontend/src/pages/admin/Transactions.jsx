@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiClient } from "../../api/client";
+import { apiClient, mediaUrl } from "../../api/client";
 import { useLang } from "../../context/LangContext";
 
 const STATUS_COLOR = {
@@ -93,7 +93,9 @@ export default function AdminTransactions() {
                 <td className="px-4 py-3 text-cream-200">#{tx.user_id}</td>
                 <td className="px-4 py-3 text-cream-200">#{tx.lottery_id}</td>
                 <td className="px-4 py-3 font-mono text-green-300">ETB {tx.amount}</td>
-                <td className="px-4 py-3 text-cream-200">{tx.gateway}</td>
+                <td className="px-4 py-3 text-cream-200">
+                  {tx.webhook_payload?.provider || tx.webhook_payload?.bank_or_wallet || tx.gateway}
+                </td>
                 <td className="px-4 py-3 font-mono text-cream-300 text-xs">{tx.gateway_ref || "—"}</td>
                 <td className="px-4 py-3">
                   <span className={`pill ${STATUS_COLOR[tx.status] || "bg-ink-700 text-cream-400"}`}>{tx.status}</span>
@@ -134,7 +136,9 @@ function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-cream-100">#{tx.id}</span>
             <span className="pill bg-yellow-500/15 text-yellow-300">PENDING</span>
-            <span className="text-cream-300 text-sm">{tx.gateway}</span>
+            <span className="text-cream-300 text-sm font-medium">
+              {wp.provider || wp.bank_or_wallet || tx.gateway}
+            </span>
             <span className="font-mono text-green-300 text-sm">ETB {tx.amount}</span>
           </div>
           <div className="mt-1 text-xs text-cream-400">
@@ -176,8 +180,8 @@ function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
               {wp.screenshot_url && (
                 <div>
                   <p className="text-cream-400 mb-2">{lang === "am" ? "ስክሪንሾት:" : "Screenshot:"}</p>
-                  <a href={wp.screenshot_url} target="_blank" rel="noreferrer">
-                    <img src={wp.screenshot_url} alt="proof"
+                  <a href={mediaUrl(wp.screenshot_url)} target="_blank" rel="noreferrer">
+                    <img src={mediaUrl(wp.screenshot_url)} alt="proof"
                       className="max-h-64 w-full rounded-xl object-contain border border-ink-600 hover:opacity-90 transition" />
                   </a>
                 </div>

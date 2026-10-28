@@ -252,6 +252,29 @@ const translations = {
     continueBtn: "Continue → Pay ({qty} ticket{s})",
     backBtn: "← Back",
     afterTransfer: "After transferring, enter your reference number and optionally upload a screenshot. Admin verifies and issues tickets.",
+
+    // Digital Wallet & Ethiopian Banks
+    digitalWallet: "Digital Wallet",
+    bankTransfer: "Bank Transfer",
+    selectWallet: "Select Digital Wallet",
+    selectBank: "Select Ethiopian Bank",
+    chooseBankPlaceholder: "-- Select Ethiopian Bank (A-Z) --",
+    walletRef: "Wallet Transaction Reference *",
+    bankRef: "Bank Reference / Slip Number *",
+    accountNumber: "Account Number",
+    accountHolder: "Account Name",
+    ussdDial: "USSD Dial Code",
+    transferInstructions: "Transfer Instructions",
+
+    // Draw media & photos
+    drawPhotos: "Draw Photos & Cover",
+    currentCover: "Current Cover Photo",
+    noCoverPhoto: "No cover photo uploaded yet",
+    changeCoverPhoto: "Upload / Change Cover Photo",
+    prizePhotos: "Prize Photos",
+    uploadPrizePhotos: "Add Prize Photos",
+    coverPhotoUpdated: "Cover photo updated successfully ✓",
+    prizePhotosUploaded: "Prize photos uploaded successfully ✓",
   },
 
   am: {
@@ -478,6 +501,29 @@ const translations = {
     continueBtn: "ቀጥል → ክፍያ ({qty} ቲኬት{s})",
     backBtn: "← ተመለስ",
     afterTransfer: "ካስተላለፉ በኋላ ማጣቀሻ ቁጥሩን ያስገቡ እና ስክሪንሾት ይስቀሉ። አስተዳዳሪ ያረጋግጣል።",
+
+    // Digital Wallet & Ethiopian Banks
+    digitalWallet: "ዲጂታል ዋሌት",
+    bankTransfer: "የባንክ ዝውውር",
+    selectWallet: "ዲጂታል ዋሌት ይምረጡ",
+    selectBank: "የኢትዮጵያ ባንክ ይምረጡ",
+    chooseBankPlaceholder: "-- የኢትዮጵያ ባንክ ይምረጡ (በፊደል ቅደም ተከተል) --",
+    walletRef: "የዲጂታል ዋሌት ማጣቀሻ ቁጥር *",
+    bankRef: "የባንክ ማጣቀሻ / ደረሰኝ ቁጥር *",
+    accountNumber: "የሂሳብ ቁጥር",
+    accountHolder: "የሂሳብ ስም",
+    ussdDial: "የ USSD መደወያ ኮድ",
+    transferInstructions: "የማስተላለፊያ መመሪያ",
+
+    // Draw media & photos
+    drawPhotos: "የዕጣ ፎቶዎች እና ሽፋን",
+    currentCover: "የአሁኑ የሽፋን ፎቶ",
+    noCoverPhoto: "ገና የተጫነ የሽፋን ፎቶ የለም",
+    changeCoverPhoto: "የሽፋን ፎቶ ስቀል / ቀይር",
+    prizePhotos: "የሽልማት ፎቶዎች",
+    uploadPrizePhotos: "ተጨማሪ የሽልማት ፎቶዎችን ጨምር",
+    coverPhotoUpdated: "የሽፋን ፎቶው በተሳካ ሁኔታ ተዘምኗል ✓",
+    prizePhotosUploaded: "የሽልማት ፎቶዎች በተሳካ ሁኔታ ተጭነዋል ✓",
 
     // Draw & ticket statuses
     statusDRAFT:           "ረቂቅ",

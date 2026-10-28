@@ -27,6 +27,8 @@ router = APIRouter(prefix="/api/payments", tags=["payments"])
 class PaymentAccountsOut(BaseModel):
     telebirr_number: str
     telebirr_name: str
+    mpesa_number: str
+    mpesa_name: str
     cbe_number: str
     cbe_name: str
     awash_number: str
@@ -37,11 +39,13 @@ class PaymentAccountsOut(BaseModel):
 def payment_accounts():
     return PaymentAccountsOut(
         telebirr_number=settings.TELEBIRR_ACCOUNT,
-        telebirr_name=settings.TELEBIRR_NAME,
+        telebirr_name=settings.TELEBIRR_NAME or "Yona Online Draw",
+        mpesa_number=settings.MPESA_ACCOUNT,
+        mpesa_name=settings.MPESA_NAME or "Yona Online Draw",
         cbe_number=settings.CBE_ACCOUNT,
-        cbe_name=settings.CBE_NAME,
+        cbe_name=settings.CBE_NAME or "Yona Online Draw",
         awash_number=settings.AWASH_ACCOUNT,
-        awash_name=settings.AWASH_NAME,
+        awash_name=settings.AWASH_NAME or "Yona Online Draw",
     )
 
 
@@ -67,15 +71,26 @@ async def submit_payment(
     phone: str = Form(default=""),
     message: str = Form(default=""),
     chosen_numbers: str = Form(default=""),  # comma-separated e.g. "42,17"
+    bank_or_wallet: str = Form(default=""),  # specific bank or wallet name
     screenshot: UploadFile = File(default=None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     # Validate gateway
+    gw_str = gateway.upper().strip()
     try:
-        gw = Gateway(gateway.upper())
+        gw = Gateway(gw_str)
     except ValueError:
-        raise HTTPException(400, f"Invalid gateway. Use TELEBIRR or BANK_TRANSFER")
+        if "BANK" in gw_str:
+            gw = Gateway.BANK_TRANSFER
+        elif "MPESA" in gw_str or "M-PESA" in gw_str:
+            gw = Gateway.MPESA
+        elif "DIGITAL" in gw_str or "WALLET" in gw_str:
+            gw = Gateway.DIGITAL_WALLET
+        elif "TELE" in gw_str:
+            gw = Gateway.TELEBIRR
+        else:
+            gw = Gateway.MANUAL
 
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery or lottery.status != LotteryStatus.ACTIVE:
@@ -152,6 +167,8 @@ async def submit_payment(
                 "phone": phone or None,
                 "message": message or None,
                 "chosen_numbers": chosen_list or None,
+                "provider": bank_or_wallet or gw.value,
+                "bank_or_wallet": bank_or_wallet or gw.value,
                 "screenshot_url": screenshot_url,
                 "submitted_at": datetime.now(timezone.utc).isoformat(),
             },

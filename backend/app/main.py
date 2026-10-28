@@ -2,9 +2,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from .config import settings
 from .database import init_db
+from .media import UPLOAD_DIR
 from .routers import admin, auth, lotteries, payments, results, tickets
 
 
@@ -79,3 +80,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/health", tags=["meta"])
 def health():
     return {"status": "ok", "version": "2.0.0"}
+
+
+@app.get("/uploads/{file_path:path}", tags=["media"])
+def serve_upload(file_path: str):
+    """Serve uploaded media files with directory traversal protection."""
+    full_path = (UPLOAD_DIR / file_path).resolve()
+    base_dir = UPLOAD_DIR.resolve()
+    if not str(full_path).startswith(str(base_dir)) or not full_path.is_file():
+        return JSONResponse(status_code=404, content={"detail": "File not found"})
+    return FileResponse(str(full_path))
