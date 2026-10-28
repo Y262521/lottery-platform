@@ -167,5 +167,21 @@ def run_migrations() -> None:
             _exec(db, "ALTER TABLE draw_results ADD COLUMN IF NOT EXISTS draw_video_urls JSONB",
                   "draw_results.draw_video_urls")
 
+        # Payment accounts table for configurable bank and wallet accounts
+        _exec(db, """
+            CREATE TABLE IF NOT EXISTS payment_accounts (
+                id SERIAL PRIMARY KEY,
+                provider_type VARCHAR(20) NOT NULL,
+                provider_id VARCHAR(50) UNIQUE NOT NULL,
+                provider_name VARCHAR(100) NOT NULL,
+                account_number VARCHAR(100) NOT NULL,
+                account_holder VARCHAR(150) NOT NULL,
+                instructions VARCHAR(255),
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """, "create payment_accounts table")
+
     finally:
         db.close()

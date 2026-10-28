@@ -180,3 +180,36 @@ class AuditOut(BaseModel):
     entity_id: int | None
     detail: str | None
     created_at: datetime
+
+
+# ── Payment Accounts ──────────────────────────────────────────────────────────
+class PaymentAccountCreate(BaseModel):
+    provider_type: str = Field(pattern="^(WALLET|BANK)$")
+    provider_id: str = Field(min_length=2, max_length=50)
+    provider_name: str = Field(min_length=2, max_length=100)
+    account_number: str = Field(min_length=2, max_length=100)
+    account_holder: str = Field(min_length=2, max_length=150)
+    instructions: str | None = None
+    is_active: bool = True
+
+
+class PaymentAccountUpdate(BaseModel):
+    account_number: str | None = None
+    account_holder: str | None = None
+    instructions: str | None = None
+    is_active: bool | None = None
+
+
+class PaymentAccountOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    provider_type: str
+    provider_id: str
+    provider_name: str
+    account_number: str
+    account_holder: str
+    instructions: str | None = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+

@@ -16,6 +16,7 @@ import AdminLotteryForm from "./pages/admin/LotteryForm";
 import AdminLotteryManage from "./pages/admin/LotteryManage";
 import AdminTransactions from "./pages/admin/Transactions";
 import AdminUsers from "./pages/admin/Users";
+import AdminPaymentAccounts from "./pages/admin/PaymentAccounts";
 
 export default function App() {
   const { t } = useLang();
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/admin/lotteries/:id" element={<AdminRoute><AdminLotteryManage /></AdminRoute>} />
           <Route path="/admin/transactions" element={<AdminRoute><AdminTransactions /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/payment-accounts" element={<AdminRoute><AdminPaymentAccounts /></AdminRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

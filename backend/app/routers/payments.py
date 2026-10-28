@@ -12,7 +12,7 @@ from ..database import get_db
 from ..deps import get_current_user, require_roles
 from ..media import upload_image
 from ..models import (
-    Gateway, LotteryPost, LotteryStatus,
+    Gateway, LotteryPost, LotteryStatus, PaymentAccount,
     PaymentStatus, PaymentTransaction, Role, Ticket, TicketStatus, User,
 )
 from ..notifications import send_ticket_confirmation
@@ -24,6 +24,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
 
+class PaymentAccountItem(BaseModel):
+    id: int
+    provider_type: str
+    provider_id: str
+    provider_name: str
+    account_number: str
+    account_holder: str
+    instructions: str | None = None
+
+
 class PaymentAccountsOut(BaseModel):
     telebirr_number: str
     telebirr_name: str
@@ -33,19 +43,57 @@ class PaymentAccountsOut(BaseModel):
     cbe_name: str
     awash_number: str
     awash_name: str
+    by_provider: dict[str, dict] = {}
+    accounts: list[PaymentAccountItem] = []
 
 
 @router.get("/accounts", response_model=PaymentAccountsOut)
-def payment_accounts():
+def payment_accounts(db: Session = Depends(get_db)):
+    accts = db.scalars(select(PaymentAccount).where(PaymentAccount.is_active == True)).all()
+    by_prov = {
+        a.provider_id: {
+            "id": a.id,
+            "provider_type": a.provider_type,
+            "provider_id": a.provider_id,
+            "provider_name": a.provider_name,
+            "account_number": a.account_number,
+            "account_holder": a.account_holder,
+            "instructions": a.instructions,
+        }
+        for a in accts
+    }
+
+    t_num = by_prov.get("TELEBIRR", {}).get("account_number") or settings.TELEBIRR_ACCOUNT
+    t_name = by_prov.get("TELEBIRR", {}).get("account_holder") or settings.TELEBIRR_NAME or "Yona Online Draw"
+    m_num = by_prov.get("MPESA", {}).get("account_number") or settings.MPESA_ACCOUNT
+    m_name = by_prov.get("MPESA", {}).get("account_holder") or settings.MPESA_NAME or "Yona Online Draw"
+    c_num = by_prov.get("CBE", {}).get("account_number") or settings.CBE_ACCOUNT
+    c_name = by_prov.get("CBE", {}).get("account_holder") or settings.CBE_NAME or "Yona Online Draw"
+    a_num = by_prov.get("AWASH", {}).get("account_number") or settings.AWASH_ACCOUNT
+    a_name = by_prov.get("AWASH", {}).get("account_holder") or settings.AWASH_NAME or "Yona Online Draw"
+
     return PaymentAccountsOut(
-        telebirr_number=settings.TELEBIRR_ACCOUNT,
-        telebirr_name=settings.TELEBIRR_NAME or "Yona Online Draw",
-        mpesa_number=settings.MPESA_ACCOUNT,
-        mpesa_name=settings.MPESA_NAME or "Yona Online Draw",
-        cbe_number=settings.CBE_ACCOUNT,
-        cbe_name=settings.CBE_NAME or "Yona Online Draw",
-        awash_number=settings.AWASH_ACCOUNT,
-        awash_name=settings.AWASH_NAME or "Yona Online Draw",
+        telebirr_number=t_num,
+        telebirr_name=t_name,
+        mpesa_number=m_num,
+        mpesa_name=m_name,
+        cbe_number=c_num,
+        cbe_name=c_name,
+        awash_number=a_num,
+        awash_name=a_name,
+        by_provider=by_prov,
+        accounts=[
+            PaymentAccountItem(
+                id=a.id,
+                provider_type=a.provider_type,
+                provider_id=a.provider_id,
+                provider_name=a.provider_name,
+                account_number=a.account_number,
+                account_holder=a.account_holder,
+                instructions=a.instructions,
+            )
+            for a in accts
+        ],
     )
 
 

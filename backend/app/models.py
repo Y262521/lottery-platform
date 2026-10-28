@@ -180,3 +180,19 @@ class AuditLog(Base):
     detail:     Mapped[str|None] = mapped_column(Text, nullable=True)
     ip_address: Mapped[str|None] = mapped_column(String(45), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class PaymentAccount(Base):
+    __tablename__ = "payment_accounts"
+
+    id:             Mapped[int]          = mapped_column(Integer, primary_key=True)
+    provider_type:  Mapped[str]          = mapped_column(String(20), nullable=False)  # WALLET | BANK
+    provider_id:    Mapped[str]          = mapped_column(String(50), unique=True, index=True, nullable=False)  # e.g. CBE, DASHEN, TELEBIRR
+    provider_name:  Mapped[str]          = mapped_column(String(100), nullable=False)
+    account_number: Mapped[str]          = mapped_column(String(100), nullable=False)
+    account_holder: Mapped[str]          = mapped_column(String(150), nullable=False)
+    instructions:   Mapped[str|None]     = mapped_column(String(255), nullable=True)
+    is_active:      Mapped[bool]         = mapped_column(Boolean, default=True, nullable=False)
+    created_at:     Mapped[datetime]     = mapped_column(DateTime, server_default=func.now())
+    updated_at:     Mapped[datetime]     = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+

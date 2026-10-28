@@ -41,7 +41,6 @@ export default function Navbar() {
         <div className="hidden items-center gap-1 md:flex">
           <NavLink to="/" end className={link}>{t("home")}</NavLink>
           {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
-          {user && <NavLink to="/profile" className={link}>{t("profile")}</NavLink>}
           {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
         </div>
 
@@ -53,22 +52,31 @@ export default function Navbar() {
             {lang === "en" ? "አማ" : "EN"}
           </button>
           {user ? (
-            <>
+            <div className="flex items-center gap-1.5">
               <NavLink
                 to="/profile"
-                className="hidden text-xs text-cream-300 hover:text-green-300 sm:flex items-center gap-1.5 transition"
+                className={({ isActive }) =>
+                  `flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+                    isActive
+                      ? "border-green-500/50 bg-green-500/15 text-green-300"
+                      : "border-ink-600 bg-ink-800 text-cream-200 hover:border-ink-500 hover:text-green-300"
+                  }`
+                }
                 title={t("profile")}
               >
                 <span className="h-2 w-2 rounded-full bg-green-500" />
-                {user.email || user.phone || user.full_name}
+                <span>👤 {t("profile")}</span>
+                <span className="hidden lg:inline text-cream-400 font-normal">
+                  ({user.full_name || user.phone || user.email})
+                </span>
               </NavLink>
               <button
                 onClick={() => { logout(); navigate("/login"); }}
-                className="btn-ghost px-3 py-1.5 text-xs"
+                className="btn-ghost px-2.5 py-1.5 text-xs text-red-300/80 hover:text-red-300"
               >
                 {t("signOut")}
               </button>
-            </>
+            </div>
           ) : (
             <>
               <NavLink to="/login" className="btn-ghost px-3 py-1.5 text-xs">{t("signIn")}</NavLink>

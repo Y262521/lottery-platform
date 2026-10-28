@@ -27,10 +27,11 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-3">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <NavCard to="/admin/lotteries" icon="🎟️" title={t("lotteries")} desc={t("manageDesc")} />
         <NavCard to="/admin/transactions" icon="💰" title={t("transactions")} desc={t("transactionsDesc")} />
         <NavCard to="/admin/users" icon="👥" title={t("users")} desc={t("usersDesc")} />
+        <NavCard to="/admin/payment-accounts" icon="💳" title={t("paymentAccounts")} desc={t("paymentAccountsDesc")} />
       </div>
     </div>
   );

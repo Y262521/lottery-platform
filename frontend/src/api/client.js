@@ -121,4 +121,9 @@ export const apiClient = {
   resetUserPassword: (id, new_password) => api(`/api/admin/users/${id}/reset-password`, { method: "POST", body: { new_password } }),
   allTransactions: () => api("/api/admin/transactions"),
   auditLogs: () => api("/api/admin/audit"),
+  adminPaymentAccounts: () => api("/api/admin/payment-accounts"),
+  savePaymentAccount: (b) => api("/api/admin/payment-accounts", { method: "POST", body: b }),
+  updatePaymentAccount: (id, b) => api(`/api/admin/payment-accounts/${id}`, { method: "PATCH", body: b }),
+  deletePaymentAccount: (id) => api(`/api/admin/payment-accounts/${id}`, { method: "DELETE" }),
 };
+

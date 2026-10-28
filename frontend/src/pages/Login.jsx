@@ -34,8 +34,10 @@ export default function Login() {
     setError("");
     setBusy(true);
     try {
-      const user = await login(identifier.trim(), password);
-      navigate(user.role === "ADMIN" ? "/admin" : from, { replace: true });
+      await login(identifier.trim(), password);
+      // Default landing page for all users (including admin) is Home page ('/')
+      const target = from && from !== "/admin" && from !== "/login" ? from : "/";
+      navigate(target, { replace: true });
     } catch (err) {
       setError(typeof err.message === "string" ? err.message : t("signInTitle") + " failed");
     } finally {

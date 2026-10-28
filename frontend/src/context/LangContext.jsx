@@ -62,8 +62,15 @@ const translations = {
     enterNewPassword: "Enter new password:",
     passwordResetSuccess: "Password reset successfully ✓",
     resetDraw: "Reset to Active",
-    drawResetSuccess: "Draw reset to active successfully",
     cancel: "Cancel",
+    editProfileBtn: "Edit Profile",
+    cancelEdit: "Cancel",
+    readOnlyProfileNote: "Click Edit Profile to modify your personal details or update your password.",
+    memberRole: "Account Role",
+    memberEmail: "Email Address",
+    memberPhone: "Phone Number",
+    memberFullName: "Full Name",
+    notProvided: "Not provided",
 
     // Draw detail
     prize: "Prize",
@@ -264,7 +271,20 @@ const translations = {
     accountNumber: "Account Number",
     accountHolder: "Account Name",
     ussdDial: "USSD Dial Code",
+    usedDial: "USSD Dial Code",
     transferInstructions: "Transfer Instructions",
+
+    // Admin Payment Accounts
+    paymentAccounts: "Payment Accounts",
+    paymentAccountsDesc: "Configure receiving accounts for banks and digital wallets",
+    addPaymentAccount: "Add Payment Account",
+    editPaymentAccount: "Edit Payment Account",
+    provider: "Provider (Bank / Wallet)",
+    accountSavedSuccess: "Payment account saved successfully ✓",
+    accountDeletedSuccess: "Payment account deleted ✓",
+    noDirectAccountNote: "Direct account not added yet for this bank. Please use our primary CBE account or select another bank/wallet.",
+    editProfileBtn: "Edit Profile",
+    cancelEdit: "Cancel",
 
     // Draw media & photos
     drawPhotos: "Draw Photos & Cover",
@@ -337,8 +357,15 @@ const translations = {
     enterNewPassword: "አዲስ የይለፍ ቃል ያስገቡ:",
     passwordResetSuccess: "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል ✓",
     resetDraw: "ወደ ንቁ መልስ",
-    drawResetSuccess: "የእጣው ሁኔታ በተሳካ ሁኔታ ወደ ንቁ ተመልሷል",
     cancel: "ተወው",
+    editProfileBtn: "መገለጫ አርትዕ",
+    cancelEdit: "ተወው",
+    readOnlyProfileNote: "የግል መረጃዎችን ወይም የይለፍ ቃል ለመቀየር 'መገለጫ አርትዕ' የሚለውን ይጫኑ።",
+    memberRole: "የመለያ አይነት",
+    memberEmail: "ኢሜይል አድራሻ",
+    memberPhone: "ስልክ ቁጥር",
+    memberFullName: "ሙሉ ስም",
+    notProvided: "አልተሞላም",
 
     // Draw detail
     prize: "ሽልማት",
@@ -513,7 +540,20 @@ const translations = {
     accountNumber: "የሂሳብ ቁጥር",
     accountHolder: "የሂሳብ ስም",
     ussdDial: "የ USSD መደወያ ኮድ",
+    usedDial: "የ USSD መደወያ ኮድ",
     transferInstructions: "የማስተላለፊያ መመሪያ",
+
+    // Admin Payment Accounts
+    paymentAccounts: "የክፍያ አካውንቶች",
+    paymentAccountsDesc: "የባንክ እና ዲጂታል ዋሌት መቀበያ አካውንቶችን ያቀናብሩ",
+    addPaymentAccount: "የክፍያ አካውንት ያክሉ",
+    editPaymentAccount: "የክፍያ አካውንት አርትዕ",
+    provider: "አቅራቢ (ባንክ / ዋሌት)",
+    accountSavedSuccess: "የክፍያ አካውንት በተሳካ ሁኔታ ተቀምጧል ✓",
+    accountDeletedSuccess: "የክፍያ አካውንት ተሰርዟል ✓",
+    noDirectAccountNote: "ለዚህ ባንክ ቀጥታ አካውንት እስካሁን አልተጨመረም። እባክዎ ዋናውን የንግድ ባንክ አካውንት ይጠቀሙ ወይም ሌላ ባንክ/ዋሌት ይምረጡ።",
+    editProfileBtn: "መገለጫ አርትዕ",
+    cancelEdit: "ተወው",
 
     // Draw media & photos
     drawPhotos: "የዕጣ ፎቶዎች እና ሽፋን",

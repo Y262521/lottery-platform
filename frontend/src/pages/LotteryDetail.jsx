@@ -362,57 +362,98 @@ export default function LotteryDetail() {
               )}
 
               {/* Account boxes: Digital Wallet vs Bank Transfer */}
-              {paymentType === "DIGITAL_WALLET" && (
-                <div className="space-y-3 mb-4">
-                  <div>
-                    <label className="label">{t("selectWallet")}</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {DIGITAL_WALLETS.map((w) => (
-                        <button
-                          key={w.id}
-                          type="button"
-                          onClick={() => setSelectedWallet(w.id)}
-                          className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-semibold transition ${
-                            selectedWallet === w.id
-                              ? "border-green-500 bg-green-500/15 text-green-300"
-                              : "border-ink-600 bg-ink-800 text-cream-300 hover:border-ink-500"
-                          }`}
-                        >
-                          <span className="text-lg">{w.icon}</span>
-                          <span>{lang === "am" ? w.nameAm : w.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              {paymentType === "DIGITAL_WALLET" && (() => {
+                const configuredWallet = acct?.by_provider?.[selectedWallet];
+                const walletNumber = configuredWallet?.account_number ||
+                  (selectedWallet === "TELEBIRR" ? acct?.telebirr_number : acct?.mpesa_number);
+                const walletHolder = configuredWallet?.account_holder ||
+                  (selectedWallet === "TELEBIRR" ? acct?.telebirr_name : acct?.mpesa_name) || "Yona Online Draw";
+                const walletInstructions = configuredWallet?.instructions;
 
-                  {selectedWallet === "TELEBIRR" ? (
-                    <AccountBox
-                      icon="📱"
-                      title={lang === "am" ? "ቴሌብር (Telebirr)" : "Telebirr"}
-                      rows={[
-                        { label: lang === "am" ? "የስልክ ቁጥር" : "Number", value: acct.telebirr_number || "0912345678" },
-                        { label: lang === "am" ? "የስም መረጃ" : "Name", value: acct.telebirr_name || "Yona Online Draw" },
-                        { label: t("ussdDial"), value: "*127#" },
-                      ]}
-                    />
-                  ) : (
-                    <AccountBox
-                      icon="🟢"
-                      title={lang === "am" ? "ኤም-ፔሳ (M-Pesa)" : "M-Pesa (Safaricom)"}
-                      rows={[
-                        { label: lang === "am" ? "የስልክ ቁጥር" : "Number", value: acct.mpesa_number || acct.telebirr_number || "07..." },
-                        { label: lang === "am" ? "የስም መረጃ" : "Name", value: acct.mpesa_name || acct.telebirr_name || "Yona Online Draw" },
-                        { label: t("ussdDial"), value: "*733#" },
-                      ]}
-                    />
-                  )}
-                </div>
-              )}
+                const isTelebirr = selectedWallet === "TELEBIRR";
+                const title = isTelebirr
+                  ? (lang === "am" ? "ቴሌብር (Telebirr)" : "Telebirr")
+                  : (lang === "am" ? "ኤም-ፔሳ (M-Pesa)" : "M-Pesa (Safaricom)");
+
+                return (
+                  <div className="space-y-3 mb-4">
+                    <div>
+                      <label className="label">{t("selectWallet")}</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {DIGITAL_WALLETS.map((w) => {
+                          const hasWAcct = Boolean(
+                            acct?.by_provider?.[w.id]?.account_number ||
+                            (w.id === "TELEBIRR" && acct?.telebirr_number) ||
+                            (w.id === "MPESA" && acct?.mpesa_number)
+                          );
+                          return (
+                            <button
+                              key={w.id}
+                              type="button"
+                              onClick={() => setSelectedWallet(w.id)}
+                              className={`flex items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-semibold transition ${
+                                selectedWallet === w.id
+                                  ? "border-green-500 bg-green-500/15 text-green-300"
+                                  : "border-ink-600 bg-ink-800 text-cream-300 hover:border-ink-500"
+                              }`}
+                            >
+                              <span className="text-lg">{w.icon}</span>
+                              <span>{lang === "am" ? w.nameAm : w.name}</span>
+                              {hasWAcct && <span className="text-[10px] text-green-400">✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {walletNumber ? (
+                      <AccountBox
+                        icon={isTelebirr ? "📱" : "🟢"}
+                        title={title}
+                        rows={[
+                          { label: lang === "am" ? "የስልክ ቁጥር" : "Number", value: walletNumber },
+                          { label: lang === "am" ? "የስም መረጃ" : "Name", value: walletHolder },
+                          { label: t("ussdDial"), value: isTelebirr ? "*127#" : "*733#" },
+                        ]}
+                        note={walletInstructions}
+                      />
+                    ) : (
+                      <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs text-amber-200">
+                        <p className="font-semibold text-amber-300 mb-1">
+                          ⚠️ {lang === "am" ? "የሂሳብ ቁጥር ገና አልተመዘገበም" : "Account not yet configured"}
+                        </p>
+                        <p>
+                          {lang === "am"
+                            ? `ለ ${title} የሂሳብ ቁጥር ገና በአስተዳዳሪው አልተጨመረም። እባክዎ ቴሌብር ወይም የኢትዮጵያ ንግድ ባንክ (CBE) ይጠቀሙ።`
+                            : `Account details for ${title} have not been added yet by the admin. Please select Telebirr or Commercial Bank of Ethiopia (CBE).`}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {paymentType === "BANK_TRANSFER" && (() => {
                 const currentBank = ETHIOPIAN_BANKS.find((b) => b.id === selectedBankId);
-                const bankAccountNo = (currentBank?.accountKey && acct[currentBank.accountKey]) || acct.cbe_number || "1000...";
-                const bankAccountHolder = (currentBank?.nameKey && acct[currentBank.nameKey]) || acct.cbe_name || "Yona Online Draw";
+                const configuredBank = acct?.by_provider?.[selectedBankId];
+
+                let bankAccountNo = null;
+                let bankAccountHolder = null;
+                let bankInstructions = null;
+
+                if (configuredBank && configuredBank.account_number) {
+                  bankAccountNo = configuredBank.account_number;
+                  bankAccountHolder = configuredBank.account_holder || "Yona Online Draw";
+                  bankInstructions = configuredBank.instructions;
+                } else if (selectedBankId === "CBE" && acct?.cbe_number) {
+                  bankAccountNo = acct.cbe_number;
+                  bankAccountHolder = acct.cbe_name || "Yona Online Draw";
+                } else if (selectedBankId === "AWASH" && acct?.awash_number) {
+                  bankAccountNo = acct.awash_number;
+                  bankAccountHolder = acct.awash_name || "Yona Online Draw";
+                }
+
+                const bankTitle = lang === "am" ? currentBank?.nameAm || currentBank?.name : currentBank?.name;
 
                 return (
                   <div className="space-y-3 mb-4">
@@ -423,22 +464,43 @@ export default function LotteryDetail() {
                         value={selectedBankId}
                         onChange={(e) => setSelectedBankId(e.target.value)}
                       >
-                        {ETHIOPIAN_BANKS.map((b) => (
-                          <option key={b.id} value={b.id}>
-                            {b.name} {b.nameAm ? `· ${b.nameAm}` : ""}
-                          </option>
-                        ))}
+                        {ETHIOPIAN_BANKS.map((b) => {
+                          const hasAcct = Boolean(
+                            acct?.by_provider?.[b.id]?.account_number ||
+                            (b.id === "CBE" && acct?.cbe_number) ||
+                            (b.id === "AWASH" && acct?.awash_number)
+                          );
+                          return (
+                            <option key={b.id} value={b.id}>
+                              {b.name} {b.nameAm ? `· ${b.nameAm}` : ""} {hasAcct ? "✓" : ""}
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
 
-                    <AccountBox
-                      icon="🏦"
-                      title={lang === "am" ? currentBank?.nameAm || currentBank?.name : currentBank?.name}
-                      rows={[
-                        { label: t("accountNumber"), value: bankAccountNo },
-                        { label: t("accountHolder"), value: bankAccountHolder },
-                      ]}
-                    />
+                    {bankAccountNo ? (
+                      <AccountBox
+                        icon="🏦"
+                        title={bankTitle}
+                        rows={[
+                          { label: t("accountNumber"), value: bankAccountNo },
+                          { label: t("accountHolder"), value: bankAccountHolder },
+                        ]}
+                        note={bankInstructions}
+                      />
+                    ) : (
+                      <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs text-amber-200">
+                        <p className="font-semibold text-amber-300 mb-1">
+                          ⚠️ {lang === "am" ? "የሂሳብ ቁጥር ገና አልተመዘገበም" : "Account not yet configured"}
+                        </p>
+                        <p>
+                          {lang === "am"
+                            ? `ለ ${bankTitle} የሂሳብ ቁጥር በአስተዳዳሪው ገና አልተጨመረም። እባክዎ የኢትዮጵያ ንግድ ባንክ (CBE) ወይም ቴሌብር ይምረጡ።`
+                            : `Account details for ${bankTitle} have not been added yet by the admin. Please select Commercial Bank of Ethiopia (CBE) or Telebirr.`}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -568,7 +630,7 @@ function NumberGrid({ min, max, taken, selected, maxSelect, onToggle, lang }) {
 
 // ── Helper components ───────────────────────────────────────────────────────
 
-function AccountBox({ icon, title, rows }) {
+function AccountBox({ icon, title, rows, note }) {
   return (
     <div className="rounded-xl border border-green-500/30 bg-ink-800 p-4 mb-3">
       <div className="flex items-center gap-2 mb-3">
@@ -584,6 +646,12 @@ function AccountBox({ icon, title, rows }) {
           </span>
         </div>
       ))}
+      {note && (
+        <div className="mt-2.5 pt-2 border-t border-ink-700 text-xs text-cream-300 flex items-start gap-1.5">
+          <span>ℹ️</span>
+          <span>{note}</span>
+        </div>
+      )}
     </div>
   );
 }
