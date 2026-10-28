@@ -28,8 +28,12 @@ export function AuthProvider({ children }) {
     hydrate();
   }, [hydrate]);
 
-  const login = async (email, password) => {
-    const { access_token, refresh_token } = await apiClient.login({ email, password });
+  const login = async (identifier, password) => {
+    const { access_token, refresh_token } = await apiClient.login({
+      identifier,
+      email: identifier,
+      password,
+    });
     token.set(access_token, refresh_token);
     const me = await apiClient.me();
     setUser(me);

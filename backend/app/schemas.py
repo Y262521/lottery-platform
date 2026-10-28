@@ -7,26 +7,31 @@ from .models import Gateway, LotteryStatus, PaymentStatus, Role, TicketStatus
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 class UserCreate(BaseModel):
-    email: EmailStr
+    phone: str = Field(min_length=8, max_length=30)
     full_name: str = Field(min_length=1, max_length=255)
-    phone: str | None = None
+    email: EmailStr | None = None
     password: str = Field(min_length=8, max_length=128)
 
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    email: EmailStr
+    email: str | None = None
     full_name: str
-    phone: str | None
+    phone: str | None = None
     role: Role
     is_active: bool
     created_at: datetime
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    identifier: str | None = None
+    email: str | None = None
     password: str
+
+    @property
+    def login_id(self) -> str:
+        return (self.identifier or self.email or "").strip()
 
 
 class TokenPair(BaseModel):
@@ -141,8 +146,9 @@ class DrawResultOut(BaseModel):
     id: int
     lottery_id: int
     winning_ticket_nos: list
-    draw_video_url: str | None
-    proof_image_urls: list | None
+    draw_video_url: str | None = None
+    draw_video_urls: list | None = []
+    proof_image_urls: list | None = []
     notes: str | None
     published_at: datetime
 

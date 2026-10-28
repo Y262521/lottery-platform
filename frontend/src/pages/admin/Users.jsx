@@ -36,7 +36,7 @@ export default function AdminUsers() {
             {users.map((u) => (
               <tr key={u.id} className="bg-ink-700/40">
                 <td className="px-4 py-3">
-                  <div className="text-cream-100">{u.email}</div>
+                  <div className="text-cream-100">{u.email || u.phone || "—"}</div>
                   <div className="text-xs text-cream-400">{u.full_name}</div>
                 </td>
                 <td className="px-4 py-3 text-cream-300">{u.phone || "—"}</td>

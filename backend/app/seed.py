@@ -23,10 +23,13 @@ def seed_admin() -> None:
             admin.hashed_password = hash_password(settings.ADMIN_PASSWORD)
             admin.role = Role.ADMIN
             admin.is_active = True
+            if not admin.phone:
+                admin.phone = "0900000000"
             db.commit()
             return
         db.add(User(
             email=settings.ADMIN_EMAIL,
+            phone="0900000000",
             full_name="Platform Administrator",
             hashed_password=hash_password(settings.ADMIN_PASSWORD),
             role=Role.ADMIN,

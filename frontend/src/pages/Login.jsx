@@ -23,8 +23,8 @@ export default function Login() {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-  const [email, setEmail] = useState("admin@lottery-platform.com");
-  const [password, setPassword] = useState("admin12345");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +34,7 @@ export default function Login() {
     setError("");
     setBusy(true);
     try {
-      const user = await login(email, password);
+      const user = await login(identifier.trim(), password);
       navigate(user.role === "ADMIN" ? "/admin" : from, { replace: true });
     } catch (err) {
       setError(typeof err.message === "string" ? err.message : t("signInTitle") + " failed");
@@ -51,9 +51,17 @@ export default function Login() {
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
-            <label className="label" htmlFor="email">{t("email")}</label>
-            <input id="email" className="input" type="email" required
-              value={email} onChange={(e) => setEmail(e.target.value)} />
+            <label className="label" htmlFor="identifier">{t("emailOrPhone")}</label>
+            <input
+              id="identifier"
+              className="input"
+              type="text"
+              required
+              autoComplete="username"
+              placeholder="09... / email"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+            />
           </div>
           <div>
             <label className="label" htmlFor="password">{t("password")}</label>
@@ -63,6 +71,7 @@ export default function Login() {
                 className="input pr-10"
                 type={showPw ? "text" : "password"}
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -94,11 +103,6 @@ export default function Login() {
             {t("createAccount")}
           </Link>
         </p>
-
-        <div className="mt-6 rounded-lg border border-ink-600 bg-ink-800 p-3 text-xs text-cream-400">
-          <span className="font-semibold text-green-300">{t("demoAdmin")}</span>{" "}
-          {t("demoAdminDesc")}
-        </div>
       </div>
     </div>
   );

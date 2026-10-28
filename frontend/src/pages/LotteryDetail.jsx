@@ -25,16 +25,7 @@ export default function LotteryDetail() {
   const { user } = useAuth();
   const { t, lang } = useLang();
 
-  useEffect(() => {
-    if (!id || id === "undefined") {
-      navigate("/", { replace: true });
-      return;
-    }
-    apiClient.getLottery(id).then(setLottery).catch(() => navigate("/", { replace: true }));
-    apiClient.paymentAccounts().then(setAccounts).catch(() => {});
-    apiClient.takenNumbers(id).then((r) => setTakenNums(r.taken || [])).catch(() => {});
-    if (user) { setSenderName(user.full_name || ""); setPhone(user.phone || ""); }
-  }, [id, navigate, user]);  const [lottery, setLottery]           = useState(null);
+  const [lottery, setLottery]           = useState(null);
   const [accounts, setAccounts]         = useState({});
   const [takenNums, setTakenNums]       = useState([]);
   const [numRange, setNumRange]         = useState(null); // {min, max} or null
@@ -107,6 +98,7 @@ export default function LotteryDetail() {
   async function submitPayment() {
     if (!reference.trim()) { setError(lang === "am" ? "ማጣቀሻ ቁጥር ያስፈልጋል" : "Payment reference is required"); return; }
     if (!senderName.trim()) { setError(lang === "am" ? "ስም ያስፈልጋል" : "Sender name is required"); return; }
+    if (!phone.trim()) { setError(lang === "am" ? "ስልክ ቁጥር ያስፈልጋል" : "Phone number is required"); return; }
     setError(""); setBusy(true);
     try {
       const fd = new FormData();

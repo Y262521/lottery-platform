@@ -61,9 +61,9 @@ class User(Base):
     __tablename__ = "users"
 
     id:              Mapped[int]      = mapped_column(Integer, primary_key=True)
-    email:           Mapped[str]      = mapped_column(String(255), unique=True, index=True, nullable=False)
+    email:           Mapped[str|None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     full_name:       Mapped[str]      = mapped_column(String(255), nullable=False)
-    phone:           Mapped[str|None] = mapped_column(String(30), nullable=True)
+    phone:           Mapped[str|None] = mapped_column(String(30), unique=True, index=True, nullable=True)
     hashed_password: Mapped[str]      = mapped_column(String(255), nullable=False)
     role:            Mapped[Role]     = mapped_column(SAEnum(Role), default=Role.USER, nullable=False)
     is_active:       Mapped[bool]     = mapped_column(Boolean, default=True, nullable=False)
@@ -157,6 +157,7 @@ class DrawResult(Base):
     # e.g. ["LP001-0042", "LP001-0107"]
     winning_ticket_nos: Mapped[list]     = mapped_column(JSON, nullable=False)
     draw_video_url:     Mapped[str|None] = mapped_column(String(500), nullable=True)
+    draw_video_urls:    Mapped[list|None]= mapped_column(JSON, nullable=True, default=list)
     proof_image_urls:   Mapped[list|None]= mapped_column(JSON, nullable=True, default=list)
     notes:              Mapped[str|None] = mapped_column(Text, nullable=True)
     published_at:       Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

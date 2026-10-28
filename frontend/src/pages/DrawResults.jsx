@@ -17,6 +17,10 @@ export default function DrawResults() {
     apiClient.getWinners(id).then(setWinners).catch(() => {});
   }, [id]);
 
+  const videos = result?.draw_video_urls?.length
+    ? result.draw_video_urls
+    : result?.draw_video_url ? [result.draw_video_url] : [];
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <button onClick={() => navigate("/")} className="mb-4 text-sm text-cream-300 hover:text-cream-100">
@@ -43,12 +47,31 @@ export default function DrawResults() {
             </p>
           </div>
 
-          {result.draw_video_url && (
+          {/* Multiple Draw Videos Proof with decreased, compact height */}
+          {videos.length > 0 && (
             <div className="card p-6">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-4">{t("drawVideoProof")}</h2>
-              <video controls className="w-full rounded-xl" src={result.draw_video_url}>
-                Your browser doesn't support video.
-              </video>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-4">
+                {videos.length > 1 ? t("drawVideosProof") : t("drawVideoProof")}
+              </h2>
+              <div className={`grid gap-4 ${videos.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                {videos.map((vUrl, i) => (
+                  <div key={i} className="rounded-xl overflow-hidden bg-ink-900 border border-ink-600">
+                    <video
+                      controls
+                      playsInline
+                      className="w-full rounded-t-xl max-h-48 sm:max-h-56 object-contain bg-black"
+                      src={vUrl}
+                    >
+                      Your browser doesn't support video.
+                    </video>
+                    {videos.length > 1 && (
+                      <div className="p-2 text-xs text-cream-400 bg-ink-800">
+                        Video #{i + 1}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

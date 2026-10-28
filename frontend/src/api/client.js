@@ -100,6 +100,7 @@ export const apiClient = {
   getWinners: (lotteryId) => api(`/api/lotteries/${lotteryId}/winners`),
   publishResults: (lotteryId, b) => api(`/api/lotteries/${lotteryId}/results`, { method: "POST", body: b }),
   uploadDrawVideo: (id, formData) => api(`/api/lotteries/${id}/results/video`, { method: "POST", body: formData, form: true }),
+  uploadDrawVideos: (id, formData) => api(`/api/lotteries/${id}/results/videos`, { method: "POST", body: formData, form: true }),
   uploadProofImages: (id, formData) => api(`/api/lotteries/${id}/results/proof-images`, { method: "POST", body: formData, form: true }),
 
   // admin

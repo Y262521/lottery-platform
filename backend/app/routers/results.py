@@ -45,7 +45,7 @@ def publish_results(
             t.status = TicketStatus.WON if t.ticket_no in winning_set else TicketStatus.LOST
             if t.status == TicketStatus.WON:
                 winner = db.get(User, t.user_id)
-                if winner:
+                if winner and winner.email:
                     send_winner_notification(winner.email, winner.full_name, lottery.title, t.ticket_no)
 
     log(db, "draw.results_published", actor_id=admin.id, entity="lottery_post",
@@ -56,20 +56,43 @@ def publish_results(
 
 
 @router.post("/{lottery_id}/results/video", response_model=DrawResultOut)
+@router.post("/{lottery_id}/results/videos", response_model=DrawResultOut)
 async def upload_draw_video(
     lottery_id: int,
-    file: UploadFile = File(...),
+    file: UploadFile = File(default=None),
+    files: list[UploadFile] = File(default=None),
     db: Session = Depends(get_db),
     admin: User = Depends(require_roles(Role.ADMIN)),
 ):
     result = db.scalar(select(DrawResult).where(DrawResult.lottery_id == lottery_id))
     if not result:
         raise HTTPException(404, "Publish results first before uploading video")
-    content = await file.read()
-    url = upload_video(content, folder="lottery/draw_videos",
-                       public_id=f"lottery_{lottery_id}_draw_video")
-    if url:
-        result.draw_video_url = url
+
+    uploaded = []
+    if files:
+        uploaded.extend(files)
+    if file and file.filename:
+        uploaded.append(file)
+
+    if not uploaded:
+        raise HTTPException(400, "No video file provided")
+
+    urls = list(result.draw_video_urls or [])
+    if result.draw_video_url and result.draw_video_url not in urls:
+        urls.insert(0, result.draw_video_url)
+
+    for i, f in enumerate(uploaded):
+        if not f.filename:
+            continue
+        content = await f.read()
+        url = upload_video(content, folder="lottery/draw_videos",
+                           public_id=f"lottery_{lottery_id}_draw_video_{len(urls)+i}")
+        if url:
+            urls.append(url)
+
+    if urls:
+        result.draw_video_urls = urls
+        result.draw_video_url = urls[0]
         db.commit()
         db.refresh(result)
     return result

@@ -77,7 +77,7 @@ export default function AdminTransactions() {
             <tr>
               <th className="px-4 py-3">{t("txnId")}</th>
               <th className="px-4 py-3">{lang === "am" ? "ተጠቃሚ" : "User"}</th>
-              <th className="px-4 py-3">{lang === "am" ? "ሎተሪ" : "Lottery"}</th>
+              <th className="px-4 py-3">{lang === "am" ? "እጣ" : "Draw"}</th>
               <th className="px-4 py-3">{t("txnAmount")}</th>
               <th className="px-4 py-3">{lang === "am" ? "ዘዴ" : "Method"}</th>
               <th className="px-4 py-3">{lang === "am" ? "ማጣቀሻ" : "Reference"}</th>
@@ -138,7 +138,7 @@ function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
             <span className="font-mono text-green-300 text-sm">ETB {tx.amount}</span>
           </div>
           <div className="mt-1 text-xs text-cream-400">
-            {lang === "am" ? "ሎተሪ" : "Lottery"} #{tx.lottery_id} ·{" "}
+            {lang === "am" ? "እጣ" : "Draw"} #{tx.lottery_id} ·{" "}
             {tx.tickets_count} {lang === "am" ? "ቲኬቶች" : "ticket(s)"} ·{" "}
             {lang === "am" ? "ማጣቀሻ:" : "Ref:"}{" "}
             <span className="font-mono text-cream-200">{tx.gateway_ref}</span>

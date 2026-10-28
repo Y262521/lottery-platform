@@ -3,8 +3,8 @@ import { createContext, useContext, useState } from "react";
 const translations = {
   en: {
     // Brand
-    brandName: "Yonas & Robel Online Lottery",
-    brandSub: "Direct-Purchase Lottery",
+    brandName: "Yona Online Draw",
+    brandSub: "Direct-Purchase Online Draw",
     // Navbar
     home: "Home",
     myTickets: "My Tickets",
@@ -14,12 +14,12 @@ const translations = {
     signOut: "Sign out",
 
     // Home hero
-    heroTag: "Direct-purchase lottery platform",
+    heroTag: "Direct-purchase online draw platform",
     heroTitle: "Your ticket to",
     heroTitleAccent: "winning",
-    heroDesc: "Browse active lottery events, buy tickets directly, and watch transparent draw results with video proof.",
-    noOpenDraws: "No active lotteries right now. Check back soon.",
-    draws: "Lotteries",
+    heroDesc: "Browse active draws, buy tickets directly, and watch transparent draw results with video proof.",
+    noOpenDraws: "No active draws right now. Check back soon.",
+    draws: "Draws",
     pastFrozen: "Past Draws",
     ticket: "Ticket",
     ticketsSold: "tickets sold",
@@ -29,7 +29,8 @@ const translations = {
     // Auth
     signInTitle: "Sign in",
     signInSub: "Welcome back.",
-    email: "Email",
+    email: "Email (optional)",
+    emailOrPhone: "Email or Phone",
     password: "Password",
     signingIn: "Signing in…",
     newHere: "New here?",
@@ -37,15 +38,15 @@ const translations = {
     demoAdmin: "Demo admin",
     demoAdminDesc: "credentials are pre-filled.",
     createAccountTitle: "Create account",
-    createAccountSub: "Register to start buying lottery tickets.",
+    createAccountSub: "Register to start buying draw tickets.",
     fullName: "Full name",
-    phone: "Phone (optional)",
+    phone: "Phone Number *",
     atLeast8: "At least 8 characters.",
     creating: "Creating…",
     alreadyHave: "Already have an account?",
     registrationFailed: "Registration failed",
 
-    // Lottery detail
+    // Draw detail
     prize: "Prize",
     drawDate: "Draw Date",
     remaining: "Remaining",
@@ -64,6 +65,7 @@ const translations = {
     drawResults: "Draw Results & Verification",
     winningNumbers: "Winning Ticket Numbers",
     drawVideoProof: "Draw Video Proof",
+    drawVideosProof: "Draw Video Proofs",
     photoEvidence: "Photo Evidence",
     winners: "Winners",
     resultsNotPublished: "Results have not been published yet.",
@@ -80,42 +82,42 @@ const translations = {
     telebirrPushSent: "A Telebirr USSD push has been sent to your phone. Approve the payment to confirm your tickets.",
     telebirrPending: "Your tickets will appear in \"My Tickets\" once approved.",
     paymentConfirmed: "Payment Confirmed!",
-    ticketsGenerated: "Your tickets have been generated and a confirmation email has been sent.",
+    ticketsGenerated: "Your tickets have been generated and a confirmation notification has been sent.",
     viewMyTickets: "View My Tickets",
-    browseMore: "Browse More Lotteries",
+    browseMore: "Browse More Draws",
 
     // My tickets
     myTicketsTitle: "My Tickets",
-    myTicketsSub: "All your lottery entries.",
+    myTicketsSub: "All your draw entries.",
     noTickets: "No tickets yet.",
-    browseDesc: "Browse lotteries",
+    browseDesc: "Browse draws",
     confirmed: "Confirmed",
 
     // Admin dashboard
     adminTitle: "Admin Dashboard",
-    newLottery: "+ New Lottery",
+    newLottery: "+ New Draw",
     revenue: "Revenue (ETB)",
     winningTickets: "Winners",
-    activeLotteries: "Active Lotteries",
+    activeLotteries: "Active Draws",
     users: "Users",
     pendingPayments: "Pending Payments",
-    lotteries: "Lotteries",
+    lotteries: "Draws",
     manageDesc: "Create, manage and publish draw results",
     transactions: "Transactions",
     transactionsDesc: "Review payments and confirm bank transfers",
     usersDesc: "Manage roles and account status",
 
-    // Admin lotteries
+    // Admin draws
     all: "All",
     manage: "Manage",
     publish: "Publish",
     closeSales: "Close Sales",
     sold: "Sold",
     price: "Price",
-    noLotteries: "No lotteries found.",
+    noLotteries: "No draws found.",
 
-    // Admin lottery form
-    createLottery: "Create New Lottery",
+    // Admin draw form
+    createLottery: "Create New Draw",
     titleField: "Title *",
     description: "Description",
     prizeDescription: "Prize Description *",
@@ -127,14 +129,15 @@ const translations = {
     salesCloseAt: "Sales Close At",
     coverImage: "Cover Image (optional)",
     prizeImages: "Prize Images (optional, multiple)",
-    createDraft: "Create Lottery (Save as Draft)",
+    createDraft: "Create Draw (Save as Draft)",
     cancel: "Cancel",
+    remove: "Remove",
 
-    // Admin lottery manage
-    backToLotteries: "← Lotteries",
+    // Admin draw manage
+    backToLotteries: "← Draws",
     actions: "Actions",
     openSales: "Publish (Open Sales)",
-    cancelLottery: "Cancel Lottery",
+    cancelLottery: "Cancel Draw",
     viewPublicPage: "View Public Page ↗",
     capacity: "Capacity",
     unlimited: "Unlimited",
@@ -143,7 +146,7 @@ const translations = {
     winningTicketNos: "Winning Ticket Numbers (comma-separated) *",
     winningPlaceholder: "LP001-00042, LP001-00107",
     notes: "Notes (optional)",
-    drawVideoProofUpload: "Draw Video Proof (optional)",
+    drawVideoProofUpload: "Draw Video Proof (multiple allowed, optional)",
     photoEvidenceUpload: "Photo Evidence (optional)",
     publishResultsBtn: "Publish Results & Notify Winners",
     publishing: "Publishing…",
@@ -156,7 +159,7 @@ const translations = {
     // Admin transactions
     txnId: "ID",
     txnUser: "User",
-    txnLottery: "Lottery",
+    txnLottery: "Draw",
     txnAmount: "Amount",
     txnGateway: "Gateway",
     txnStatus: "Status",
@@ -183,7 +186,7 @@ const translations = {
     drawAt: "Draw Date",
     status: "Status",
 
-    // Lottery & ticket statuses (shown in UI)
+    // Draw & ticket statuses (shown in UI)
     statusDRAFT:           "Draft",
     statusACTIVE:          "Active",
     statusCLOSED:          "Closed",
@@ -204,10 +207,10 @@ const translations = {
     paymentRejected:     "Payment Rejected",
     ticketNo:            "Ticket No.",
     chosenNo:            "Your number",
-    noTicketsForLottery: "No tickets for this lottery.",
+    noTicketsForLottery: "No tickets for this draw.",
     paymentRef:          "Ref",
     submittedOn:         "Submitted",
-    lottery:             "Lottery",
+    lottery:             "Draw",
 
     // Payment proof
     makePayment: "Make Payment",
@@ -216,9 +219,9 @@ const translations = {
     bankRef: "Bank Reference / Slip Number *",
     senderName: "Sender Name (as on transfer) *",
     senderNamePh: "Your name",
-    phoneLbl: "Phone Number (optional)",
+    phoneLbl: "Phone Number *",
     messageLbl: "Message / Note (optional)",
-    messagePh: "e.g. Lottery ticket payment for...",
+    messagePh: "e.g. Draw ticket payment for...",
     screenshotLbl: "Payment Screenshot (optional but recommended)",
     screenshotHelp: "Upload a screenshot of your Telebirr/bank receipt as proof",
     submitRef: "Submit Payment Reference",
@@ -234,8 +237,8 @@ const translations = {
 
   am: {
     // Brand
-    brandName: "እድል ኦንላይን እጣ",
-    brandSub: "እድል የኦንላይን መድረክ",
+    brandName: "ዮና ኦንላይን እጣ",
+    brandSub: "ዮና የኦንላይን እጣ መድረክ",
     // Navbar
     home: "ዋና ገጽ",
     myTickets: "የእኔ ቲኬቶች",
@@ -245,10 +248,10 @@ const translations = {
     signOut: "ውጣ",
 
     // Home hero
-    heroTitle: "የእድሎን",
-    heroTitleAccent: "በእድል ኦንላይን እጣ ይሞክሩ",
-    heroDesc: "አሁን ያሉ እጣዎችን ይዬ እና የእጣ ቁጥሮን በቀጥታ ይግዙ",
-    noOpenDraws: "አሁን ንቁ ሎተሪ የለም። ቆይተው ይመለሱ።",
+    heroTitle: "በዮና",
+    heroTitleAccent: "ኦንላይን እጣ ይሞክሩ",
+    heroDesc: "አሁን ያሉ እጣዎችን ይመልከቱ እና የእጣ ቁጥሮን በቀጥታ ይግዙ",
+    noOpenDraws: "አሁን ንቁ እጣ የለም። ቆይተው ይመለሱ።",
     draws: "ዕጣዎች",
     pastFrozen: "ያለፉ ዕጣዎች",
     ticket: "ቲኬት",
@@ -259,7 +262,8 @@ const translations = {
     // Auth
     signInTitle: "ግባ",
     signInSub: "እንኳን ደህና መጡ።",
-    email: "ኢሜይል",
+    email: "ኢሜይል (አማራጭ)",
+    emailOrPhone: "ኢሜይል ወይም ስልክ ቁጥር",
     password: "የይለፍ ቃል",
     signingIn: "በመግባት ላይ…",
     newHere: "አዲስ ነዎት?",
@@ -267,15 +271,15 @@ const translations = {
     demoAdmin: "ዴሞ አስተዳዳሪ",
     demoAdminDesc: "ምስክርነቶች አስቀድሞ ተሞልተዋል።",
     createAccountTitle: "መለያ ፍጠር",
-    createAccountSub: "ሎተሪ ቲኬቶችን ለመግዛት ይመዝገቡ።",
+    createAccountSub: "የእጣ ቲኬቶችን ለመግዛት ይመዝገቡ።",
     fullName: "ሙሉ ስም",
-    phone: "ስልክ (አማራጭ)",
+    phone: "ስልክ ቁጥር *",
     atLeast8: "ቢያንስ 8 ቁምፊዎች።",
     creating: "በመፍጠር ላይ…",
     alreadyHave: "መለያ አለዎት?",
     registrationFailed: "ምዝገባ አልተሳካም",
 
-    // Lottery detail
+    // Draw detail
     prize: "ሽልማት",
     drawDate: "የዕጣ ቀን",
     remaining: "ቀሪ",
@@ -294,6 +298,7 @@ const translations = {
     drawResults: "የዕጣ ውጤቶች",
     winningNumbers: "አሸናፊ ቲኬት ቁጥሮች",
     drawVideoProof: "የዕጣ ቪዲዮ ማስረጃ",
+    drawVideosProof: "የዕጣ ቪዲዮ ማስረጃዎች",
     photoEvidence: "የፎቶ ማስረጃ",
     winners: "አሸናፊዎች",
     resultsNotPublished: "ውጤቶች ገና አልወጡም።",
@@ -301,7 +306,7 @@ const translations = {
 
     // Payment callback
     bankTransferTitle: "የባንክ ዝውውር መመሪያ",
-    bankTransferDesc: "ትክክለኛውን መጠን ወደ ሂሳቡ ያስተላልፉ እና 영수증ዎን ለድጋፍ ቡድናችን ይላኩ።",
+    bankTransferDesc: "ትክክለኛውን መጠን ወደ ሂሳቡ ያስተላልፉ እና ደረሰኝዎን ለድጋፍ ቡድናችን ይላኩ።",
     bank: "ባንክ",
     account: "ሂሳብ",
     reference: "ማጣቀሻ",
@@ -310,42 +315,42 @@ const translations = {
     telebirrPushSent: "ወደ ስልክዎ Telebirr USSD ላኩ። ቲኬቶቹን ለማረጋገጥ ክፍያውን ያጽድቁ።",
     telebirrPending: "ካጸደቁ በኋላ ቲኬቶቹ 'የእኔ ቲኬቶች' ውስጥ ይታያሉ።",
     paymentConfirmed: "ክፍያ ተረጋግጧል!",
-    ticketsGenerated: "ቲኬቶቹ ተፈጥረዋል እና ማረጋገጫ ኢሜይል ተልኳል።",
+    ticketsGenerated: "ቲኬቶቹ ተፈጥረዋል እና ማረጋገጫ ተልኳል።",
     viewMyTickets: "የእኔ ቲኬቶችን ይመልከቱ",
-    browseMore: "ተጨማሪ ሎተሪዎችን ይዳስሱ",
+    browseMore: "ተጨማሪ እጣዎችን ይዳስሱ",
 
     // My tickets
     myTicketsTitle: "የእኔ ቲኬቶች",
-    myTicketsSub: "ሁሉም የሎተሪ ምዝገባዎቼ።",
+    myTicketsSub: "ሁሉም የእጣ ምዝገባዎቼ።",
     noTickets: "ቲኬት የለዎትም።",
-    browseDesc: "ሎተሪዎችን ይዳስሱ",
+    browseDesc: "እጣዎችን ይዳስሱ",
     confirmed: "ተረጋግጧል",
 
     // Admin dashboard
     adminTitle: "የአስተዳዳሪ ዳሽቦርድ",
-    newLottery: "+ አዲስ ሎተሪ",
+    newLottery: "+ አዲስ እጣ",
     revenue: "ገቢ (ETB)",
     winningTickets: "አሸናፊዎች",
-    activeLotteries: "ንቁ ሎተሪዎች",
+    activeLotteries: "ንቁ እጣዎች",
     users: "ተጠቃሚዎች",
     pendingPayments: "በሂደት ላይ ያሉ ክፍያዎች",
-    lotteries: "ሎተሪዎች",
-    manageDesc: "ሎተሪዎችን ፍጠሩ፣ ያስተዳድሩ እና ውጤቶችን ያወጡ",
+    lotteries: "እጣዎች",
+    manageDesc: "እጣዎችን ፍጠሩ፣ ያስተዳድሩ እና ውጤቶችን ያወጡ",
     transactions: "ግብይቶች",
     transactionsDesc: "ክፍያዎችን ይከልሱ እና የባንክ ዝውውሮችን ያረጋግጡ",
     usersDesc: "ሚናዎችን እና የሂሳብ ሁኔታ ያስተዳድሩ",
 
-    // Admin lotteries
+    // Admin draws
     all: "ሁሉም",
     manage: "አስተዳድር",
     publish: "አሳትም",
     closeSales: "ሽያጭ ዝጋ",
     sold: "ተሸጧል",
     price: "ዋጋ",
-    noLotteries: "ሎተሪ አልተገኘም።",
+    noLotteries: "እጣ አልተገኘም።",
 
-    // Admin lottery form
-    createLottery: "አዲስ ሎተሪ ፍጠር",
+    // Admin draw form
+    createLottery: "አዲስ እጣ ፍጠር",
     titleField: "ርዕስ *",
     description: "መግለጫ",
     prizeDescription: "የሽልማት መግለጫ *",
@@ -356,15 +361,16 @@ const translations = {
     salesOpenAt: "ሽያጭ የሚከፈትበት ጊዜ",
     salesCloseAt: "ሽያጭ የሚዘጋበት ጊዜ",
     coverImage: "ሽፋን ምስል (አማራጭ)",
-    prizeImages: "የሽልማት ምስሎች (አማራጭ)",
-    createDraft: "ሎተሪ ፍጠር (ረቂቅ አስቀምጥ)",
+    prizeImages: "የሽልማት ምስሎች (አማራጭ፣ በርካታ)",
+    createDraft: "እጣ ፍጠር (ረቂቅ አስቀምጥ)",
     cancel: "ሰርዝ",
+    remove: "አስወግድ",
 
-    // Admin lottery manage
-    backToLotteries: "← ሎተሪዎች",
+    // Admin draw manage
+    backToLotteries: "← እጣዎች",
     actions: "ድርጊቶች",
     openSales: "አሳትም (ሽያጭ ክፈት)",
-    cancelLottery: "ሎተሪ ሰርዝ",
+    cancelLottery: "እጣ ሰርዝ",
     viewPublicPage: "ህዝባዊ ገጽ ይመልከቱ ↗",
     capacity: "ብዛት",
     unlimited: "ያልተወሰነ",
@@ -373,7 +379,7 @@ const translations = {
     winningTicketNos: "አሸናፊ ቲኬት ቁጥሮች (በኮማ ይለዩ) *",
     winningPlaceholder: "LP001-00042, LP001-00107",
     notes: "ማስታወሻ (አማራጭ)",
-    drawVideoProofUpload: "የዕጣ ቪዲዮ ማስረጃ (አማራጭ)",
+    drawVideoProofUpload: "የዕጣ ቪዲዮ ማስረጃ (በርካታ ቪዲዮዎች ይፈቀዳሉ፣ አማራጭ)",
     photoEvidenceUpload: "የፎቶ ማስረጃ (አማራጭ)",
     publishResultsBtn: "ውጤቶች ያሳትሙ እና አሸናፊዎችን ያሳውቁ",
     publishing: "በማሳተም ላይ…",
@@ -386,7 +392,7 @@ const translations = {
     // Admin transactions
     txnId: "መ/ቁ",
     txnUser: "ተጠቃሚ",
-    txnLottery: "ሎተሪ",
+    txnLottery: "እጣ",
     txnAmount: "መጠን",
     txnGateway: "መግቢያ",
     txnStatus: "ሁኔታ",
@@ -420,9 +426,9 @@ const translations = {
     bankRef: "የባንክ ማጣቀሻ / ደረሰኝ ቁጥር *",
     senderName: "የላኪ ስም *",
     senderNamePh: "ስምዎ",
-    phoneLbl: "ስልክ ቁጥር (አማራጭ)",
+    phoneLbl: "ስልክ ቁጥር *",
     messageLbl: "መልዕክት / ማስታወሻ (አማራጭ)",
-    messagePh: "ለምሳሌ: ሎተሪ ቲኬት ክፍያ...",
+    messagePh: "ለምሳሌ: የእጣ ቲኬት ክፍያ...",
     screenshotLbl: "የክፍያ ስክሪንሾት (አማራጭ ነገር ግን ይመከራል)",
     screenshotHelp: "የ Telebirr/ባንክ ደረሰኝ ስክሪንሾት ይስቀሉ",
     submitRef: "ክፍያ አስረከብ",
@@ -435,7 +441,7 @@ const translations = {
     backBtn: "← ተመለስ",
     afterTransfer: "ካስተላለፉ በኋላ ማጣቀሻ ቁጥሩን ያስገቡ እና ስክሪንሾት ይስቀሉ። አስተዳዳሪ ያረጋግጣል።",
 
-    // Lottery & ticket statuses
+    // Draw & ticket statuses
     statusDRAFT:           "ረቂቅ",
     statusACTIVE:          "ንቁ",
     statusCLOSED:          "ተዘግቷል",
@@ -456,10 +462,10 @@ const translations = {
     paymentRejected:     "ክፍያ ተቀባይነት አላገኘም",
     ticketNo:            "የቲኬት ቁጥር",
     chosenNo:            "የመረጡት ቁጥር",
-    noTicketsForLottery: "ለዚህ ሎተሪ ቲኬት የለም።",
+    noTicketsForLottery: "ለዚህ እጣ ቲኬት የለም።",
     paymentRef:          "ማጣቀሻ",
     submittedOn:         "የቀረበ ቀን",
-    lottery:             "ሎተሪ",
+    lottery:             "እጣ",
   },
 };
 

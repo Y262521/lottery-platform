@@ -1,6 +1,6 @@
 """Auth: register, login, refresh, me."""
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from ..audit import log
 from ..database import get_db
@@ -14,11 +14,26 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
-    if db.scalar(select(User).where(User.email == payload.email)):
-        raise HTTPException(409, "Email already registered")
+    phone = payload.phone.strip() if payload.phone else ""
+    if not phone:
+        raise HTTPException(400, "Phone number is required")
+
+    # Check if phone number already registered
+    existing_phone = db.scalar(select(User).where(User.phone == phone))
+    if existing_phone:
+        raise HTTPException(409, "Phone number already registered")
+
+    email = str(payload.email).strip().lower() if payload.email else None
+    if email:
+        existing_email = db.scalar(select(User).where(func.lower(User.email) == email))
+        if existing_email:
+            raise HTTPException(409, "Email already registered")
+
     user = User(
-        email=payload.email, full_name=payload.full_name,
-        phone=payload.phone, hashed_password=hash_password(payload.password),
+        email=email,
+        phone=phone,
+        full_name=payload.full_name.strip(),
+        hashed_password=hash_password(payload.password),
         role=Role.USER,
     )
     db.add(user)
@@ -30,7 +45,40 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenPair)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.email == payload.email))
+    login_id = payload.login_id
+    if not login_id:
+        raise HTTPException(400, "Email or phone number is required")
+
+    clean_id = login_id.strip()
+
+    # Search by email or phone
+    user = db.scalar(
+        select(User).where(
+            (func.lower(User.email) == clean_id.lower()) |
+            (User.phone == clean_id)
+        )
+    )
+
+    # If not found and identifier contains only phone-like characters, try normalized variants
+    if not user:
+        digits = clean_id.lstrip("+").strip()
+        if digits.isdigit():
+            alt_candidates = []
+            if digits.startswith("251"):
+                alt_candidates.append("0" + digits[3:])
+                alt_candidates.append("+" + digits)
+            elif digits.startswith("0"):
+                alt_candidates.append("+251" + digits[1:])
+                alt_candidates.append(digits[1:])
+            elif len(digits) == 9:
+                alt_candidates.append("0" + digits)
+                alt_candidates.append("+251" + digits)
+
+            for cand in alt_candidates:
+                user = db.scalar(select(User).where(User.phone == cand))
+                if user:
+                    break
+
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(401, "Invalid credentials")
     if not user.is_active:

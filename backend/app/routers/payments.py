@@ -220,10 +220,11 @@ def confirm_payment(
         raise HTTPException(500, f"Confirmation failed: {exc}")
 
     ticket_nos = [t.ticket_no for t in tickets]
-    send_ticket_confirmation(
-        user.email, user.full_name, lottery.title,
-        ticket_nos, lottery.draw_date.strftime("%Y-%m-%d"),
-    )
+    if user.email:
+        send_ticket_confirmation(
+            user.email, user.full_name, lottery.title,
+            ticket_nos, lottery.draw_date.strftime("%Y-%m-%d"),
+        )
     db.refresh(txn)
     return txn
 

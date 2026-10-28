@@ -30,7 +30,7 @@ export default function Navbar() {
             style={{ display: "none" }}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 font-mono font-bold text-ink-900 shadow-glow text-xs"
           >
-            {lang === "am" ? "ዮ" : "YR"}
+            {lang === "am" ? "ዮ" : "YO"}
           </span>
           <span className="flex flex-col leading-none min-w-0">
             <span className="text-sm font-bold tracking-tight text-cream-50 truncate">{t("brandName")}</span>
@@ -55,7 +55,7 @@ export default function Navbar() {
             <>
               <span className="hidden text-xs text-cream-300 sm:flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
-                {user.email}
+                {user.email || user.phone || user.full_name}
               </span>
               <button
                 onClick={() => { logout(); navigate("/login"); }}

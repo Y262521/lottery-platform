@@ -153,5 +153,14 @@ def run_migrations() -> None:
             _exec(db, "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS chosen_number INTEGER",
                   "tickets.chosen_number")
 
+        # v2.2 additions: optional email, required phone, multiple draw videos
+        if _table_exists(db, "users"):
+            _exec(db, "ALTER TABLE users ALTER COLUMN email DROP NOT NULL", "users.email drop not null")
+            _exec(db, "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_phone ON users(phone)", "ix_users_phone")
+
+        if _table_exists(db, "draw_results"):
+            _exec(db, "ALTER TABLE draw_results ADD COLUMN IF NOT EXISTS draw_video_urls JSONB",
+                  "draw_results.draw_video_urls")
+
     finally:
         db.close()

@@ -13,8 +13,9 @@ def send_ticket_confirmation(
     draw_date: str,
 ) -> None:
     """Send ticket confirmation email. Fails silently so payments are not blocked."""
-    if not settings.RESEND_API_KEY:
-        logger.info("RESEND_API_KEY not set — skipping email to %s", to_email)
+    if not settings.RESEND_API_KEY or not to_email:
+        if not settings.RESEND_API_KEY:
+            logger.info("RESEND_API_KEY not set — skipping email to %s", to_email)
         return
     try:
         import resend
@@ -40,9 +41,9 @@ def send_ticket_confirmation(
         logger.error("Failed to send email to %s: %s", to_email, exc)
 
 
-def send_winner_notification(to_email: str, full_name: str,
+def send_winner_notification(to_email: str | None, full_name: str,
                              lottery_title: str, ticket_no: str) -> None:
-    if not settings.RESEND_API_KEY:
+    if not settings.RESEND_API_KEY or not to_email:
         return
     try:
         import resend
