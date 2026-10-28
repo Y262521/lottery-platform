@@ -1,4 +1,4 @@
-"""JWT creation/verification and password hashing."""
+import bcrypt
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from jose import JWTError, jwt
@@ -9,11 +9,22 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    try:
+        pwd_bytes = plain.encode("utf-8")[:72]
+        salt = bcrypt.gensalt(rounds=12)
+        return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
+    except Exception:
+        return pwd_context.hash(plain)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8")[:72], hashed.encode("utf-8"))
+    except Exception:
+        try:
+            return pwd_context.verify(plain, hashed)
+        except Exception:
+            return False
 
 
 def _token(subject: str, expires: timedelta, kind: str) -> str:

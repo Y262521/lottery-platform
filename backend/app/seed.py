@@ -19,6 +19,11 @@ def seed_admin() -> None:
                 if admin:
                     admin.email = settings.ADMIN_EMAIL
                     break
+        if not admin:
+            admin = db.scalar(select(User).where(User.role == Role.ADMIN))
+            if admin:
+                admin.email = settings.ADMIN_EMAIL
+
         if admin:
             admin.hashed_password = hash_password(settings.ADMIN_PASSWORD)
             admin.role = Role.ADMIN
