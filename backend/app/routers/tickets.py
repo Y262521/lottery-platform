@@ -33,7 +33,23 @@ def get_ticket(ticket_id: int, db: Session = Depends(get_db),
 @router.get("/lottery/{lottery_id}", response_model=list[TicketOut])
 def lottery_tickets(lottery_id: int, db: Session = Depends(get_db),
                     _: User = Depends(require_roles(Role.ADMIN, Role.AUDITOR))):
-    return db.scalars(
+    tickets = db.scalars(
         select(Ticket).where(Ticket.lottery_id == lottery_id)
-        .order_by(Ticket.ticket_no)
+        .order_by(Ticket.chosen_number.asc().nulls_last(), Ticket.ticket_no.asc())
     ).all()
+    return [
+        TicketOut(
+            id=t.id,
+            user_id=t.user_id,
+            ticket_no=t.ticket_no,
+            chosen_number=t.chosen_number,
+            lottery_id=t.lottery_id,
+            status=t.status,
+            created_at=t.created_at,
+            confirmed_at=t.confirmed_at,
+            user_name=t.user.full_name if t.user else "—",
+            user_phone=t.user.phone if t.user else "—",
+            user_email=t.user.email if t.user else None,
+        )
+        for t in tickets
+    ]

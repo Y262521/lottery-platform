@@ -102,16 +102,38 @@ def all_transactions(db: Session = Depends(get_db),
     rows = db.scalars(
         select(PaymentTransaction).order_by(PaymentTransaction.created_at.desc()).limit(500)
     ).all()
-    return [
-        {
-            "id": t.id, "user_id": t.user_id, "lottery_id": t.lottery_id,
-            "amount": t.amount, "gateway": t.gateway, "gateway_ref": t.gateway_ref,
-            "status": t.gateway_status, "tickets_count": t.tickets_count,
-            "created_at": t.created_at, "verified_at": t.verified_at,
-            "webhook_payload": t.webhook_payload,  # includes sender, phone, message, screenshot
-        }
-        for t in rows
-    ]
+    results = []
+    for t in rows:
+        wp = t.webhook_payload or {}
+        ticket_chosen = [tk.chosen_number for tk in t.tickets if tk.chosen_number is not None]
+        chosen = ticket_chosen if ticket_chosen else (wp.get("chosen_numbers") or [])
+        results.append({
+            "id": t.id,
+            "user_id": t.user_id,
+            "user_name": t.user.full_name if t.user else (wp.get("sender_name") or "—"),
+            "user_phone": t.user.phone if t.user else (wp.get("phone") or "—"),
+            "user_email": t.user.email if t.user else None,
+            "lottery_id": t.lottery_id,
+            "lottery_title": t.lottery.title if t.lottery else f"Draw #{t.lottery_id}",
+            "amount": t.amount,
+            "gateway": t.gateway,
+            "gateway_ref": t.gateway_ref,
+            "status": t.gateway_status,
+            "tickets_count": t.tickets_count,
+            "chosen_numbers": chosen,
+            "tickets": [
+                {
+                    "ticket_no": tk.ticket_no,
+                    "chosen_number": tk.chosen_number,
+                    "status": tk.status.value if hasattr(tk.status, "value") else str(tk.status),
+                }
+                for tk in t.tickets
+            ],
+            "created_at": t.created_at,
+            "verified_at": t.verified_at,
+            "webhook_payload": t.webhook_payload,
+        })
+    return results
 
 
 @router.get("/audit", response_model=list[AuditOut])

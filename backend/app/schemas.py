@@ -107,12 +107,16 @@ class LotteryOut(BaseModel):
 class TicketOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    user_id: int
     ticket_no: str
     chosen_number: int | None
     lottery_id: int
     status: TicketStatus
     created_at: datetime
     confirmed_at: datetime | None
+    user_name: str | None = None
+    user_phone: str | None = None
+    user_email: str | None = None
 
 
 # ── Payments ──────────────────────────────────────────────────────────────────

@@ -10,6 +10,8 @@ export default function AdminLotteryManage() {
   const [lottery, setLottery] = useState(null);
   const [result, setResult] = useState(null);
   const [tickets, setTickets] = useState([]);
+  const [ticketSearch, setTicketSearch] = useState("");
+  const [ticketStatusFilter, setTicketStatusFilter] = useState("ALL");
   const [winningNos, setWinningNos] = useState("");
   const [notes, setNotes] = useState("");
   const [videoFiles, setVideoFiles] = useState([]);
@@ -312,6 +314,148 @@ export default function AdminLotteryManage() {
               {lang === "am" ? "ገና የተጫነ የሽልማት ፎቶ የለም።" : "No additional prize photos uploaded yet."}
             </p>
           )}
+        </div>
+      </div>
+
+      {/* Participants & Selected Numbers */}
+      <div className="card p-5 mb-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-bold text-cream-50 flex items-center gap-2">
+              <span>🎟️</span>
+              <span>{t("ticketsAndNumbers")}</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-green-500/20 text-green-300 font-mono font-bold">
+                {tickets.length} {lang === "am" ? "ቲኬቶች" : "tickets"}
+              </span>
+            </h2>
+            <p className="text-xs text-cream-300 mt-1">
+              {lang === "am"
+                ? "የተጠቃሚዎች ዝርዝር እና ለመሳተፍ የመረጧቸው የዕጣ ቁጥሮች"
+                : "List of participating users and their selected draw numbers"}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-cream-400">
+              {lang === "am" ? "የተመረጡ ቁጥሮች:" : "With chosen number:"}{" "}
+              <strong className="text-green-300 font-bold">
+                {tickets.filter((tk) => tk.chosen_number !== null && tk.chosen_number !== undefined).length}
+              </strong>
+            </span>
+          </div>
+        </div>
+
+        {/* Search & Filter */}
+        <div className="flex flex-col sm:flex-row gap-2 pt-1">
+          <div className="relative flex-1">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cream-400 pointer-events-none">
+              🔍
+            </span>
+            <input
+              type="text"
+              value={ticketSearch}
+              onChange={(e) => setTicketSearch(e.target.value)}
+              placeholder={t("searchTickets")}
+              className="input pl-9 pr-7 py-1.5 text-xs w-full"
+            />
+            {ticketSearch && (
+              <button
+                type="button"
+                onClick={() => setTicketSearch("")}
+                className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-cream-400 hover:text-cream-200"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="flex gap-1 overflow-x-auto pb-1 sm:pb-0">
+            {["ALL", "CONFIRMED", "PENDING_PAYMENT", "WON"].map((st) => (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setTicketStatusFilter(st)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition shrink-0 ${
+                  ticketStatusFilter === st
+                    ? "bg-green-600 text-ink-950 font-bold"
+                    : "bg-ink-800 text-cream-300 hover:bg-ink-700 border border-ink-600"
+                }`}
+              >
+                {st}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tickets Table */}
+        <div className="overflow-x-auto rounded-xl border border-ink-600 mt-2">
+          <table className="w-full text-left text-xs min-w-[560px]">
+            <thead className="bg-ink-800 text-cream-400">
+              <tr>
+                <th className="px-3 py-2.5">{t("chosenNumber")}</th>
+                <th className="px-3 py-2.5">{t("ticketNoCol")}</th>
+                <th className="px-3 py-2.5">{t("participantUser")}</th>
+                <th className="px-3 py-2.5">{t("statusCol")}</th>
+                <th className="px-3 py-2.5">{t("txnDate")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-700">
+              {tickets
+                .filter((tk) => {
+                  if (ticketStatusFilter !== "ALL" && tk.status !== ticketStatusFilter) return false;
+                  if (!ticketSearch.trim()) return true;
+                  const tq = ticketSearch.trim().toLowerCase();
+                  const no = (tk.ticket_no || "").toLowerCase();
+                  const ch = tk.chosen_number !== null && tk.chosen_number !== undefined ? String(tk.chosen_number) : "";
+                  const name = (tk.user_name || "").toLowerCase();
+                  const phone = (tk.user_phone || "").toLowerCase();
+                  return no.includes(tq) || ch === tq || name.includes(tq) || phone.includes(tq);
+                })
+                .map((tk) => (
+                  <tr key={tk.id} className="bg-ink-700/40 hover:bg-ink-700/70">
+                    <td className="px-3 py-2">
+                      {tk.chosen_number !== null && tk.chosen_number !== undefined ? (
+                        <span className="pill bg-green-500/20 text-green-300 font-mono text-xs font-bold border border-green-500/30">
+                          Number #{tk.chosen_number}
+                        </span>
+                      ) : (
+                        <span className="text-cream-400 italic text-[11px]">
+                          {lang === "am" ? "አውቶማቲክ" : "Auto-assigned"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 font-mono text-cream-200 font-semibold">
+                      {tk.ticket_no}
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="text-cream-100 font-medium">{tk.user_name || "—"}</div>
+                      <div className="text-[11px] text-cream-400 font-mono">{tk.user_phone || "—"}</div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`pill text-[10px] ${
+                        tk.status === "CONFIRMED" ? "bg-green-500/15 text-green-300" :
+                        tk.status === "WON" ? "bg-yellow-500/20 text-yellow-300 font-bold" :
+                        tk.status === "PENDING_PAYMENT" ? "bg-yellow-500/10 text-yellow-400" :
+                        "bg-ink-800 text-cream-400"
+                      }`}>
+                        {tk.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 text-cream-400 text-[11px]">
+                      {tk.confirmed_at
+                        ? new Date(tk.confirmed_at).toLocaleDateString()
+                        : new Date(tk.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              {tickets.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-cream-400">
+                    <div className="text-2xl mb-1">🎟️</div>
+                    <p>{t("noTicketsFound")}</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

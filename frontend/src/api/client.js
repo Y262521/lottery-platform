@@ -135,5 +135,6 @@ export const apiClient = {
   savePaymentAccount: (b) => api("/api/admin/payment-accounts", { method: "POST", body: b }),
   updatePaymentAccount: (id, b) => api(`/api/admin/payment-accounts/${id}`, { method: "PATCH", body: b }),
   deletePaymentAccount: (id) => api(`/api/admin/payment-accounts/${id}`, { method: "DELETE" }),
+  lotteryTickets: (lotteryId) => api(`/api/tickets/lottery/${lotteryId}`),
 };
 
