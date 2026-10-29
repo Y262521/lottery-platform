@@ -72,16 +72,20 @@ export default function LotteryDetail() {
     reader.readAsDataURL(file);
   }
 
+  const activeQty = Math.max(1, Number(quantity) || 1);
+
   function toggleNum(n) {
     setSelectedNums((cur) => {
       if (cur.includes(n)) return cur.filter((x) => x !== n);
-      if (cur.length >= quantity) return cur; // max reached
+      if (cur.length >= activeQty) return cur; // max reached
       return [...cur, n];
     });
   }
 
   function goToPickOrPay() {
     if (!user) { navigate("/login", { state: { from: { pathname: `/lottery/${id}` } } }); return; }
+    const validQty = Math.max(1, Number(quantity) || 1);
+    if (quantity !== validQty) setQuantity(validQty);
     setError("");
     refreshTakenNumbers();
     if (hasNumberRange) {
@@ -92,10 +96,11 @@ export default function LotteryDetail() {
   }
 
   function goToPay() {
-    if (hasNumberRange && selectedNums.length !== quantity) {
+    const validQty = Math.max(1, Number(quantity) || 1);
+    if (hasNumberRange && selectedNums.length !== validQty) {
       setError(lang === "am"
-        ? `${quantity} ቁጥሮች ይምረጡ`
-        : `Please select exactly ${quantity} number${quantity > 1 ? "s" : ""}`);
+        ? `${validQty} ቁጥሮች ይምረጡ`
+        : `Please select exactly ${validQty} number${validQty > 1 ? "s" : ""}`);
       return;
     }
     // Check if any chosen number is taken or payment in progress
@@ -165,7 +170,7 @@ export default function LotteryDetail() {
     try {
       const fd = new FormData();
       fd.append("lottery_id", String(lottery.id));
-      fd.append("quantity", String(quantity));
+      fd.append("quantity", String(activeQty));
       fd.append("gateway", gatewayValue);
       fd.append("bank_or_wallet", selectedProvider);
       fd.append("payment_reference", reference.trim());
@@ -185,7 +190,7 @@ export default function LotteryDetail() {
 
   if (!lottery) return <div className="flex min-h-[60vh] items-center justify-center text-cream-300">{t("loading")}</div>;
 
-  const total = (lottery.ticket_price * quantity).toLocaleString();
+  const total = (lottery.ticket_price * activeQty).toLocaleString();
   const isOpen = lottery.status === "ACTIVE";
   const acct = accounts;
 
@@ -293,29 +298,56 @@ export default function LotteryDetail() {
                       <button
                         type="button"
                         className="btn-ghost h-10 w-10 text-xl rounded-lg font-bold"
-                        disabled={quantity <= 1}
-                        onClick={() => { setQuantity(q => Math.max(1, q - 1)); setSelectedNums([]); }}
+                        disabled={Number(quantity) <= 1}
+                        onClick={() => {
+                          const next = Math.max(1, (Number(quantity) || 1) - 1);
+                          setQuantity(next);
+                          setSelectedNums([]);
+                        }}
                       >−</button>
                       <input
                         type="number"
                         min="1"
                         max={lottery.total_tickets ? Math.max(1, lottery.total_tickets - lottery.tickets_sold) : undefined}
                         value={quantity}
+                        placeholder="1"
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 1;
-                          const maxAllowed = lottery.total_tickets ? Math.max(1, lottery.total_tickets - lottery.tickets_sold) : 999999;
-                          setQuantity(Math.max(1, Math.min(maxAllowed, val)));
+                          const raw = e.target.value;
+                          if (raw === "") {
+                            setQuantity("");
+                            setSelectedNums([]);
+                            return;
+                          }
+                          const parsed = parseInt(raw, 10);
+                          if (isNaN(parsed)) return;
+                          if (parsed <= 0) {
+                            setQuantity("");
+                            setSelectedNums([]);
+                            return;
+                          }
+                          const maxAllowed = lottery.total_tickets
+                            ? Math.max(1, lottery.total_tickets - lottery.tickets_sold)
+                            : 999999;
+                          setQuantity(Math.min(maxAllowed, parsed));
                           setSelectedNums([]);
+                        }}
+                        onBlur={() => {
+                          if (!quantity || Number(quantity) < 1) {
+                            setQuantity(1);
+                          }
                         }}
                         className="input w-24 text-center font-mono text-xl py-1.5"
                       />
                       <button
                         type="button"
                         className="btn-ghost h-10 w-10 text-xl rounded-lg font-bold"
-                        disabled={lottery.total_tickets && quantity >= (lottery.total_tickets - lottery.tickets_sold)}
+                        disabled={Boolean(lottery.total_tickets && Number(quantity) >= (lottery.total_tickets - lottery.tickets_sold))}
                         onClick={() => {
-                          const maxAllowed = lottery.total_tickets ? Math.max(1, lottery.total_tickets - lottery.tickets_sold) : 999999;
-                          setQuantity(q => Math.min(maxAllowed, q + 1));
+                          const maxAllowed = lottery.total_tickets
+                            ? Math.max(1, lottery.total_tickets - lottery.tickets_sold)
+                            : 999999;
+                          const next = Math.min(maxAllowed, (Number(quantity) || 1) + 1);
+                          setQuantity(next);
                           setSelectedNums([]);
                         }}
                       >+</button>
@@ -366,7 +398,7 @@ export default function LotteryDetail() {
                     {user
                       ? hasNumberRange
                         ? (lang === "am" ? `ቀጥል → ቁጥር ይምረጡ` : `Continue → Pick Numbers`)
-                        : (lang === "am" ? `ቀጥል → ክፍያ (${quantity})` : `Continue → Pay (${quantity})`)
+                        : (lang === "am" ? `ቀጥል → ክፍያ (${activeQty})` : `Continue → Pay (${activeQty})`)
                       : t("signInToBuy")}
                   </button>
                 </>
@@ -382,8 +414,8 @@ export default function LotteryDetail() {
               </h2>
               <p className="text-xs text-cream-400 mb-4">
                 {lang === "am"
-                  ? `${quantity} ቁጥሮች ይምረጡ • ${selectedNums.length}/${quantity} ተመርጧል`
-                  : `Select ${quantity} number${quantity > 1 ? "s" : ""} • ${selectedNums.length}/${quantity} selected`}
+                  ? `${activeQty} ቁጥሮች ይምረጡ • ${selectedNums.length}/${activeQty} ተመርጧል`
+                  : `Select ${activeQty} number${activeQty > 1 ? "s" : ""} • ${selectedNums.length}/${activeQty} selected`}
               </p>
 
               {/* Legend */}
@@ -408,7 +440,7 @@ export default function LotteryDetail() {
                 max={numRange?.max || 100}
                 taken={takenNums}
                 selected={selectedNums}
-                maxSelect={quantity}
+                maxSelect={activeQty}
                 onToggle={toggleNum}
                 lang={lang}
               />
@@ -418,10 +450,10 @@ export default function LotteryDetail() {
               )}
 
               <button className="btn-primary mt-4 w-full py-3" onClick={goToPay}
-                disabled={selectedNums.length !== quantity}>
+                disabled={selectedNums.length !== activeQty}>
                 {lang === "am"
-                  ? `ቀጥል → ክፍያ (${quantity} ቲኬት)`
-                  : `Continue → Pay (${quantity} ticket${quantity > 1 ? "s" : ""})`}
+                  ? `ቀጥል → ክፍያ (${activeQty} ቲኬት)`
+                  : `Continue → Pay (${activeQty} ticket${activeQty > 1 ? "s" : ""})`}
               </button>
             </>
           )}
