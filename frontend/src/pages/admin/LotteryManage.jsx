@@ -400,13 +400,14 @@ export default function AdminLotteryManage() {
             <tbody className="divide-y divide-ink-700">
               {tickets
                 .filter((tk) => {
+                  if (!tk) return false;
                   if (ticketStatusFilter !== "ALL" && tk.status !== ticketStatusFilter) return false;
                   if (!ticketSearch.trim()) return true;
                   const tq = ticketSearch.trim().toLowerCase();
-                  const no = (tk.ticket_no || "").toLowerCase();
+                  const no = String(tk.ticket_no || "").toLowerCase();
                   const ch = tk.chosen_number !== null && tk.chosen_number !== undefined ? String(tk.chosen_number) : "";
-                  const name = (tk.user_name || "").toLowerCase();
-                  const phone = (tk.user_phone || "").toLowerCase();
+                  const name = String(tk.user_name || "").toLowerCase();
+                  const phone = String(tk.user_phone || "").toLowerCase();
                   return no.includes(tq) || ch === tq || name.includes(tq) || phone.includes(tq);
                 })
                 .map((tk) => (

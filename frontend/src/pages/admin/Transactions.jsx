@@ -49,17 +49,18 @@ export default function AdminTransactions() {
   const failedCount = txns.filter((t) => t.status === "FAILED").length;
 
   const q = search.trim().toLowerCase();
-  const filteredTxns = txns.filter((tx) => {
+  const filteredTxns = (txns || []).filter((tx) => {
+    if (!tx) return false;
     if (statusFilter !== "ALL" && tx.status !== statusFilter) return false;
     if (!q) return true;
-    const idStr = String(tx.id);
-    const userName = (tx.user_name || "").toLowerCase();
-    const userPhone = (tx.user_phone || "").toLowerCase();
-    const userEmail = (tx.user_email || "").toLowerCase();
-    const drawTitle = (tx.lottery_title || "").toLowerCase();
-    const ref = (tx.gateway_ref || tx.webhook_payload?.payment_reference || "").toLowerCase();
+    const idStr = String(tx.id ?? "");
+    const userName = String(tx.user_name || "").toLowerCase();
+    const userPhone = String(tx.user_phone || "").toLowerCase();
+    const userEmail = String(tx.user_email || "").toLowerCase();
+    const drawTitle = String(tx.lottery_title || "").toLowerCase();
+    const ref = String(tx.gateway_ref || tx.webhook_payload?.payment_reference || "").toLowerCase();
     const chosen = (tx.chosen_numbers || []).map(String).join(" ");
-    const tickets = (tx.tickets || []).map((tk) => tk.ticket_no).join(" ").toLowerCase();
+    const tickets = (tx.tickets || []).map((tk) => String(tk.ticket_no || "")).join(" ").toLowerCase();
     return (
       idStr.includes(q) ||
       userName.includes(q) ||

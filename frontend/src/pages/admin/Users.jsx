@@ -16,13 +16,14 @@ export default function AdminUsers() {
   useEffect(() => { load(); }, []);
 
   const q = search.trim().toLowerCase();
-  const filteredUsers = users.filter((u) => {
+  const filteredUsers = (users || []).filter((u) => {
+    if (!u) return false;
     if (roleFilter !== "ALL" && u.role !== roleFilter) return false;
     if (!q) return true;
-    const fullName = (u.full_name || "").toLowerCase();
-    const phone = (u.phone || "").toLowerCase();
-    const email = (u.email || "").toLowerCase();
-    const id = (u.id || "").toLowerCase();
+    const fullName = String(u.full_name || "").toLowerCase();
+    const phone = String(u.phone || "").toLowerCase();
+    const email = String(u.email || "").toLowerCase();
+    const id = String(u.id ?? "").toLowerCase();
     return (
       fullName.includes(q) ||
       phone.includes(q) ||
