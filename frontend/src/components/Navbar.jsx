@@ -40,6 +40,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-1 md:flex">
           <NavLink to="/" end className={link}>{t("home")}</NavLink>
+          <NavLink to="/organizers" className={link}>{t("organizers")}</NavLink>
           {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
           {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
         </div>
@@ -113,6 +114,7 @@ export default function Navbar() {
       {/* Mobile nav */}
       <div className="flex gap-1 overflow-x-auto border-t border-ink-700 px-3 py-2 md:hidden">
         <NavLink to="/" end className={link}>{t("home")}</NavLink>
+        <NavLink to="/organizers" className={link}>{t("organizers")}</NavLink>
         {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
         {user && <NavLink to="/profile" className={link}>{t("profile")}</NavLink>}
         {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}

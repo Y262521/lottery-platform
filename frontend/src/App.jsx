@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { AdminRoute, ProtectedRoute } from "./components/ProtectedRoute";
 import { useLang } from "./context/LangContext";
@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LotteryDetail from "./pages/LotteryDetail";
+import Organizers from "./pages/Organizers";
 import PaymentCallback from "./pages/PaymentCallback";
 import DrawResults from "./pages/DrawResults";
 import Profile from "./pages/Profile";
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/lottery/:id" element={<LotteryDetail />} />
           <Route path="/lottery/:id/results" element={<DrawResults />} />
+          <Route path="/organizers" element={<Organizers />} />
           {/* Catch empty or invalid lottery paths → redirect home */}
           <Route path="/lottery" element={<Navigate to="/" replace />} />
           <Route path="/lottery/" element={<Navigate to="/" replace />} />
@@ -47,7 +49,14 @@ export default function App() {
         </Routes>
       </main>
       <footer className="border-t border-ink-700 px-4 py-6 text-center text-xs text-cream-400">
-        {t("brandName")} · {t("brandSub")}
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <NavLink to="/" className="hover:text-cream-200 transition">{t("home")}</NavLink>
+          <span>·</span>
+          <NavLink to="/organizers" className="hover:text-cream-200 transition">{t("organizers")}</NavLink>
+        </div>
+        <div>
+          {t("brandName")} · {t("brandSub")}
+        </div>
       </footer>
     </div>
   );

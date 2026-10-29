@@ -7,12 +7,22 @@ const translations = {
     brandSub: "Direct-Purchase Online Draw",
     // Navbar
     home: "Home",
+    organizers: "Organizers",
     myTickets: "My Tickets",
     admin: "Admin",
     signIn: "Sign in",
     getStarted: "Register",
     register: "Register",
     signOut: "Sign out",
+
+    // Organizers
+    organizersTitle: "Organizers of the Draw",
+    organizersSub: "Meet the leadership and team organizing transparent, fair, and verified online draws.",
+    verifiedOrganizer: "Verified Organizer",
+    organizerRole1: "Founder & Lead Organizer",
+    organizerRole2: "Co-Organizer & Operations Lead",
+    organizersTrustTitle: "Transparent & Verified Platform",
+    organizersTrustDesc: "Every draw is conducted with complete fairness, public verification, and video proof.",
 
     // Home hero
     heroTag: "Direct-purchase online draw platform",
@@ -325,6 +335,7 @@ const translations = {
     brandSub: "ዮና የኦንላይን እጣ መድረክ",
     // Navbar
     home: "ዋና ገጽ",
+    organizers: "የእጣው አዘጋጆች",
     myTickets: "የእኔ ቲኬቶች",
     admin: "አስተዳዳሪ",
     signIn: "ግባ",
@@ -332,7 +343,17 @@ const translations = {
     register: "ተመዝገብ",
     signOut: "ውጣ",
 
+    // Organizers
+    organizersTitle: "የእጣው አዘጋጆች",
+    organizersSub: "ግልጽ፣ አስተማማኝ እና ታማኝ የኦንላይን ዕጣዎችን የሚያዘጋጁ የቡድናችን አባላት እና አመራሮች።",
+    verifiedOrganizer: "የተረጋገጠ አዘጋጅ",
+    organizerRole1: "መስራች እና ዋና አዘጋጅ",
+    organizerRole2: "ተባባሪ አዘጋጅ እና ስራ አስኪያጅ",
+    organizersTrustTitle: "ግልጽ እና የተረጋገጠ መድረክ",
+    organizersTrustDesc: "እያንዳንዱ የዕጣ ውድድር በሙሉ ታማኝነት፣ ግልጽ በሆነ ምርጫ እና በተረጋገጠ የቪዲዮ ማስረጃ ይካሄዳል።",
+
     // Home hero
+    heroTag: "የቀጥታ ግዢ የኦንላይን ዕጣ መድረክ",
     heroTitle: "በዮና",
     heroTitleAccent: "ኦንላይን እጣ ይሞክሩ",
     heroDesc: "አሁን ያሉ እጣዎችን ይመልከቱ እና የእጣ ቁጥሮን በቀጥታ ይግዙ",
