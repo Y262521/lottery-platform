@@ -10,7 +10,8 @@ const translations = {
     myTickets: "My Tickets",
     admin: "Admin",
     signIn: "Sign in",
-    getStarted: "Get started",
+    getStarted: "Register",
+    register: "Register",
     signOut: "Sign out",
 
     // Home hero
@@ -156,7 +157,6 @@ const translations = {
     coverImage: "Cover Image (optional)",
     prizeImages: "Prize Images (optional, multiple)",
     createDraft: "Create Draw (Save as Draft)",
-    cancel: "Cancel",
     remove: "Remove",
 
     // Admin draw manage
@@ -277,8 +277,7 @@ const translations = {
     selectWallet: "Select Digital Wallet",
     selectBank: "Select Ethiopian Bank",
     chooseBankPlaceholder: "-- Select Ethiopian Bank (A-Z) --",
-    walletRef: "Wallet Transaction Reference *",
-    bankRef: "Bank Reference / Slip Number *",
+    walletRef: "Wallet Transaction Reference (optional)",
     accountNumber: "Account Number",
     accountHolder: "Account Name",
     ussdDial: "USSD Dial Code",
@@ -294,8 +293,6 @@ const translations = {
     accountSavedSuccess: "Payment account saved successfully ✓",
     accountDeletedSuccess: "Payment account deleted ✓",
     noDirectAccountNote: "Direct account not added yet for this bank. Please use our primary CBE account or select another bank/wallet.",
-    editProfileBtn: "Edit Profile",
-    cancelEdit: "Cancel",
 
     // Draw media & photos
     drawPhotos: "Draw Photos & Cover",
@@ -317,7 +314,8 @@ const translations = {
     myTickets: "የእኔ ቲኬቶች",
     admin: "አስተዳዳሪ",
     signIn: "ግባ",
-    getStarted: "ጀምር",
+    getStarted: "ተመዝገብ",
+    register: "ተመዝገብ",
     signOut: "ውጣ",
 
     // Home hero
@@ -368,7 +366,7 @@ const translations = {
     enterNewPassword: "አዲስ የይለፍ ቃል ያስገቡ:",
     passwordResetSuccess: "የይለፍ ቃል በተሳካ ሁኔታ ተቀይሯል ✓",
     resetDraw: "ወደ ንቁ መልስ",
-    cancel: "ተወው",
+    cancel: "ሰርዝ",
     editProfileBtn: "መገለጫ አርትዕ",
     cancelEdit: "ተወው",
     readOnlyProfileNote: "የግል መረጃዎችን ወይም የይለፍ ቃል ለመቀየር 'መገለጫ አርትዕ' የሚለውን ይጫኑ።",
@@ -462,7 +460,6 @@ const translations = {
     coverImage: "ሽፋን ምስል (አማራጭ)",
     prizeImages: "የሽልማት ምስሎች (አማራጭ፣ በርካታ)",
     createDraft: "እጣ ፍጠር (ረቂቅ አስቀምጥ)",
-    cancel: "ሰርዝ",
     remove: "አስወግድ",
 
     // Admin draw manage
@@ -532,15 +529,15 @@ const translations = {
     // Payment proof
     makePayment: "ክፍያ ያካሂዱ",
     transferTo: "ETB {amount} ወደ ታች ወደ አለው አካዉንት ያስተላልፉ",
-    telebirrRef: "Telebirr ማጣቀሻ ቁጥር *",
-    bankRef: "የባንክ ማጣቀሻ / ደረሰኝ ቁጥር *",
+    telebirrRef: "Telebirr ማጣቀሻ ቁጥር (አማራጭ)",
+    bankRef: "የባንክ ማጣቀሻ / ደረሰኝ ቁጥር (አማራጭ)",
     senderName: "የላኪ ስም *",
     senderNamePh: "ስምዎ",
     phoneLbl: "ስልክ ቁጥር *",
     messageLbl: "መልዕክት / ማስታወሻ (አማራጭ)",
     messagePh: "ለምሳሌ: የእጣ ቲኬት ክፍያ...",
-    screenshotLbl: "የክፍያ ስክሪንሾት (አማራጭ ነገር ግን ይመከራል)",
-    screenshotHelp: "የ Telebirr/ባንክ ደረሰኝ ስክሪንሾት ይስቀሉ",
+    screenshotLbl: "የክፍያ ስክሪንሾት ማስረጃ * (አስገዳጅ)",
+    screenshotHelp: "የ Telebirr/ባንክ ደረሰኝ ስክሪንሾት ይስቀሉ (አስገዳጅ)",
     submitRef: "ክፍያ አስረከብ",
     submitting: "በማስገባት ላይ…",
     paymentSubmitted: "ክፍያ ቀርቧል!",
@@ -558,7 +555,6 @@ const translations = {
     selectBank: "የኢትዮጵያ ባንክ ይምረጡ",
     chooseBankPlaceholder: "-- የኢትዮጵያ ባንክ ይምረጡ (በፊደል ቅደም ተከተል) --",
     walletRef: "የዲጂታል ዋሌት ማጣቀሻ ቁጥር (አማራጭ)",
-    bankRef: "የባንክ ማጣቀሻ / ደረሰኝ ቁጥር (አማራጭ)",
     accountNumber: "የሂሳብ ቁጥር",
     accountHolder: "የሂሳብ ስም",
     ussdDial: "የ USSD መደወያ ኮድ",
@@ -574,8 +570,6 @@ const translations = {
     accountSavedSuccess: "የክፍያ አካውንት በተሳካ ሁኔታ ተቀምጧል ✓",
     accountDeletedSuccess: "የክፍያ አካውንት ተሰርዟል ✓",
     noDirectAccountNote: "ለዚህ ባንክ ቀጥታ አካውንት እስካሁን አልተጨመረም። እባክዎ ዋናውን የንግድ ባንክ አካውንት ይጠቀሙ ወይም ሌላ ባንክ/ዋሌት ይምረጡ።",
-    editProfileBtn: "መገለጫ አርትዕ",
-    cancelEdit: "ተወው",
 
     // Draw media & photos
     drawPhotos: "የዕጣ ፎቶዎች እና ሽፋን",
