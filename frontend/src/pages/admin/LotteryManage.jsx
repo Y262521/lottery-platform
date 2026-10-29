@@ -27,6 +27,7 @@ export default function AdminLotteryManage() {
     prize_description: "",
     ticket_price: 50,
     total_tickets: "",
+    tickets_sold: "",
     draw_date: "",
     sales_open_at: "",
     sales_close_at: "",
@@ -60,6 +61,7 @@ export default function AdminLotteryManage() {
       prize_description: lottery.prize_description || "",
       ticket_price: lottery.ticket_price || 50,
       total_tickets: lottery.total_tickets ?? "",
+      tickets_sold: lottery.tickets_sold ?? 0,
       draw_date: toLocalDatetimeString(lottery.draw_date),
       sales_open_at: toLocalDatetimeString(lottery.sales_open_at),
       sales_close_at: toLocalDatetimeString(lottery.sales_close_at),
@@ -81,6 +83,7 @@ export default function AdminLotteryManage() {
         prize_description: editForm.prize_description.trim(),
         ticket_price: Number(editForm.ticket_price),
         total_tickets: editForm.total_tickets ? Number(editForm.total_tickets) : null,
+        tickets_sold: editForm.tickets_sold !== "" && editForm.tickets_sold !== undefined ? Number(editForm.tickets_sold) : undefined,
         draw_date: toISO(editForm.draw_date),
         sales_open_at: editForm.sales_open_at ? toISO(editForm.sales_open_at) : null,
         sales_close_at: editForm.sales_close_at ? toISO(editForm.sales_close_at) : null,
@@ -649,7 +652,7 @@ export default function AdminLotteryManage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="label">{t("ticketPrice")}</label>
                   <input
@@ -670,6 +673,17 @@ export default function AdminLotteryManage() {
                     placeholder={t("unlimited")}
                     value={editForm.total_tickets}
                     onChange={(e) => setEditForm({ ...editForm, total_tickets: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="label">{lang === "am" ? "የተሸጡ ቲኬቶች" : "Tickets Sold"}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="input font-mono text-green-300 font-bold"
+                    placeholder="0"
+                    value={editForm.tickets_sold}
+                    onChange={(e) => setEditForm({ ...editForm, tickets_sold: e.target.value })}
                   />
                 </div>
               </div>

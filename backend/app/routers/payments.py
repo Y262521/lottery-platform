@@ -406,6 +406,17 @@ def reject_payment(
     for t in existing_tickets:
         t.status = TicketStatus.CANCELLED
 
+    # Sync lottery.tickets_sold to exact confirmed count
+    lottery = db.get(LotteryPost, txn.lottery_id)
+    if lottery:
+        actual_sold = db.scalar(
+            select(func.count()).select_from(Ticket).where(
+                Ticket.lottery_id == lottery.id,
+                Ticket.status.in_([TicketStatus.CONFIRMED, TicketStatus.WON, TicketStatus.LOST]),
+            )
+        ) or 0
+        lottery.tickets_sold = actual_sold
+
     log(db, "payment.rejected", actor_id=admin.id, entity="payment_transaction", entity_id=txn_id)
     db.commit()
     db.refresh(txn)

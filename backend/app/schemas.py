@@ -74,6 +74,7 @@ class LotteryUpdate(BaseModel):
     prize_description: str | None = None
     ticket_price: float | None = Field(default=None, gt=0)
     total_tickets: int | None = Field(default=None, gt=0)
+    tickets_sold: int | None = Field(default=None, ge=0)
     max_per_user: int | None = Field(default=None, ge=1)
     draw_date: datetime | None = None
     sales_open_at: datetime | None = None

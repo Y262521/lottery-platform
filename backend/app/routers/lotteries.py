@@ -1,6 +1,6 @@
 """Lottery post CRUD + media upload."""
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from ..audit import log
 from ..database import get_db
@@ -15,8 +15,56 @@ from ..schemas import LotteryCreate, LotteryOut, LotteryUpdate
 router = APIRouter(prefix="/api/lotteries", tags=["lotteries"])
 
 
-def _to_out(lottery: LotteryPost) -> LotteryOut:
-    return LotteryOut.model_validate(lottery)
+def _to_out(lottery: LotteryPost, db: Session | None = None) -> LotteryOut:
+    out = LotteryOut.model_validate(lottery)
+    if db is not None:
+        actual_sold = db.scalar(
+            select(func.count()).select_from(Ticket).where(
+                Ticket.lottery_id == lottery.id,
+                Ticket.status.in_([TicketStatus.CONFIRMED, TicketStatus.WON, TicketStatus.LOST]),
+            )
+        )
+        if actual_sold is not None:
+            out.tickets_sold = actual_sold
+            if lottery.tickets_sold != actual_sold:
+                lottery.tickets_sold = actual_sold
+                try:
+                    db.commit()
+                except Exception:
+                    db.rollback()
+    return out
+
+
+def _list_to_out(lotteries: list[LotteryPost], db: Session) -> list[LotteryOut]:
+    if not lotteries:
+        return []
+    lottery_ids = [l.id for l in lotteries]
+    counts_map = dict(
+        db.execute(
+            select(Ticket.lottery_id, func.count(Ticket.id))
+            .where(
+                Ticket.lottery_id.in_(lottery_ids),
+                Ticket.status.in_([TicketStatus.CONFIRMED, TicketStatus.WON, TicketStatus.LOST]),
+            )
+            .group_by(Ticket.lottery_id)
+        ).all()
+    )
+    res = []
+    dirty = False
+    for l in lotteries:
+        out = LotteryOut.model_validate(l)
+        actual = counts_map.get(l.id, 0)
+        out.tickets_sold = actual
+        if l.tickets_sold != actual:
+            l.tickets_sold = actual
+            dirty = True
+        res.append(out)
+    if dirty:
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+    return res
 
 
 def _effective_range(lottery: LotteryPost) -> tuple[int, int] | None:
@@ -45,7 +93,7 @@ def list_lotteries(
             q = q.where(LotteryPost.status == status_filter)
     else:
         q = q.where(LotteryPost.status.in_([LotteryStatus.ACTIVE, LotteryStatus.DRAWN]))
-    return [_to_out(l) for l in db.scalars(q).all()]
+    return _list_to_out(db.scalars(q).all(), db)
 
 
 @router.get("/{lottery_id}", response_model=LotteryOut)
@@ -57,7 +105,7 @@ def get_lottery(lottery_id: int, db: Session = Depends(get_db),
     is_admin = current_user and current_user.role in (Role.ADMIN, Role.AUDITOR)
     if not is_admin and lottery.status not in (LotteryStatus.ACTIVE, LotteryStatus.DRAWN):
         raise HTTPException(404, "Lottery not found")
-    return _to_out(lottery)
+    return _to_out(lottery, db)
 
 
 @router.post("", response_model=LotteryOut, status_code=201)
