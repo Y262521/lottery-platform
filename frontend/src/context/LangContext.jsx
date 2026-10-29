@@ -20,7 +20,7 @@ const translations = {
     organizersSub: "Meet the leadership and team organizing transparent, fair, and verified online draws.",
     verifiedOrganizer: "Verified Organizer",
     organizerRole1: "Founder & Lead Organizer",
-    organizerRole2: "Co-Organizer & Operations Lead",
+    organizerRole2: "Founder & Lead Organizer",
     organizersTrustTitle: "Transparent & Verified Platform",
     organizersTrustDesc: "Every draw is conducted with complete fairness, public verification, and video proof.",
 
@@ -348,7 +348,7 @@ const translations = {
     organizersSub: "ግልጽ፣ አስተማማኝ እና ታማኝ የኦንላይን ዕጣዎችን የሚያዘጋጁ የቡድናችን አባላት እና አመራሮች።",
     verifiedOrganizer: "የተረጋገጠ አዘጋጅ",
     organizerRole1: "መስራች እና ዋና አዘጋጅ",
-    organizerRole2: "ተባባሪ አዘጋጅ እና ስራ አስኪያጅ",
+    organizerRole2: "መስራች እና ዋና አዘጋጅ",
     organizersTrustTitle: "ግልጽ እና የተረጋገጠ መድረክ",
     organizersTrustDesc: "እያንዳንዱ የዕጣ ውድድር በሙሉ ታማኝነት፣ ግልጽ በሆነ ምርጫ እና በተረጋገጠ የቪዲዮ ማስረጃ ይካሄዳል።",
 
