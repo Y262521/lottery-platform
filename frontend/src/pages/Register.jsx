@@ -59,8 +59,8 @@ export default function Register() {
   }
 
   return (
-    <div className="mx-auto mt-16 max-w-md px-4">
-      <div className="card p-8">
+    <div className="mx-auto my-8 sm:my-16 max-w-md px-4">
+      <div className="card p-6 sm:p-8">
         <h1 className="text-2xl font-bold text-cream-50">{t("createAccountTitle")}</h1>
         <p className="mt-1 text-sm text-cream-300">{t("createAccountSub")}</p>
 

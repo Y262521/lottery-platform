@@ -22,23 +22,23 @@ export default function DrawResults() {
     : result?.draw_video_url ? [result.draw_video_url] : [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:py-10">
       <button onClick={() => navigate("/")} className="mb-4 text-sm text-cream-300 hover:text-cream-100">
         {t("back")}
       </button>
 
-      <h1 className="text-3xl font-bold text-cream-50">{lottery?.title}</h1>
-      <p className="mt-1 text-cream-300">{t("drawResults")}</p>
+      <h1 className="text-2xl sm:text-3xl font-bold text-cream-50">{lottery?.title}</h1>
+      <p className="mt-1 text-sm sm:text-base text-cream-300">{t("drawResults")}</p>
 
       {!result ? (
-        <div className="mt-8 card p-8 text-center text-cream-300">{t("resultsNotPublished")}</div>
+        <div className="mt-8 card p-6 sm:p-8 text-center text-cream-300">{t("resultsNotPublished")}</div>
       ) : (
         <div className="mt-6 space-y-6">
-          <div className="card p-6">
+          <div className="card p-4 sm:p-6">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-4">{t("winningNumbers")}</h2>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2.5 sm:gap-3">
               {result.winning_ticket_nos.map((no) => (
-                <span key={no} className="rounded-xl bg-green-600 px-4 py-2 font-mono font-bold text-ink-900 shadow-glow">{no}</span>
+                <span key={no} className="rounded-xl bg-green-600 px-3 sm:px-4 py-1.5 sm:py-2 font-mono font-bold text-ink-900 shadow-glow text-sm sm:text-base break-all">{no}</span>
               ))}
             </div>
             {result.notes && <p className="mt-4 text-sm text-cream-300">{result.notes}</p>}

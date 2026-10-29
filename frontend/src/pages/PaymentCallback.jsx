@@ -17,8 +17,8 @@ export default function PaymentCallback() {
 
   if (gateway === "BANK_TRANSFER") {
     return (
-      <div className="mx-auto mt-16 max-w-md px-4">
-        <div className="card p-8 text-center">
+      <div className="mx-auto my-8 sm:my-16 max-w-md px-4">
+        <div className="card p-6 sm:p-8 text-center">
           <div className="text-5xl mb-4">🏦</div>
           <h1 className="text-2xl font-bold text-cream-50">{t("bankTransferTitle")}</h1>
           <p className="mt-3 text-cream-300">{t("bankTransferDesc")}</p>
@@ -36,8 +36,8 @@ export default function PaymentCallback() {
 
   if (status === "pending") {
     return (
-      <div className="mx-auto mt-16 max-w-md px-4">
-        <div className="card p-8 text-center">
+      <div className="mx-auto my-8 sm:my-16 max-w-md px-4">
+        <div className="card p-6 sm:p-8 text-center">
           <div className="text-5xl mb-4">📱</div>
           <h1 className="text-2xl font-bold text-cream-50">{t("checkYourPhone")}</h1>
           <p className="mt-3 text-cream-300">{t("telebirrPushSent")}</p>
@@ -50,8 +50,8 @@ export default function PaymentCallback() {
 
   const confirmed = tickets.filter((t_) => t_.status === "CONFIRMED");
   return (
-    <div className="mx-auto mt-16 max-w-md px-4">
-      <div className="card p-8 text-center">
+    <div className="mx-auto my-8 sm:my-16 max-w-md px-4">
+      <div className="card p-6 sm:p-8 text-center">
         <div className="text-5xl mb-4">🎉</div>
         <h1 className="text-2xl font-bold text-cream-50">{t("paymentConfirmed")}</h1>
         <p className="mt-3 text-cream-300">{t("ticketsGenerated")}</p>

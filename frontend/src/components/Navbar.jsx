@@ -14,12 +14,12 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-ink-600 bg-ink-900/80 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <NavLink to="/" className="flex items-center gap-2.5">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-2.5 sm:py-3">
+        <NavLink to="/" className="flex items-center gap-2 min-w-0">
           <img
             src="/Logo.png"
             alt="Logo"
-            className="h-9 w-9 shrink-0 rounded-xl object-contain"
+            className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 rounded-xl object-contain"
             onError={(e) => {
               // Fallback to text badge if image fails to load
               e.target.style.display = "none";
@@ -28,13 +28,13 @@ export default function Navbar() {
           />
           <span
             style={{ display: "none" }}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 font-mono font-bold text-ink-900 shadow-glow text-xs"
+            className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-green-600 font-mono font-bold text-ink-900 shadow-glow text-xs"
           >
             {lang === "am" ? "ዮ" : "YO"}
           </span>
           <span className="flex flex-col leading-none min-w-0">
-            <span className="text-sm font-bold tracking-tight text-cream-50 truncate">{t("brandName")}</span>
-            <span className="text-[10px] uppercase tracking-widest text-cream-400">{t("brandSub")}</span>
+            <span className="text-xs sm:text-sm font-bold tracking-tight text-cream-50 truncate">{t("brandName")}</span>
+            <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-cream-400 truncate">{t("brandSub")}</span>
           </span>
         </NavLink>
 
@@ -44,19 +44,19 @@ export default function Navbar() {
           {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={toggle}
-            className="rounded-lg border border-ink-600 px-2.5 py-1.5 text-xs font-semibold text-cream-300 hover:bg-ink-700 transition"
+            className="rounded-lg border border-ink-600 px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-cream-300 hover:bg-ink-700 transition"
           >
             {lang === "en" ? "አማ" : "EN"}
           </button>
           {user ? (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
               <NavLink
                 to="/profile"
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+                  `flex items-center gap-1 sm:gap-1.5 rounded-lg border px-2 sm:px-2.5 py-1.5 text-xs font-semibold transition ${
                     isActive
                       ? "border-green-500/50 bg-green-500/15 text-green-300"
                       : "border-ink-600 bg-ink-800 text-cream-200 hover:border-ink-500 hover:text-green-300"
@@ -64,7 +64,7 @@ export default function Navbar() {
                 }
                 title={t("profile")}
               >
-                <span className="h-2 w-2 rounded-full bg-green-500" />
+                <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
                 <span>👤 {t("profile")}</span>
                 <span className="hidden lg:inline text-cream-400 font-normal">
                   ({user.full_name || user.phone || user.email})
@@ -72,15 +72,15 @@ export default function Navbar() {
               </NavLink>
               <button
                 onClick={() => { logout(); navigate("/login"); }}
-                className="btn-ghost px-2.5 py-1.5 text-xs text-red-300/80 hover:text-red-300"
+                className="btn-ghost px-2 sm:px-2.5 py-1.5 text-xs text-red-300/80 hover:text-red-300"
               >
                 {t("signOut")}
               </button>
             </div>
           ) : (
             <>
-              <NavLink to="/login" className="btn-ghost px-3 py-1.5 text-xs">{t("signIn")}</NavLink>
-              <NavLink to="/register" className="btn-primary px-3 py-1.5 text-xs">{t("getStarted")}</NavLink>
+              <NavLink to="/login" className="btn-ghost px-2.5 sm:px-3 py-1.5 text-xs">{t("signIn")}</NavLink>
+              <NavLink to="/register" className="btn-primary px-2.5 sm:px-3 py-1.5 text-xs">{t("getStarted")}</NavLink>
             </>
           )}
         </div>

@@ -44,14 +44,22 @@ export default function LotteryDetail() {
 
   const hasNumberRange = numRange != null;
 
+  function refreshTakenNumbers() {
+    if (!id || id === "undefined") return;
+    apiClient.takenNumbers(id).then((r) => {
+      const taken = r.taken || [];
+      setTakenNums(taken);
+      setNumRange(r.range || null);
+      // Remove any previously selected numbers that are now taken
+      setSelectedNums((cur) => cur.filter((n) => !taken.includes(n)));
+    }).catch(() => {});
+  }
+
   useEffect(() => {
     if (!id || id === "undefined") { navigate("/", { replace: true }); return; }
     apiClient.getLottery(id).then(setLottery).catch(() => navigate("/", { replace: true }));
     apiClient.paymentAccounts().then(setAccounts).catch(() => {});
-    apiClient.takenNumbers(id).then((r) => {
-      setTakenNums(r.taken || []);
-      setNumRange(r.range || null);
-    }).catch(() => {});
+    refreshTakenNumbers();
     if (user) { setSenderName(user.full_name || ""); setPhone(user.phone || ""); }
   }, [id, navigate, user]);
 
@@ -75,6 +83,7 @@ export default function LotteryDetail() {
   function goToPickOrPay() {
     if (!user) { navigate("/login", { state: { from: { pathname: `/lottery/${id}` } } }); return; }
     setError("");
+    refreshTakenNumbers();
     if (hasNumberRange) {
       setStep("pick");
     } else {
@@ -89,14 +98,35 @@ export default function LotteryDetail() {
         : `Please select exactly ${quantity} number${quantity > 1 ? "s" : ""}`);
       return;
     }
+    // Check if any chosen number is taken or payment in progress
+    const conflict = selectedNums.filter((n) => takenNums.includes(n));
+    if (conflict.length > 0) {
+      setError(
+        lang === "am"
+          ? `የተመረጡት ቁጥሮች ተወስደዋል ወይም በክፍያ ሂደት ላይ ናቸው: ${conflict.join(", ")}`
+          : `Selected numbers are already taken or payment in progress: ${conflict.join(", ")}`
+      );
+      refreshTakenNumbers();
+      return;
+    }
     setError("");
     setStep("pay");
   }
 
   async function submitPayment() {
-    if (!reference.trim()) { setError(lang === "am" ? "ማጣቀሻ ቁጥር ያስፈልጋል" : "Payment reference is required"); return; }
-    if (!senderName.trim()) { setError(lang === "am" ? "ስም ያስፈልጋል" : "Sender name is required"); return; }
+    // Reference ID is optional; sender name and phone are required
+    if (!senderName.trim()) { setError(lang === "am" ? "የላኪ ስም ያስፈልጋል" : "Sender name is required"); return; }
     if (!phone.trim()) { setError(lang === "am" ? "ስልክ ቁጥር ያስፈልጋል" : "Phone number is required"); return; }
+    
+    // Screenshot proof is mandatory
+    if (!screenshot) {
+      setError(
+        lang === "am"
+          ? "የክፍያ ማረጋገጫ ፎቶ (screenshot) ማስገባት ግዴታ ነው *"
+          : "Payment screenshot proof is required *"
+      );
+      return;
+    }
 
     // Validate provider has an account configured
     if (paymentType === "BANK_TRANSFER") {
@@ -146,7 +176,10 @@ export default function LotteryDetail() {
       if (screenshot) fd.append("screenshot", screenshot);
       await apiClient.submitPayment(fd);
       setStep("done");
-    } catch (e) { setError(e.message); }
+    } catch (e) {
+      setError(e.message);
+      refreshTakenNumbers();
+    }
     finally { setBusy(false); }
   }
 
@@ -354,18 +387,18 @@ export default function LotteryDetail() {
               </p>
 
               {/* Legend */}
-              <div className="flex items-center gap-4 mb-4 text-xs text-cream-400">
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 text-xs text-cream-400 flex-wrap">
                 <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-4 w-4 rounded bg-green-600" />
+                  <span className="inline-block h-3.5 w-3.5 rounded bg-green-600" />
                   {lang === "am" ? "ተመርጧል" : "Selected"}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-4 w-4 rounded bg-ink-600" />
+                  <span className="inline-block h-3.5 w-3.5 rounded bg-ink-600" />
                   {lang === "am" ? "ዝግጁ" : "Available"}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-4 w-4 rounded bg-red-900/60 border border-red-500/30" />
-                  {lang === "am" ? "ተወስዷል" : "Taken"}
+                  <span className="inline-block h-3.5 w-3.5 rounded bg-red-950/60 border border-red-500/30" />
+                  {lang === "am" ? "ተወስዷል / በክፍያ ላይ" : "Taken / In Progress"}
                 </span>
               </div>
 
@@ -558,14 +591,22 @@ export default function LotteryDetail() {
               <div className="mt-4 space-y-3">
                 <Field
                   label={
-                    paymentType === "DIGITAL_WALLET"
-                      ? selectedWallet === "TELEBIRR"
-                        ? t("telebirrRef")
-                        : (lang === "am" ? "የኤም-ፔሳ ማጣቀሻ ቁጥር *" : "M-Pesa Transaction Reference *")
-                      : `${ETHIOPIAN_BANKS.find((b) => b.id === selectedBankId)?.short || "Bank"} ${t("bankRef")}`
+                    <span className="flex items-center justify-between">
+                      <span>
+                        {paymentType === "DIGITAL_WALLET"
+                          ? selectedWallet === "TELEBIRR"
+                            ? t("telebirrRef")
+                            : (lang === "am" ? "የኤም-ፔሳ ማጣቀሻ ቁጥር" : "M-Pesa Transaction Reference")
+                          : `${ETHIOPIAN_BANKS.find((b) => b.id === selectedBankId)?.short || "Bank"} ${t("bankRef")}`
+                        }
+                      </span>
+                      <span className="text-[10px] text-cream-400 font-normal px-2 py-0.5 rounded bg-ink-700">
+                        {lang === "am" ? "አማራጭ" : "Optional"}
+                      </span>
+                    </span>
                   }
                 >
-                  <input className="input font-mono" placeholder="e.g. TXN1234567890"
+                  <input className="input font-mono" placeholder={lang === "am" ? "አማራጭ (ለምሳሌ TXN1234567890)" : "Optional (e.g. TXN1234567890)"}
                     value={reference} onChange={e => setReference(e.target.value)} />
                 </Field>
                 <Field label={t("senderName")}>
@@ -581,22 +622,33 @@ export default function LotteryDetail() {
                     value={message} onChange={e => setMessage(e.target.value)} />
                 </Field>
 
-                {/* Screenshot upload */}
-                <Field label={t("screenshotLbl")}>
+                {/* Screenshot upload — Mandatory */}
+                <Field
+                  label={
+                    <span className="flex items-center justify-between">
+                      <span>{t("screenshotLbl")}</span>
+                      <span className="text-[10px] text-amber-300 font-semibold px-2 py-0.5 rounded bg-amber-500/20">
+                        {lang === "am" ? "አስገዳጅ *" : "Required *"}
+                      </span>
+                    </span>
+                  }
+                >
                   <div onClick={() => fileRef.current?.click()}
                     className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 cursor-pointer transition ${
-                      screenshotPreview ? "border-green-500/50" : "border-ink-600 hover:border-green-500/40"
+                      screenshotPreview ? "border-green-500/50 bg-green-500/5" : "border-ink-600 hover:border-green-500/40 bg-ink-800/40"
                     }`}>
                     {screenshotPreview ? (
                       <>
                         <img src={screenshotPreview} alt="proof" className="max-h-40 w-full rounded-lg object-contain" />
-                        <p className="mt-1 text-xs text-green-300">{lang === "am" ? "ይቀይሩ" : "Click to change"}</p>
+                        <p className="mt-1 text-xs text-green-300">{lang === "am" ? "ፎቶውን ይቀይሩ" : "Click to change photo"}</p>
                       </>
                     ) : (
                       <>
                         <span className="text-3xl">📸</span>
-                        <p className="mt-1 text-sm text-cream-300">{lang === "am" ? "ስክሪንሾት ይስቀሉ" : "Upload screenshot"}</p>
-                        <p className="text-xs text-cream-400">{t("screenshotHelp")}</p>
+                        <p className="mt-1 text-sm font-semibold text-cream-200">
+                          {lang === "am" ? "የክፍያ ማረጋገጫ ስክሪንሾት ይስቀሉ *" : "Upload payment screenshot *"}
+                        </p>
+                        <p className="text-xs text-cream-400 text-center">{t("screenshotHelp")}</p>
                       </>
                     )}
                     <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleScreenshot} />
@@ -633,8 +685,8 @@ function NumberGrid({ min, max, taken, selected, maxSelect, onToggle, lang }) {
   const done = selected.length >= maxSelect;
 
   return (
-    <div className="max-h-72 overflow-y-auto rounded-xl border border-ink-600 bg-ink-800 p-3">
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(44px, 1fr))" }}>
+    <div className="max-h-72 sm:max-h-80 overflow-y-auto rounded-xl border border-ink-600 bg-ink-800 p-2.5 sm:p-3">
+      <div className="grid gap-1.5 sm:gap-2" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(42px, 1fr))" }}>
         {nums.map((n) => {
           const isTaken    = taken.includes(n);
           const isSelected = selected.includes(n);
@@ -646,25 +698,25 @@ function NumberGrid({ min, max, taken, selected, maxSelect, onToggle, lang }) {
               type="button"
               disabled={isDisabled}
               onClick={() => !isTaken && onToggle(n)}
-              title={isTaken ? (lang === "am" ? "ቀደም ብሎ ተወስዷል" : "Already taken") : ""}
+              title={isTaken ? (lang === "am" ? "ተወስዷል ወይም በክፍያ ሂደት ላይ ነው" : "Already taken or payment in progress") : ""}
               className={[
-                "flex h-11 w-full items-center justify-center rounded-lg font-mono text-sm font-bold transition select-none",
+                "relative flex h-11 w-full items-center justify-center rounded-lg font-mono text-sm font-bold transition select-none",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400/50",
                 isTaken
-                  ? "bg-red-900/40 text-red-400/60 border border-red-500/20 cursor-not-allowed line-through"
+                  ? "bg-red-950/40 text-red-400/60 border border-red-500/20 cursor-not-allowed line-through"
                   : isSelected
                     ? "bg-green-600 text-ink-900 shadow-glow scale-105"
                     : isDisabled
                       ? "bg-ink-700 text-cream-500 cursor-not-allowed opacity-40"
-                      : "bg-ink-600 text-cream-100 hover:bg-ink-500 cursor-pointer",
+                      : "bg-ink-600 text-cream-100 hover:bg-ink-500 cursor-pointer active:scale-95",
               ].join(" ")}
               aria-pressed={isSelected}
               aria-label={isTaken
-                ? `${n} ${lang === "am" ? "ቀደም ብሎ ተወስዷል" : "taken"}`
+                ? `${n} ${lang === "am" ? "ተወስዷል ወይም በክፍያ ላይ" : "taken or payment in progress"}`
                 : `${n}`}
             >
               {n}
-              {isTaken && <span className="absolute text-[8px] -mt-5 text-red-400" aria-hidden>✗</span>}
+              {isTaken && <span className="absolute text-[8px] top-1 right-1 text-red-400 font-bold" aria-hidden>✕</span>}
             </button>
           );
         })}
@@ -682,15 +734,15 @@ function NumberGrid({ min, max, taken, selected, maxSelect, onToggle, lang }) {
 
 function AccountBox({ icon, title, rows, note }) {
   return (
-    <div className="rounded-xl border border-green-500/30 bg-ink-800 p-4 mb-3">
+    <div className="rounded-xl border border-green-500/30 bg-ink-800 p-3.5 sm:p-4 mb-3">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xl">{icon}</span>
         <span className="font-semibold text-cream-100 text-sm">{title}</span>
       </div>
       {rows.map((r) => (
-        <div key={r.label} className="flex items-center justify-between py-1.5 text-sm border-b border-ink-700 last:border-0">
+        <div key={r.label} className="flex flex-wrap sm:flex-nowrap items-center justify-between py-1.5 text-xs sm:text-sm border-b border-ink-700 last:border-0 gap-1">
           <span className="text-cream-400">{r.label}</span>
-          <span className="flex items-center font-mono text-cream-50">
+          <span className="flex items-center font-mono text-cream-50 break-all text-xs sm:text-sm">
             {r.value}
             {r.value && r.value !== "—" && <CopyBtn value={r.value} />}
           </span>

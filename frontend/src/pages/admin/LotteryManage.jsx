@@ -181,7 +181,7 @@ export default function AdminLotteryManage() {
     : result?.draw_video_url ? [result.draw_video_url] : [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:py-10">
       <button onClick={() => navigate("/admin/lotteries")} className="mb-4 text-sm text-cream-300 hover:text-cream-100">
         {t("backToLotteries")}
       </button>
@@ -194,7 +194,7 @@ export default function AdminLotteryManage() {
       {msg && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-3 py-2 text-sm text-green-300">{msg}</div>}
 
       {/* Actions */}
-      <div className="card p-5 mb-6">
+      <div className="card p-4 sm:p-5 mb-6">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-cream-300 mb-3">{t("actions")}</h2>
         <div className="flex flex-wrap gap-2">
           <button
@@ -206,14 +206,14 @@ export default function AdminLotteryManage() {
             <span>{t("editDraw")}</span>
           </button>
           {lottery.status === "DRAFT" && (
-            <button className="btn-primary" onClick={() => act(() => apiClient.publishLottery(id), t("publish"))}>{t("openSales")}</button>
+            <button className="btn-primary px-3 py-1.5 text-xs font-bold" onClick={() => act(() => apiClient.publishLottery(id), t("publish"))}>{t("openSales")}</button>
           )}
           {lottery.status === "ACTIVE" && (
-            <button className="btn-ghost" onClick={() => act(() => apiClient.closeLottery(id), t("closeSales"))}>{t("closeSales")}</button>
+            <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => act(() => apiClient.closeLottery(id), t("closeSales"))}>{t("closeSales")}</button>
           )}
           {(lottery.status === "CLOSED" || lottery.status === "CANCELLED") && (
             <button
-              className="btn-ghost text-yellow-300 border-yellow-500/40 hover:bg-yellow-500/10"
+              className="btn-ghost text-yellow-300 border-yellow-500/40 hover:bg-yellow-500/10 px-3 py-1.5 text-xs"
               onClick={() => {
                 if (confirm(`${t("resetDraw")}?`)) {
                   act(() => apiClient.resetLottery(id), t("resetDraw"));
@@ -224,14 +224,14 @@ export default function AdminLotteryManage() {
             </button>
           )}
           {["DRAFT","ACTIVE","CLOSED"].includes(lottery.status) && (
-            <button className="btn-danger" onClick={() => { if(confirm(t("cancelLottery") + "?")) act(() => apiClient.cancelLottery(id), t("cancel")); }}>{t("cancelLottery")}</button>
+            <button className="btn-danger px-3 py-1.5 text-xs" onClick={() => { if(confirm(t("cancelLottery") + "?")) act(() => apiClient.cancelLottery(id), t("cancel")); }}>{t("cancelLottery")}</button>
           )}
-          <a href={`/lottery/${id}`} target="_blank" rel="noreferrer" className="btn-ghost text-xs">{t("viewPublicPage")}</a>
+          <a href={`/lottery/${id}`} target="_blank" rel="noreferrer" className="btn-ghost px-3 py-1.5 text-xs">{t("viewPublicPage")}</a>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <Stat label={t("ticketsSold")} value={lottery.tickets_sold} />
         <Stat label={t("capacity")} value={lottery.total_tickets || t("unlimited")} />
         <Stat label={t("revenueLabel")} value={`ETB ${(lottery.tickets_sold * lottery.ticket_price).toLocaleString()}`} />

@@ -10,14 +10,14 @@ export default function AdminDashboard() {
   useEffect(() => { apiClient.metrics().then(setMetrics).catch(() => {}); }, []);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-cream-50">{t("adminTitle")}</h1>
-        <Link to="/admin/lotteries/new" className="btn-primary">{t("newLottery")}</Link>
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-cream-50">{t("adminTitle")}</h1>
+        <Link to="/admin/lotteries/new" className="btn-primary self-start sm:self-auto">{t("newLottery")}</Link>
       </div>
 
       {metrics && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
           <Metric label={t("revenue")} value={metrics.total_revenue.toLocaleString()} />
           <Metric label={t("ticketsSold")} value={metrics.tickets_sold} />
           <Metric label={t("winningTickets")} value={metrics.winning_tickets} />
@@ -27,7 +27,7 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <NavCard to="/admin/lotteries" icon="🎟️" title={t("lotteries")} desc={t("manageDesc")} />
         <NavCard to="/admin/transactions" icon="💰" title={t("transactions")} desc={t("transactionsDesc")} />
         <NavCard to="/admin/users" icon="👥" title={t("users")} desc={t("usersDesc")} />

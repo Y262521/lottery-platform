@@ -128,41 +128,54 @@ export default function AdminTransactions() {
 function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
   const wp = tx.webhook_payload || {};
   const hasDetails = tx.webhook_payload && Object.keys(tx.webhook_payload).length > 0;
+  const refDisplay = wp.payment_reference || tx.gateway_ref || (lang === "am" ? "አልተሰጠም (አማራጭ)" : "None (optional)");
 
   return (
     <div className="card border-yellow-500/30 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-cream-100">#{tx.id}</span>
+            <span className="font-mono text-cream-100 font-bold">#{tx.id}</span>
             <span className="pill bg-yellow-500/15 text-yellow-300">PENDING</span>
             <span className="text-cream-300 text-sm font-medium">
               {wp.provider || wp.bank_or_wallet || tx.gateway}
             </span>
-            <span className="font-mono text-green-300 text-sm">ETB {tx.amount}</span>
+            <span className="font-mono text-green-300 text-sm font-bold">ETB {tx.amount}</span>
           </div>
-          <div className="mt-1 text-xs text-cream-400">
-            {lang === "am" ? "እጣ" : "Draw"} #{tx.lottery_id} ·{" "}
-            {tx.tickets_count} {lang === "am" ? "ቲኬቶች" : "ticket(s)"} ·{" "}
-            {lang === "am" ? "ማጣቀሻ:" : "Ref:"}{" "}
-            <span className="font-mono text-cream-200">{tx.gateway_ref}</span>
+          <div className="mt-1.5 text-xs text-cream-400 flex items-center gap-1.5 flex-wrap">
+            <span>{lang === "am" ? "እጣ" : "Draw"} #{tx.lottery_id}</span>
+            <span>·</span>
+            <span>{tx.tickets_count} {lang === "am" ? "ቲኬቶች" : "ticket(s)"}</span>
+            <span>·</span>
+            <span>{lang === "am" ? "ማጣቀሻ:" : "Ref:"}</span>
+            <span className="font-mono text-cream-200">{refDisplay}</span>
           </div>
+          {wp.chosen_numbers && wp.chosen_numbers.length > 0 && (
+            <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-cream-400">{lang === "am" ? "የተመረጡ ቁጥሮች:" : "Chosen Numbers:"}</span>
+              {wp.chosen_numbers.map((n) => (
+                <span key={n} className="pill bg-green-500/20 text-green-300 font-mono text-xs font-bold">
+                  #{n}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button className="btn-ghost px-2 py-1 text-xs" onClick={onExpand}>
+          <button className="btn-ghost px-2.5 py-1 text-xs" onClick={onExpand}>
             {expanded ? "▲" : "▼"} {lang === "am" ? "ዝርዝር" : "Details"}
           </button>
-          <button className="btn-primary px-3 py-1.5 text-xs" onClick={onConfirm}>
+          <button className="btn-primary px-3 py-1.5 text-xs font-bold" onClick={onConfirm}>
             ✓ {lang === "am" ? "አረጋግጥ" : "Confirm"}
           </button>
-          <button className="btn-danger px-3 py-1.5 text-xs" onClick={onReject}>
+          <button className="btn-danger px-3 py-1.5 text-xs font-bold" onClick={onReject}>
             ✕ {lang === "am" ? "ሰርዝ" : "Reject"}
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div className="mt-4 rounded-xl bg-ink-800 p-4 text-sm space-y-2">
+        <div className="mt-4 rounded-xl bg-ink-800 p-4 text-sm space-y-2.5">
           {!hasDetails ? (
             <p className="text-cream-400 text-xs italic">
               {lang === "am"
@@ -171,18 +184,24 @@ function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
             </p>
           ) : (
             <>
-              <Row label={lang === "am" ? "ማጣቀሻ" : "Reference"} value={wp.payment_reference || tx.gateway_ref} />
+              <Row label={lang === "am" ? "ማጣቀሻ" : "Reference"} value={refDisplay} />
+              {wp.chosen_numbers && wp.chosen_numbers.length > 0 && (
+                <Row
+                  label={lang === "am" ? "የተመረጡ ቁጥሮች" : "Chosen Numbers"}
+                  value={wp.chosen_numbers.map((n) => `#${n}`).join(", ")}
+                />
+              )}
               <Row label={lang === "am" ? "ላኪ" : "Sender"} value={wp.sender_name} />
               <Row label={lang === "am" ? "ስልክ" : "Phone"} value={wp.phone} />
               <Row label={lang === "am" ? "መልዕክት" : "Message"} value={wp.message} />
               <Row label={lang === "am" ? "የቀረበ" : "Submitted"}
                 value={wp.submitted_at ? new Date(wp.submitted_at).toLocaleString() : "—"} />
               {wp.screenshot_url && (
-                <div>
-                  <p className="text-cream-400 mb-2">{lang === "am" ? "ስክሪንሾት:" : "Screenshot:"}</p>
-                  <a href={mediaUrl(wp.screenshot_url)} target="_blank" rel="noreferrer">
+                <div className="pt-2">
+                  <p className="text-cream-400 text-xs font-semibold mb-2">{lang === "am" ? "የክፍያ ማረጋገጫ ስክሪንሾት:" : "Payment Proof Screenshot:"}</p>
+                  <a href={mediaUrl(wp.screenshot_url)} target="_blank" rel="noreferrer" className="inline-block w-full">
                     <img src={mediaUrl(wp.screenshot_url)} alt="proof"
-                      className="max-h-64 w-full rounded-xl object-contain border border-ink-600 hover:opacity-90 transition" />
+                      className="max-h-72 w-full rounded-xl object-contain border border-ink-600 bg-ink-900/60 hover:opacity-90 transition" />
                   </a>
                 </div>
               )}
@@ -196,9 +215,9 @@ function PendingCard({ tx, lang, onExpand, expanded, onConfirm, onReject }) {
 
 function Row({ label, value }) {
   return (
-    <div className="flex justify-between gap-4">
-      <span className="text-cream-400">{label}</span>
-      <span className="font-mono text-cream-100">{value || "—"}</span>
+    <div className="flex flex-wrap sm:flex-nowrap justify-between gap-2 py-1 border-b border-ink-700/50 last:border-0">
+      <span className="text-cream-400 text-xs sm:text-sm">{label}</span>
+      <span className="font-mono text-cream-100 text-xs sm:text-sm break-all font-semibold">{value || "—"}</span>
     </div>
   );
 }

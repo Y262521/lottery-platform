@@ -47,8 +47,8 @@ export default function AdminLotteries() {
 
       {msg && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-3 py-2 text-sm text-green-300">{msg}</div>}
 
-      <div className="overflow-hidden rounded-xl border border-ink-600">
-        <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto rounded-xl border border-ink-600">
+        <table className="w-full text-left text-sm min-w-[600px]">
           <thead className="bg-ink-800 text-cream-400">
             <tr>
               <th className="px-4 py-3">{t("titleField")}</th>

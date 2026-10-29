@@ -6,7 +6,10 @@ from ..audit import log
 from ..database import get_db
 from ..deps import get_optional_user, require_roles
 from ..media import upload_image
-from ..models import LotteryPost, LotteryStatus, Role, Ticket, TicketStatus, User
+from ..models import (
+    LotteryPost, LotteryStatus, PaymentStatus, PaymentTransaction,
+    Role, Ticket, TicketStatus, User,
+)
 from ..schemas import LotteryCreate, LotteryOut, LotteryUpdate
 
 router = APIRouter(prefix="/api/lotteries", tags=["lotteries"])
@@ -159,7 +162,11 @@ def reset_lottery(lottery_id: int, db: Session = Depends(get_db),
 
 @router.get("/{lottery_id}/taken-numbers")
 def taken_numbers(lottery_id: int, db: Session = Depends(get_db)):
-    """Return taken numbers AND the effective selectable range for this lottery."""
+    """Return taken numbers AND the effective selectable range for this lottery.
+    
+    Includes numbers from confirmed tickets, in-progress pending payment tickets,
+    and pending transactions.
+    """
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
         raise HTTPException(404, "Lottery not found")
@@ -173,9 +180,24 @@ def taken_numbers(lottery_id: int, db: Session = Depends(get_db)):
             ])
         )
     ).all()
+    taken_set = set(rows)
+
+    # Also include chosen numbers from pending payment transactions
+    pending_txns = db.scalars(
+        select(PaymentTransaction).where(
+            PaymentTransaction.lottery_id == lottery_id,
+            PaymentTransaction.gateway_status == PaymentStatus.PENDING,
+        )
+    ).all()
+    for p_tx in pending_txns:
+        if p_tx.webhook_payload and isinstance(p_tx.webhook_payload, dict):
+            for num in p_tx.webhook_payload.get("chosen_numbers") or []:
+                if isinstance(num, int):
+                    taken_set.add(num)
+
     rng = _effective_range(lottery)
     return {
-        "taken": list(rows),
+        "taken": sorted(list(taken_set)),
         "range": {"min": rng[0], "max": rng[1]} if rng else None,
     }
 

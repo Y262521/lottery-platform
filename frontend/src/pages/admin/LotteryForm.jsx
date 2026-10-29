@@ -7,6 +7,14 @@ function toISO(local) {
   return local ? new Date(local).toISOString() : undefined;
 }
 
+function getDefaultDrawDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  d.setHours(18, 0, 0, 0);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function AdminLotteryForm() {
   const navigate = useNavigate();
   const { t, lang } = useLang();
@@ -19,7 +27,7 @@ export default function AdminLotteryForm() {
     prize_description: "",
     ticket_price: 50,
     total_tickets: "",
-    draw_date: "",
+    draw_date: getDefaultDrawDate(),
     sales_open_at: "",
     sales_close_at: "",
     ticket_number_min: "1",
@@ -142,15 +150,58 @@ export default function AdminLotteryForm() {
           <textarea className="input min-h-[80px]" required value={form.prize_description} onChange={set("prize_description")} />
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* ── Draw Date — prominent highlighted box with quick set presets ── */}
+        <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <label className="label mb-0 font-bold text-green-300">
+              📅 {t("drawDateField")}
+            </label>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] text-cream-400 mr-1">{lang === "am" ? "ፈጣን ምርጫ:" : "Quick set:"}</span>
+              {[
+                { label: "+3d", days: 3 },
+                { label: "+7d", days: 7 },
+                { label: "+14d", days: 14 },
+                { label: "+30d", days: 30 },
+              ].map((preset) => (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + preset.days);
+                    d.setHours(18, 0, 0, 0);
+                    const pad = (n) => String(n).padStart(2, "0");
+                    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                    setForm((f) => ({ ...f, draw_date: dateStr }));
+                  }}
+                  className="rounded-md border border-green-500/30 bg-ink-800 px-2 py-0.5 text-[11px] text-green-300 hover:bg-green-500/20 transition"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <input
+            className="input border-green-500/60 bg-ink-900 font-semibold text-green-300 text-base py-2.5"
+            type="datetime-local"
+            required
+            value={form.draw_date}
+            onChange={set("draw_date")}
+          />
+          <p className="mt-1.5 text-xs text-cream-300">
+            {lang === "am"
+              ? "የዕጣ የሚወጣበትን ቀን እና ሰዓት ይምረጡ። ከታተመም በኋላ በማንኛውም ጊዜ ማስተካከል ይችላሉ።"
+              : "Select the scheduled date and time when the draw will take place. Can be edited anytime."}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("ticketPrice")}>
             <input className="input" type="number" min={1} required value={form.ticket_price} onChange={set("ticket_price")} />
           </Field>
           <Field label={t("totalTickets")}>
-            <input className="input" type="number" min={1} value={form.total_tickets} onChange={set("total_tickets")} />
-          </Field>
-          <Field label={t("drawDateField")}>
-            <input className="input" type="datetime-local" required value={form.draw_date} onChange={set("draw_date")} />
+            <input className="input" type="number" min={1} placeholder={t("unlimited")} value={form.total_tickets} onChange={set("total_tickets")} />
           </Field>
           <Field label={t("salesOpenAt")}>
             <input className="input" type="datetime-local" value={form.sales_open_at} onChange={set("sales_open_at")} />

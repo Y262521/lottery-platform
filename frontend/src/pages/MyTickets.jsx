@@ -169,36 +169,40 @@ export default function MyTickets() {
 
               {/* Tickets list */}
               {lotteryTickets.length === 0 && lotteryPayments.length > 0 ? (
-                <div className="px-5 py-4 text-sm text-cream-400">
+                <div className="px-4 sm:px-5 py-4 text-sm text-cream-400">
                   {lang === "am"
                     ? "ክፍያ ሲረጋገጥ ቲኬቶቹ ይታያሉ።"
                     : "Tickets will appear here once payment is confirmed."}
                 </div>
               ) : lotteryTickets.length === 0 ? (
-                <div className="px-5 py-4 text-sm text-cream-400">{t("noTicketsForLottery")}</div>
+                <div className="px-4 sm:px-5 py-4 text-sm text-cream-400">{t("noTicketsForLottery")}</div>
               ) : (
                 <div className="divide-y divide-ink-700">
                   {lotteryTickets.map((tk) => {
                     const style = TICKET_STYLE[tk.status] || TICKET_STYLE.PENDING_PAYMENT;
                     return (
                       <div key={tk.id}
-                        className="flex items-center justify-between gap-3 px-5 py-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-cream-50">{tk.ticket_no}</span>
+                        className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 px-4 sm:px-5 py-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono font-bold text-cream-50 text-sm sm:text-base break-all">
+                              {tk.status === "PENDING_PAYMENT"
+                                ? (lang === "am" ? "የተያዘ ቲኬት (በማረጋገጥ ላይ)" : "Reserved (Pending Approval)")
+                                : tk.ticket_no}
+                            </span>
                             {tk.chosen_number && (
-                              <span className="pill bg-green-500/15 text-green-300 text-[10px]">
+                              <span className="pill bg-green-500/20 text-green-300 text-xs font-mono font-bold">
                                 #{tk.chosen_number}
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-cream-400 mt-0.5">
+                          <div className="text-xs text-cream-400 mt-1">
                             {new Date(tk.created_at).toLocaleDateString()}
                             {tk.confirmed_at && tk.confirmed_at !== tk.created_at &&
                               ` · ${lang === "am" ? "ተረጋግጧል" : "confirmed"} ${new Date(tk.confirmed_at).toLocaleDateString()}`}
                           </div>
                         </div>
-                        <span className={`pill ${style.pill}`}>
+                        <span className={`pill shrink-0 ${style.pill}`}>
                           {style.icon} {tStatus(t, tk.status)}
                         </span>
                       </div>

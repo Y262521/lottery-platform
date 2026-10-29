@@ -114,16 +114,23 @@ async def submit_payment(
     lottery_id: int = Form(...),
     quantity: int = Form(...),
     gateway: str = Form(...),
-    payment_reference: str = Form(...),
+    payment_reference: str = Form(default=""),
     sender_name: str = Form(...),
     phone: str = Form(default=""),
     message: str = Form(default=""),
     chosen_numbers: str = Form(default=""),  # comma-separated e.g. "42,17"
     bank_or_wallet: str = Form(default=""),  # specific bank or wallet name
-    screenshot: UploadFile = File(default=None),
+    screenshot: UploadFile = File(...),      # Mandatory payment screenshot proof
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    # Validate screenshot proof is uploaded and not empty
+    if not screenshot or not screenshot.filename:
+        raise HTTPException(
+            400,
+            "የክፍያ ማረጋገጫ ፎቶ (screenshot) ማስገባት ግዴታ ነው / Payment screenshot proof is required"
+        )
+
     # Validate gateway
     gw_str = gateway.upper().strip()
     try:
@@ -147,7 +154,19 @@ async def submit_payment(
     if lottery.total_tickets and (lottery.tickets_sold + quantity) > lottery.total_tickets:
         raise HTTPException(400, "Not enough tickets remaining")
 
-    # Note: max tickets per user check removed — users can purchase all tickets up to total availability
+    # Clean payment reference (optional)
+    ref_clean = payment_reference.strip() if payment_reference else ""
+    if ref_clean:
+        existing_ref = db.scalar(
+            select(PaymentTransaction).where(PaymentTransaction.gateway_ref == ref_clean)
+        )
+        if existing_ref:
+            raise HTTPException(
+                409,
+                "ይህ የማጣቀሻ ቁጥር አስቀድሞ ተመዝግቧል / This payment reference has already been submitted"
+            )
+
+    gateway_ref_val = ref_clean if ref_clean else None
 
     # Parse and validate chosen numbers
     chosen_list = []
@@ -157,40 +176,83 @@ async def submit_payment(
         except ValueError:
             raise HTTPException(400, "Invalid chosen numbers format")
 
-    # Check chosen numbers are available
     if chosen_list:
-        from sqlalchemy import select as _select
-        from ..models import Ticket as _T, TicketStatus as _TS
-        taken = db.scalars(
-            _select(_T.chosen_number).where(
-                _T.lottery_id == lottery_id,
-                _T.chosen_number.in_(chosen_list),
-                _T.status.in_([_TS.PENDING_PAYMENT, _TS.CONFIRMED, _TS.WON, _TS.LOST])
+        # Check for duplicates within the user's selected list
+        if len(chosen_list) != len(set(chosen_list)):
+            raise HTTPException(400, "Duplicate draw numbers selected in the same purchase")
+
+        # Range verification if lottery defines min or max
+        if lottery.ticket_number_min is not None and any(n < lottery.ticket_number_min for n in chosen_list):
+            raise HTTPException(400, f"Selected numbers must be at least {lottery.ticket_number_min}")
+        if lottery.ticket_number_max is not None and any(n > lottery.ticket_number_max for n in chosen_list):
+            raise HTTPException(400, f"Selected numbers cannot exceed {lottery.ticket_number_max}")
+
+        # Check against existing Ticket records (CONFIRMED, PENDING_PAYMENT, WON, LOST)
+        taken_tickets = db.scalars(
+            select(Ticket.chosen_number).where(
+                Ticket.lottery_id == lottery_id,
+                Ticket.chosen_number.in_(chosen_list),
+                Ticket.status.in_([
+                    TicketStatus.PENDING_PAYMENT,
+                    TicketStatus.CONFIRMED,
+                    TicketStatus.WON,
+                    TicketStatus.LOST,
+                ])
             )
         ).all()
-        if taken:
-            taken_str = ", ".join(str(n) for n in taken)
+        taken_pending_set = set(taken_tickets)
+
+        # ALSO check pending transactions webhook payloads to ensure complete lock
+        pending_txs = db.scalars(
+            select(PaymentTransaction).where(
+                PaymentTransaction.lottery_id == lottery_id,
+                PaymentTransaction.gateway_status == PaymentStatus.PENDING,
+            )
+        ).all()
+        for p_tx in pending_txs:
+            if p_tx.webhook_payload and isinstance(p_tx.webhook_payload, dict):
+                for num in p_tx.webhook_payload.get("chosen_numbers") or []:
+                    if num in chosen_list:
+                        taken_pending_set.add(num)
+
+        if taken_pending_set:
+            taken_str = ", ".join(str(n) for n in sorted(taken_pending_set))
             raise HTTPException(
                 409,
-                f"ቀደም ብሎ ተወስዷል / Already taken: {taken_str}"
+                f"ቀደም ብሎ ተወስዷል ወይም በክፍያ ሂደት ላይ ነው / Draw number(s) already taken or payment in progress: {taken_str}"
             )
 
     amount = round(lottery.ticket_price * quantity, 2)
 
-    # Upload screenshot (non-blocking failure)
-    screenshot_url = None
-    if screenshot and screenshot.filename:
-        try:
-            content = await screenshot.read()
-            screenshot_url = upload_image(
-                content,
-                folder="lottery/payment_proofs",
-                public_id=f"proof_u{user.id}_l{lottery_id}_{int(datetime.now(timezone.utc).timestamp())}",
+    # Read and upload screenshot proof
+    try:
+        content = await screenshot.read()
+        if not content or len(content) == 0:
+            raise HTTPException(
+                400,
+                "የክፍያ ማረጋገጫ ፎቶ ባዶ ነው / Payment screenshot file is empty"
             )
-        except Exception as exc:
-            logger.warning("Screenshot upload failed (non-fatal): %s", exc)
+        screenshot_url = upload_image(
+            content,
+            folder="lottery/payment_proofs",
+            public_id=f"proof_u{user.id}_l{lottery_id}_{int(datetime.now(timezone.utc).timestamp())}",
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Screenshot upload failed: %s", exc, exc_info=True)
+        raise HTTPException(
+            500,
+            f"የስክሪንሾት ምስል ማስቀመጥ አልተቻለም / Failed to save screenshot: {exc}"
+        )
 
-    # Build transaction — everything in one try/except with proper rollback
+    if not screenshot_url:
+        raise HTTPException(
+            500,
+            "የስክሪንሾት ምስል ማስቀመጥ አልተቻለም / Failed to upload payment screenshot proof"
+        )
+
+    # Build transaction and reserve tickets in PENDING_PAYMENT status
     try:
         txn = PaymentTransaction(
             user_id=user.id,
@@ -198,11 +260,11 @@ async def submit_payment(
             amount=amount,
             currency="ETB",
             gateway=gw,
-            gateway_ref=payment_reference,
+            gateway_ref=gateway_ref_val,
             gateway_status=PaymentStatus.PENDING,
             tickets_count=quantity,
             webhook_payload={
-                "payment_reference": payment_reference,
+                "payment_reference": ref_clean or None,
                 "sender_name": sender_name,
                 "phone": phone or None,
                 "message": message or None,
@@ -214,10 +276,24 @@ async def submit_payment(
             },
         )
         db.add(txn)
-        db.flush()  # get txn.id — inside try so errors are caught
+        db.flush()  # get txn.id
+
+        # Immediately reserve tickets in PENDING_PAYMENT status
+        for i in range(quantity):
+            chosen = chosen_list[i] if i < len(chosen_list) else None
+            pending_ticket = Ticket(
+                ticket_no=f"LP{lottery.id:03d}-PENDING-{txn.id}-{i+1}",
+                chosen_number=chosen,
+                lottery_id=lottery.id,
+                user_id=user.id,
+                status=TicketStatus.PENDING_PAYMENT,
+                payment_txn_id=txn.id,
+            )
+            db.add(pending_ticket)
+
         log(db, "payment.submit", actor_id=user.id, entity="payment_transaction",
             entity_id=txn.id,
-            detail=f"gateway={gw} ref={payment_reference} amount={amount}")
+            detail=f"gateway={gw} ref={ref_clean or 'N/A'} amount={amount} chosen={chosen_list}")
         db.commit()
         db.refresh(txn)
         return txn
@@ -225,9 +301,8 @@ async def submit_payment(
         db.rollback()
         err_str = str(exc)
         logger.error("payment.submit failed: %s", err_str, exc_info=True)
-        # Check for duplicate reference
         if "unique" in err_str.lower() or "duplicate" in err_str.lower():
-            raise HTTPException(409, "This payment reference has already been submitted")
+            raise HTTPException(409, "ይህ የማጣቀሻ ቁጥር አስቀድሞ ተመዝግቧል / This payment reference has already been submitted")
         raise HTTPException(500, f"Could not save payment: {err_str}")
 
 
@@ -260,6 +335,12 @@ def confirm_payment(
 
     if lottery.total_tickets and (lottery.tickets_sold + txn.tickets_count) > lottery.total_tickets:
         txn.gateway_status = PaymentStatus.FAILED
+        # Cancel any pending tickets
+        existing_tickets = db.scalars(
+            select(Ticket).where(Ticket.payment_txn_id == txn.id)
+        ).all()
+        for t in existing_tickets:
+            t.status = TicketStatus.CANCELLED
         db.commit()
         raise HTTPException(400, "Lottery is now full")
 
@@ -267,7 +348,25 @@ def confirm_payment(
         txn.gateway_status = PaymentStatus.SUCCESS
         txn.verified_at = datetime.now(timezone.utc)
         user = db.get(User, txn.user_id)
-        tickets = generate_tickets(db, lottery, user, txn, txn.tickets_count)
+
+        # Check if tickets were reserved at submit time
+        existing_tickets = db.scalars(
+            select(Ticket).where(Ticket.payment_txn_id == txn.id).order_by(Ticket.id)
+        ).all()
+
+        confirmed_tickets = []
+        if existing_tickets:
+            for t in existing_tickets:
+                seq = lottery.tickets_sold + 1
+                t.ticket_no = f"LP{lottery.id:03d}-{seq:05d}"
+                t.status = TicketStatus.CONFIRMED
+                t.confirmed_at = datetime.now(timezone.utc)
+                lottery.tickets_sold += 1
+                confirmed_tickets.append(t)
+        else:
+            # Fallback for legacy transactions without pre-created tickets
+            confirmed_tickets = generate_tickets(db, lottery, user, txn, txn.tickets_count)
+
         log(db, "payment.confirmed", actor_id=admin.id, entity="payment_transaction",
             entity_id=txn_id, detail=f"tickets_count={txn.tickets_count}")
         db.commit()
@@ -276,7 +375,7 @@ def confirm_payment(
         logger.error("confirm_payment failed: %s", exc, exc_info=True)
         raise HTTPException(500, f"Confirmation failed: {exc}")
 
-    ticket_nos = [t.ticket_no for t in tickets]
+    ticket_nos = [t.ticket_no for t in confirmed_tickets]
     if user.email:
         send_ticket_confirmation(
             user.email, user.full_name, lottery.title,
@@ -297,7 +396,16 @@ def reject_payment(
         raise HTTPException(404, "Transaction not found")
     if txn.gateway_status != PaymentStatus.PENDING:
         raise HTTPException(409, "Only PENDING payments can be rejected")
+    
     txn.gateway_status = PaymentStatus.FAILED
+
+    # Release any reserved tickets so the numbers become available again for other users!
+    existing_tickets = db.scalars(
+        select(Ticket).where(Ticket.payment_txn_id == txn.id)
+    ).all()
+    for t in existing_tickets:
+        t.status = TicketStatus.CANCELLED
+
     log(db, "payment.rejected", actor_id=admin.id, entity="payment_transaction", entity_id=txn_id)
     db.commit()
     db.refresh(txn)
