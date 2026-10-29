@@ -4,7 +4,7 @@ import { useLang } from "../context/LangContext";
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
-  const { lang, toggle, t } = useLang();
+  const { lang, toggle, setLang, t } = useLang();
   const navigate = useNavigate();
 
   const link = ({ isActive }) =>
@@ -45,12 +45,36 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button
-            onClick={toggle}
-            className="rounded-lg border border-ink-600 px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-cream-300 hover:bg-ink-700 transition"
-          >
-            {lang === "en" ? "አማ" : "EN"}
-          </button>
+          {/* Language Switcher */}
+          <div className="flex items-center rounded-xl border border-ink-600 bg-ink-800/90 p-0.5 text-xs shadow-inner">
+            <button
+              type="button"
+              onClick={() => (setLang ? setLang("en") : (lang !== "en" && toggle()))}
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1 font-semibold transition ${
+                lang === "en"
+                  ? "bg-green-600 text-ink-950 font-bold shadow-sm"
+                  : "text-cream-300 hover:text-cream-100 hover:bg-ink-700/60"
+              }`}
+              title="Switch to English"
+            >
+              <span className="text-sm">🌐</span>
+              <span>English</span>
+            </button>
+            <span className="text-ink-500 px-0.5 sm:px-1 font-bold select-none">|</span>
+            <button
+              type="button"
+              onClick={() => (setLang ? setLang("am") : (lang !== "am" && toggle()))}
+              className={`flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-2.5 py-1 font-semibold transition ${
+                lang === "am"
+                  ? "bg-green-600 text-ink-950 font-bold shadow-sm"
+                  : "text-cream-300 hover:text-cream-100 hover:bg-ink-700/60"
+              }`}
+              title="ወደ አማርኛ ይቀይሩ"
+            >
+              <span className="text-sm">🇪🇹</span>
+              <span>አማርኛ</span>
+            </button>
+          </div>
           {user ? (
             <div className="flex items-center gap-1 sm:gap-1.5">
               <NavLink

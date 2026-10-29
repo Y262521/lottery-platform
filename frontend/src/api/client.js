@@ -116,7 +116,17 @@ export const apiClient = {
 
   // admin
   metrics: () => api("/api/admin/metrics"),
-  listUsers: () => api("/api/admin/users"),
+  listUsers: (params) => {
+    let query = "";
+    if (params) {
+      const sp = new URLSearchParams();
+      if (params.q) sp.set("q", params.q);
+      if (params.role && params.role !== "ALL") sp.set("role", params.role);
+      const str = sp.toString();
+      if (str) query = `?${str}`;
+    }
+    return api(`/api/admin/users${query}`);
+  },
   updateUser: (id, b) => api(`/api/admin/users/${id}`, { method: "PATCH", body: b }),
   resetUserPassword: (id, new_password) => api(`/api/admin/users/${id}/reset-password`, { method: "POST", body: { new_password } }),
   allTransactions: () => api("/api/admin/transactions"),

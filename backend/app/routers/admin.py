@@ -1,6 +1,6 @@
 """Admin: metrics, users, audit log, transaction management."""
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from ..audit import log
 from ..database import get_db
@@ -44,9 +44,25 @@ def metrics(db: Session = Depends(get_db),
 
 
 @router.get("/users", response_model=list[UserOut])
-def list_users(db: Session = Depends(get_db),
-               _: User = Depends(require_roles(Role.ADMIN, Role.AUDITOR))):
-    return db.scalars(select(User).order_by(User.created_at.desc())).all()
+def list_users(
+    q: str | None = Query(default=None),
+    role: Role | None = Query(default=None),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_roles(Role.ADMIN, Role.AUDITOR)),
+):
+    stmt = select(User).order_by(User.created_at.desc())
+    if role:
+        stmt = stmt.where(User.role == role)
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        stmt = stmt.where(
+            or_(
+                User.full_name.ilike(term),
+                User.phone.ilike(term),
+                User.email.ilike(term),
+            )
+        )
+    return db.scalars(stmt).all()
 
 
 @router.patch("/users/{user_id}", response_model=UserOut)

@@ -203,6 +203,10 @@ const translations = {
 
     // Admin users
     usersTitle: "Users",
+    searchUsers: "Search users by name, phone, email, or ID…",
+    allRoles: "All Roles",
+    noUsersFound: "No users found matching your search.",
+    clearSearch: "Clear",
     userCol: "User",
     roleCol: "Role",
     statusCol: "Status",
@@ -505,6 +509,10 @@ const translations = {
 
     // Admin users
     usersTitle: "ተጠቃሚዎች",
+    searchUsers: "ተጠቃሚዎችን በስም፣ በስልክ፣ በኢሜይል ወይም በ ID ይፈልጉ…",
+    allRoles: "ሁሉም ሚናዎች",
+    noUsersFound: "ከፍለጋዎ ጋር የሚዛመድ ተጠቃሚ አልተገኘም።",
+    clearSearch: "አጽዳ",
     userCol: "ተጠቃሚ",
     roleCol: "ሚና",
     statusCol: "ሁኔታ",
@@ -618,10 +626,17 @@ export function LangProvider({ children }) {
     localStorage.setItem("lp_lang", next);
   }
 
+  function changeLang(target) {
+    if (target === "en" || target === "am") {
+      setLang(target);
+      localStorage.setItem("lp_lang", target);
+    }
+  }
+
   const t = (key) => translations[lang]?.[key] ?? translations.en[key] ?? key;
 
   return (
-    <LangContext.Provider value={{ lang, toggle, t }}>
+    <LangContext.Provider value={{ lang, toggle, setLang: changeLang, t }}>
       {children}
     </LangContext.Provider>
   );

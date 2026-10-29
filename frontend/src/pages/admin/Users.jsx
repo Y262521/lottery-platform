@@ -5,6 +5,8 @@ import { useLang } from "../../context/LangContext";
 export default function AdminUsers() {
   const { t, lang } = useLang();
   const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [msg, setMsg] = useState("");
   const [resetModalUser, setResetModalUser] = useState(null);
   const [newPw, setNewPw] = useState("");
@@ -12,6 +14,22 @@ export default function AdminUsers() {
 
   const load = () => apiClient.listUsers().then(setUsers).catch(() => {});
   useEffect(() => { load(); }, []);
+
+  const q = search.trim().toLowerCase();
+  const filteredUsers = users.filter((u) => {
+    if (roleFilter !== "ALL" && u.role !== roleFilter) return false;
+    if (!q) return true;
+    const fullName = (u.full_name || "").toLowerCase();
+    const phone = (u.phone || "").toLowerCase();
+    const email = (u.email || "").toLowerCase();
+    const id = (u.id || "").toLowerCase();
+    return (
+      fullName.includes(q) ||
+      phone.includes(q) ||
+      email.includes(q) ||
+      id.includes(q)
+    );
+  });
 
   async function update(id, body) {
     try { await apiClient.updateUser(id, body); setMsg(t("updated")); load(); }
@@ -36,8 +54,83 @@ export default function AdminUsers() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-cream-50 mb-6">{t("usersTitle")}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-cream-50">{t("usersTitle")}</h1>
+          <p className="text-xs text-cream-400 mt-1">
+            {users.length} {t("usersTitle").toLowerCase()}
+          </p>
+        </div>
+        <button
+          onClick={load}
+          className="btn-ghost text-xs self-start sm:self-auto flex items-center gap-1.5"
+          title="Refresh users list"
+        >
+          🔄 {lang === "am" ? "አድስ" : "Refresh"}
+        </button>
+      </div>
+
       {msg && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-3 py-2 text-sm text-green-300">{msg}</div>}
+
+      {/* Search & Filter Bar */}
+      <div className="mb-6 space-y-3 bg-ink-800/60 p-4 rounded-xl border border-ink-600">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          <div className="relative flex-1">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cream-400 pointer-events-none">
+              🔍
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("searchUsers")}
+              className="input pl-9 pr-8 py-2 text-sm w-full"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-cream-400 hover:text-cream-200"
+                title={t("clearSearch")}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            {["ALL", "USER", "ADMIN", "AUDITOR"].map((role) => (
+              <button
+                key={role}
+                type="button"
+                onClick={() => setRoleFilter(role)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition shrink-0 ${
+                  roleFilter === role
+                    ? "bg-green-600 text-ink-950 shadow-sm"
+                    : "bg-ink-800 text-cream-300 hover:bg-ink-700 hover:text-cream-100 border border-ink-600"
+                }`}
+              >
+                {role === "ALL" ? t("allRoles") : role}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-cream-400 px-1 pt-1">
+          <span>
+            {lang === "am" ? "የተገኙ:" : "Found:"}{" "}
+            <strong className="text-green-300 font-bold">{filteredUsers.length}</strong> / {users.length}
+          </span>
+          {(search || roleFilter !== "ALL") && (
+            <button
+              onClick={() => { setSearch(""); setRoleFilter("ALL"); }}
+              className="text-xs text-green-400 hover:underline font-medium"
+            >
+              ✕ {t("clearSearch")}
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="overflow-x-auto rounded-xl border border-ink-600">
         <table className="w-full text-left text-sm min-w-[620px]">
@@ -52,7 +145,24 @@ export default function AdminUsers() {
             </tr>
           </thead>
           <tbody className="divide-y divide-ink-700">
-            {users.map((u) => (
+            {filteredUsers.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-12 text-center text-cream-400">
+                  <div className="text-3xl mb-2">🔍</div>
+                  <p className="text-sm font-medium">{t("noUsersFound")}</p>
+                  {(search || roleFilter !== "ALL") && (
+                    <button
+                      type="button"
+                      onClick={() => { setSearch(""); setRoleFilter("ALL"); }}
+                      className="mt-3 inline-flex items-center gap-1 text-xs text-green-400 hover:underline font-semibold"
+                    >
+                      ✕ {t("clearSearch")}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ) : (
+              filteredUsers.map((u) => (
               <tr key={u.id} className="bg-ink-700/40">
                 <td className="px-4 py-3">
                   <div className="text-cream-100">{u.email || u.phone || "—"}</div>
