@@ -15,7 +15,7 @@ export default function AdminTransactions() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedTxn, setSelectedTxn] = useState(null);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState(null); // { type: "success" | "error", text: string }
   const [expanded, setExpanded] = useState("all-pending");
 
   const load = () => apiClient.allTransactions().then(setTxns).catch(() => {});
@@ -24,11 +24,11 @@ export default function AdminTransactions() {
   async function confirm(id) {
     try {
       await apiClient.confirmPayment(id);
-      setMsg(lang === "am" ? "ክፍያው ተረጋግጧል ✓" : "Payment confirmed successfully ✓");
+      setMsg({ type: "success", text: lang === "am" ? "ክፍያው ተረጋግጧል ✓" : "Payment confirmed successfully ✓" });
       if (selectedTxn?.id === id) setSelectedTxn(null);
       load();
     } catch (e) {
-      setMsg(e.message);
+      setMsg({ type: "error", text: e.message });
     }
   }
 
@@ -36,11 +36,11 @@ export default function AdminTransactions() {
     if (!window.confirm(lang === "am" ? "ይህን ክፍያ ይሰርዙ?" : "Reject this payment?")) return;
     try {
       await apiClient.rejectPayment(id);
-      setMsg(lang === "am" ? "ክፍያው ተሰርዟል" : "Payment rejected");
+      setMsg({ type: "success", text: lang === "am" ? "ክፍያው ተሰርዟል" : "Payment rejected" });
       if (selectedTxn?.id === id) setSelectedTxn(null);
       load();
     } catch (e) {
-      setMsg(e.message);
+      setMsg({ type: "error", text: e.message });
     }
   }
 
@@ -94,8 +94,21 @@ export default function AdminTransactions() {
       </div>
 
       {msg && (
-        <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-3 py-2 text-sm text-green-300">
-          {msg}
+        <div
+          className={`mb-4 rounded-lg px-4 py-3 text-sm flex items-center justify-between gap-2 ${
+            msg.type === "error"
+              ? "bg-red-500/10 border border-red-500/30 text-red-300"
+              : "bg-green-500/10 border border-green-500/30 text-green-300"
+          }`}
+        >
+          <span>{msg.text || (typeof msg === "string" ? msg : "")}</span>
+          <button
+            type="button"
+            onClick={() => setMsg(null)}
+            className="text-cream-400 hover:text-cream-100 text-xs px-1"
+          >
+            ✕
+          </button>
         </div>
       )}
 

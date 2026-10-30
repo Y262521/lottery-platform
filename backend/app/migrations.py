@@ -183,5 +183,15 @@ def run_migrations() -> None:
             )
         """, "create payment_accounts table")
 
+        # Free up any ticket numbers held by CANCELLED tickets so they don't block unique constraints
+        if _table_exists(db, "tickets"):
+            _exec(db, """
+                UPDATE tickets
+                SET ticket_no = ticket_no || '-CANCELLED-' || CAST(id AS VARCHAR)
+                WHERE status = 'CANCELLED'
+                  AND ticket_no NOT LIKE '%-CANCELLED-%'
+                  AND ticket_no NOT LIKE '%-PENDING-%'
+            """, "free ticket numbers of CANCELLED tickets")
+
     finally:
         db.close()

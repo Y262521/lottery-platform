@@ -16,7 +16,7 @@ from ..models import (
     PaymentStatus, PaymentTransaction, Role, Ticket, TicketStatus, User,
 )
 from ..notifications import send_ticket_confirmation
-from ..payments import generate_tickets
+from ..payments import allocate_ticket_numbers, generate_tickets
 from ..schemas import PaymentOut
 from pydantic import BaseModel
 
@@ -341,6 +341,8 @@ def confirm_payment(
         ).all()
         for t in existing_tickets:
             t.status = TicketStatus.CANCELLED
+            if "-PENDING-" not in t.ticket_no and "-CANCELLED" not in t.ticket_no:
+                t.ticket_no = f"{t.ticket_no}-CANCELLED-{t.id}"
         db.commit()
         raise HTTPException(400, "Lottery is now full")
 
@@ -356,16 +358,24 @@ def confirm_payment(
 
         confirmed_tickets = []
         if existing_tickets:
-            for t in existing_tickets:
-                seq = lottery.tickets_sold + 1
-                t.ticket_no = f"LP{lottery.id:03d}-{seq:05d}"
+            ticket_nos = allocate_ticket_numbers(db, lottery, len(existing_tickets))
+            for t, t_no in zip(existing_tickets, ticket_nos):
+                t.ticket_no = t_no
                 t.status = TicketStatus.CONFIRMED
                 t.confirmed_at = datetime.now(timezone.utc)
-                lottery.tickets_sold += 1
                 confirmed_tickets.append(t)
         else:
             # Fallback for legacy transactions without pre-created tickets
             confirmed_tickets = generate_tickets(db, lottery, user, txn, txn.tickets_count)
+
+        db.flush()
+        actual_sold = db.scalar(
+            select(func.count()).select_from(Ticket).where(
+                Ticket.lottery_id == lottery.id,
+                Ticket.status.in_([TicketStatus.CONFIRMED, TicketStatus.WON, TicketStatus.LOST]),
+            )
+        ) or 0
+        lottery.tickets_sold = actual_sold
 
         log(db, "payment.confirmed", actor_id=admin.id, entity="payment_transaction",
             entity_id=txn_id, detail=f"tickets_count={txn.tickets_count}")
@@ -405,6 +415,8 @@ def reject_payment(
     ).all()
     for t in existing_tickets:
         t.status = TicketStatus.CANCELLED
+        if "-PENDING-" not in t.ticket_no and "-CANCELLED" not in t.ticket_no:
+            t.ticket_no = f"{t.ticket_no}-CANCELLED-{t.id}"
 
     # Sync lottery.tickets_sold to exact confirmed count
     lottery = db.get(LotteryPost, txn.lottery_id)
