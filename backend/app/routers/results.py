@@ -22,11 +22,11 @@ def publish_results(
 ):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     if lottery.status not in (LotteryStatus.CLOSED, LotteryStatus.ACTIVE):
-        raise HTTPException(409, "Lottery must be CLOSED or ACTIVE to publish results")
+        raise HTTPException(409, "ውጤት ለማሳተም ዕጣው ንቁ ወይም የተዘጋ መሆን አለበት / Draw must be ACTIVE or CLOSED to publish results")
     if db.scalar(select(DrawResult).where(DrawResult.lottery_id == lottery_id)):
-        raise HTTPException(409, "Results already published for this lottery")
+        raise HTTPException(409, "የዚህ ዕጣ ውጤቶች ቀድመው ታትመዋል / Results have already been published for this draw")
 
     result = DrawResult(
         lottery_id=lottery_id,
@@ -66,7 +66,7 @@ async def upload_draw_video(
 ):
     result = db.scalar(select(DrawResult).where(DrawResult.lottery_id == lottery_id))
     if not result:
-        raise HTTPException(404, "Publish results first before uploading video")
+        raise HTTPException(404, "ቪዲዮ ከመስቀልዎ በፊት መጀመሪያ ውጤቶችን ያሳትሙ / Publish results first before uploading draw video")
 
     uploaded = []
     if files:
@@ -75,7 +75,7 @@ async def upload_draw_video(
         uploaded.append(file)
 
     if not uploaded:
-        raise HTTPException(400, "No video file provided")
+        raise HTTPException(400, "የቪዲዮ ፋይል አልተመረጠም / No video file provided")
 
     urls = list(result.draw_video_urls or [])
     if result.draw_video_url and result.draw_video_url not in urls:
@@ -107,7 +107,7 @@ async def upload_proof_images(
 ):
     result = db.scalar(select(DrawResult).where(DrawResult.lottery_id == lottery_id))
     if not result:
-        raise HTTPException(404, "Publish results first")
+        raise HTTPException(404, "መጀመሪያ ውጤቶችን ያሳትሙ / Publish results first")
     urls = result.proof_image_urls or []
     for i, f in enumerate(files):
         content = await f.read()
@@ -126,7 +126,7 @@ async def upload_proof_images(
 def get_results(lottery_id: int, db: Session = Depends(get_db)):
     result = db.scalar(select(DrawResult).where(DrawResult.lottery_id == lottery_id))
     if not result:
-        raise HTTPException(404, "Results not yet published")
+        raise HTTPException(404, "የዚህ ዕጣ ውጤቶች እስካሁን አልታተሙም / Results not yet published")
     return result
 
 
@@ -134,7 +134,7 @@ def get_results(lottery_id: int, db: Session = Depends(get_db)):
 def get_winners(lottery_id: int, db: Session = Depends(get_db)):
     result = db.scalar(select(DrawResult).where(DrawResult.lottery_id == lottery_id))
     if not result:
-        raise HTTPException(404, "Results not yet published")
+        raise HTTPException(404, "የዚህ ዕጣ ውጤቶች እስካሁን አልታተሙም / Results not yet published")
     winners = db.scalars(
         select(Ticket).where(
             Ticket.lottery_id == lottery_id,

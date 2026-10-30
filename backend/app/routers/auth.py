@@ -16,18 +16,18 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     phone = payload.phone.strip() if payload.phone else ""
     if not phone:
-        raise HTTPException(400, "Phone number is required")
+        raise HTTPException(400, "ስልክ ቁጥር ማስገባት ግዴታ ነው / Phone number is required")
 
     # Check if phone number already registered
     existing_phone = db.scalar(select(User).where(User.phone == phone))
     if existing_phone:
-        raise HTTPException(409, "Phone number already registered")
+        raise HTTPException(409, "ይህ ስልክ ቁጥር ቀድሞ ተመዝግቧል / Phone number is already registered")
 
     email = str(payload.email).strip().lower() if payload.email else None
     if email:
         existing_email = db.scalar(select(User).where(func.lower(User.email) == email))
         if existing_email:
-            raise HTTPException(409, "Email already registered")
+            raise HTTPException(409, "ይህ ኢሜይል ቀድሞ ተመዝግቧል / Email is already registered")
 
     user = User(
         email=email,
@@ -47,7 +47,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     login_id = payload.login_id
     if not login_id:
-        raise HTTPException(400, "Email or phone number is required")
+        raise HTTPException(400, "ስልክ ቁጥር ወይም ኢሜይል ማስገባት ያስፈልጋል / Email or phone number is required")
 
     clean_id = login_id.strip()
 
@@ -80,9 +80,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
                     break
 
     if not user or not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(401, "Invalid credentials")
+        raise HTTPException(401, "የተሳሳተ ስልክ/ኢሜይል ወይም የይለፍ ቃል / Invalid phone/email or password")
     if not user.is_active:
-        raise HTTPException(403, "Account disabled")
+        raise HTTPException(403, "ይህ መለያ ለጊዜው ታግዷል ወይም ተሰናክሏል / Account is disabled")
     log(db, "user.login", actor_id=user.id)
     db.commit()
     return TokenPair(
@@ -95,7 +95,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 def refresh(payload: RefreshRequest):
     data = decode_token(payload.refresh_token)
     if not data or data.get("type") != "refresh":
-        raise HTTPException(401, "Invalid refresh token")
+        raise HTTPException(401, "የመግቢያ ክፍለ ጊዜ አልቋል / Session expired, please sign in again")
     return TokenPair(
         access_token=create_access_token(data["sub"]),
         refresh_token=create_refresh_token(data["sub"]),
@@ -120,7 +120,7 @@ def update_profile(
         new_phone = payload.phone.strip()
         existing = db.scalar(select(User).where(User.phone == new_phone, User.id != user.id))
         if existing:
-            raise HTTPException(409, "Phone number is already registered to another account")
+            raise HTTPException(409, "ይህ ስልክ ቁጥር ለሌላ መለያ ተመዝግቧል / Phone number is already registered to another account")
         user.phone = new_phone
 
     if payload.email is not None:
@@ -128,14 +128,14 @@ def update_profile(
         if new_email:
             existing = db.scalar(select(User).where(func.lower(User.email) == new_email, User.id != user.id))
             if existing:
-                raise HTTPException(409, "Email is already registered to another account")
+                raise HTTPException(409, "ይህ ኢሜይል ለሌላ መለያ ተመዝግቧል / Email is already registered to another account")
             user.email = new_email
         else:
             user.email = None
 
     if payload.new_password:
         if not payload.current_password or not verify_password(payload.current_password, user.hashed_password):
-            raise HTTPException(400, "Current password is incorrect")
+            raise HTTPException(400, "ያስገቡት የአሁኑ የይለፍ ቃል የተሳሳተ ነው / Current password is incorrect")
         user.hashed_password = hash_password(payload.new_password)
 
     log(db, "user.update_profile", actor_id=user.id, entity="user", entity_id=user.id)

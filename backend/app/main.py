@@ -58,6 +58,29 @@ app.include_router(results.router)
 app.include_router(admin.router)
 
 
+from fastapi.exceptions import RequestValidationError
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for err in exc.errors():
+        field = err.get("loc", [""])[-1]
+        msg = err.get("msg", "")
+        if "value is not a valid email" in msg.lower():
+            errors.append("ትክክለኛ የኢሜይል አድራሻ ያስገቡ / Please enter a valid email address")
+        elif "field required" in msg.lower():
+            errors.append(f"{field} ማስገባት ግዴታ ነው / {field} is required")
+        else:
+            errors.append(f"{field}: {msg}")
+    detail_str = "; ".join(errors) if errors else "የተሳሳተ መረጃ ገብቷል / Invalid form submission"
+    return JSONResponse(
+        status_code=422,
+        content={"detail": detail_str},
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Catch any unhandled exception and return JSON with CORS header.
@@ -70,9 +93,10 @@ async def global_exception_handler(request: Request, exc: Exception):
         request.method, request.url.path,
         traceback.format_exc(),
     )
+    detail = getattr(exc, "detail", None) or "ያልተጠበቀ የአገልጋይ ስህተት አጋጥሟል / An unexpected server error occurred"
     return JSONResponse(
         status_code=500,
-        content={"detail": str(exc)},
+        content={"detail": detail},
         headers={"Access-Control-Allow-Origin": "*"},
     )
 

@@ -3,7 +3,7 @@ import { apiClient } from "../../api/client";
 import { useLang } from "../../context/LangContext";
 
 export default function AdminUsers() {
-  const { t, lang } = useLang();
+  const { t, lang, tError } = useLang();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
@@ -34,7 +34,7 @@ export default function AdminUsers() {
 
   async function update(id, body) {
     try { await apiClient.updateUser(id, body); setMsg(t("updated")); load(); }
-    catch (e) { setMsg(e.message); }
+    catch (e) { setMsg(tError(e)); }
   }
 
   async function handleResetPassword(e) {
@@ -47,7 +47,7 @@ export default function AdminUsers() {
       setResetModalUser(null);
       setNewPw("");
     } catch (err) {
-      setMsg(err.message);
+      setMsg(tError(err));
     } finally {
       setResetBusy(false);
     }

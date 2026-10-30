@@ -149,10 +149,10 @@ async def submit_payment(
 
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery or lottery.status != LotteryStatus.ACTIVE:
-        raise HTTPException(400, "Lottery is not open for purchases")
+        raise HTTPException(400, "ይህ ዕጣ ለሽያጭ ክፍት አይደለም / Draw is not open for ticket purchases")
 
     if lottery.total_tickets and (lottery.tickets_sold + quantity) > lottery.total_tickets:
-        raise HTTPException(400, "Not enough tickets remaining")
+        raise HTTPException(400, "በቂ ቀሪ ቲኬቶች የሉም / Not enough tickets remaining")
 
     # Clean payment reference (optional)
     ref_clean = payment_reference.strip() if payment_reference else ""
@@ -174,18 +174,18 @@ async def submit_payment(
         try:
             chosen_list = [int(x.strip()) for x in chosen_numbers.split(",") if x.strip()]
         except ValueError:
-            raise HTTPException(400, "Invalid chosen numbers format")
+            raise HTTPException(400, "የተመረጡት ቁጥሮች አቀማመጥ የተሳሳተ ነው / Invalid chosen numbers format")
 
     if chosen_list:
         # Check for duplicates within the user's selected list
         if len(chosen_list) != len(set(chosen_list)):
-            raise HTTPException(400, "Duplicate draw numbers selected in the same purchase")
+            raise HTTPException(400, "በአንድ ግዢ ውስጥ ተመሳሳይ ቁጥሮች ተመርጠዋል / Duplicate draw numbers selected in the same purchase")
 
         # Range verification if lottery defines min or max
         if lottery.ticket_number_min is not None and any(n < lottery.ticket_number_min for n in chosen_list):
-            raise HTTPException(400, f"Selected numbers must be at least {lottery.ticket_number_min}")
+            raise HTTPException(400, f"የተመረጡት ቁጥሮች ቢያንስ {lottery.ticket_number_min} መሆን አለባቸው / Selected numbers must be at least {lottery.ticket_number_min}")
         if lottery.ticket_number_max is not None and any(n > lottery.ticket_number_max for n in chosen_list):
-            raise HTTPException(400, f"Selected numbers cannot exceed {lottery.ticket_number_max}")
+            raise HTTPException(400, f"የተመረጡት ቁጥሮች ከ {lottery.ticket_number_max} መብለጥ የለባቸውም / Selected numbers cannot exceed {lottery.ticket_number_max}")
 
         # Check against existing Ticket records (CONFIRMED, PENDING_PAYMENT, WON, LOST)
         taken_tickets = db.scalars(
@@ -323,15 +323,15 @@ def confirm_payment(
 ):
     txn = db.get(PaymentTransaction, txn_id)
     if not txn:
-        raise HTTPException(404, "Transaction not found")
+        raise HTTPException(404, "የክፍያ መረጃው አልተገኘም / Payment transaction not found")
     if txn.gateway_status == PaymentStatus.SUCCESS:
-        raise HTTPException(409, "Already confirmed")
+        raise HTTPException(409, "ይህ ክፍያ አስቀድሞ ተረጋግጧል / Payment is already confirmed")
     if txn.gateway_status == PaymentStatus.FAILED:
-        raise HTTPException(409, "Payment was rejected")
+        raise HTTPException(409, "ይህ ክፍያ ውድቅ ተደርጓል / Payment was rejected")
 
     lottery = db.get(LotteryPost, txn.lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
 
     if lottery.total_tickets and (lottery.tickets_sold + txn.tickets_count) > lottery.total_tickets:
         txn.gateway_status = PaymentStatus.FAILED
@@ -344,7 +344,7 @@ def confirm_payment(
             if "-PENDING-" not in t.ticket_no and "-CANCELLED" not in t.ticket_no:
                 t.ticket_no = f"{t.ticket_no}-CANCELLED-{t.id}"
         db.commit()
-        raise HTTPException(400, "Lottery is now full")
+        raise HTTPException(400, "ዕጣው ሙሉ በሙሉ ተጠናቋል / Draw is now full")
 
     try:
         txn.gateway_status = PaymentStatus.SUCCESS
@@ -383,7 +383,7 @@ def confirm_payment(
     except Exception as exc:
         db.rollback()
         logger.error("confirm_payment failed: %s", exc, exc_info=True)
-        raise HTTPException(500, f"Confirmation failed: {exc}")
+        raise HTTPException(500, f"ክፍያ ማረጋገጥ አልተቻለም / Confirmation failed: {exc}")
 
     ticket_nos = [t.ticket_no for t in confirmed_tickets]
     if user.email:
@@ -403,9 +403,9 @@ def reject_payment(
 ):
     txn = db.get(PaymentTransaction, txn_id)
     if not txn:
-        raise HTTPException(404, "Transaction not found")
+        raise HTTPException(404, "የክፍያ መረጃው አልተገኘም / Payment transaction not found")
     if txn.gateway_status != PaymentStatus.PENDING:
-        raise HTTPException(409, "Only PENDING payments can be rejected")
+        raise HTTPException(409, "በሂደት ላይ ያሉ ክፍያዎችን ብቻ ውድቅ ማድረግ ይቻላል / Only pending payments can be rejected")
     
     txn.gateway_status = PaymentStatus.FAILED
 

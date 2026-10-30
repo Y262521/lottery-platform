@@ -101,10 +101,10 @@ def get_lottery(lottery_id: int, db: Session = Depends(get_db),
                 current_user: User | None = Depends(get_optional_user)):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     is_admin = current_user and current_user.role in (Role.ADMIN, Role.AUDITOR)
     if not is_admin and lottery.status not in (LotteryStatus.ACTIVE, LotteryStatus.DRAWN):
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም ወይም አይገኝም / Draw not found or unavailable")
     return _to_out(lottery, db)
 
 
@@ -128,9 +128,9 @@ def delete_lottery(lottery_id: int, db: Session = Depends(get_db),
                    admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     if lottery.status != LotteryStatus.DRAFT:
-        raise HTTPException(409, "Only DRAFT lotteries can be deleted.")
+        raise HTTPException(409, "ረቂቅ (Draft) የሆኑ ዕጣዎችን ብቻ መሰረዝ ይቻላል / Only DRAFT draws can be deleted")
     log(db, "lottery.delete", actor_id=admin.id, entity="lottery_post",
         entity_id=lottery_id, detail=f"title={lottery.title}")
     db.delete(lottery)
@@ -143,7 +143,7 @@ def update_lottery(lottery_id: int, payload: LotteryUpdate,
                    admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     for k, v in payload.model_dump(exclude_none=True).items():
         setattr(lottery, k, v)
     log(db, "lottery.update", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id)
@@ -157,9 +157,9 @@ def publish_lottery(lottery_id: int, db: Session = Depends(get_db),
                     admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     if lottery.status != LotteryStatus.DRAFT:
-        raise HTTPException(409, "Only DRAFT lotteries can be published")
+        raise HTTPException(409, "ረቂቅ (Draft) የሆኑ ዕጣዎችን ብቻ ማሳተም ይቻላል / Only DRAFT draws can be published")
     lottery.status = LotteryStatus.ACTIVE
     log(db, "lottery.publish", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id)
     db.commit()
@@ -171,9 +171,9 @@ def close_lottery(lottery_id: int, db: Session = Depends(get_db),
                   admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     if lottery.status != LotteryStatus.ACTIVE:
-        raise HTTPException(409, "Only ACTIVE lotteries can be closed")
+        raise HTTPException(409, "ንቁ የሆኑ ዕጣዎችን ብቻ መዝጋት ይቻላል / Only ACTIVE draws can be closed")
     lottery.status = LotteryStatus.CLOSED
     log(db, "lottery.close", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id)
     db.commit()
@@ -185,9 +185,9 @@ def cancel_lottery(lottery_id: int, db: Session = Depends(get_db),
                    admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     if lottery.status == LotteryStatus.DRAWN:
-        raise HTTPException(409, "Cannot cancel a drawn lottery")
+        raise HTTPException(409, "ዕጣ የወጣበትን ውድድር መሰረዝ አይቻልም / Cannot cancel an already drawn event")
     lottery.status = LotteryStatus.CANCELLED
     log(db, "lottery.cancel", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id)
     db.commit()
@@ -199,9 +199,9 @@ def reset_lottery(lottery_id: int, db: Session = Depends(get_db),
                   admin: User = Depends(require_roles(Role.ADMIN))):
     lottery = db.get(LotteryPost, lottery_id)
     if not lottery:
-        raise HTTPException(404, "Lottery not found")
+        raise HTTPException(404, "ዕጣው አልተገኘም / Draw not found")
     if lottery.status == LotteryStatus.DRAWN:
-        raise HTTPException(409, "Cannot reset a drawn lottery")
+        raise HTTPException(409, "ዕጣ የወጣበትን ውድድር መልሶ ማስጀመር አይቻልም / Cannot reset an already drawn event")
     lottery.status = LotteryStatus.ACTIVE
     log(db, "lottery.reset", actor_id=admin.id, entity="lottery_post", entity_id=lottery_id)
     db.commit()

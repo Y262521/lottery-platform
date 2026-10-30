@@ -70,7 +70,7 @@ def update_user(user_id: int, payload: AdminUserUpdate, db: Session = Depends(ge
                 admin: User = Depends(require_roles(Role.ADMIN))):
     user = db.get(User, user_id)
     if not user:
-        raise HTTPException(404, "User not found")
+        raise HTTPException(404, "ተጠቃሚው አልተገኘም / User not found")
     if payload.role:
         user.role = payload.role
     if payload.is_active is not None:
@@ -89,7 +89,7 @@ def reset_user_password(
 ):
     user = db.get(User, user_id)
     if not user:
-        raise HTTPException(404, "User not found")
+        raise HTTPException(404, "ተጠቃሚው አልተገኘም / User not found")
     user.hashed_password = hash_password(payload.new_password)
     log(db, "admin.reset_password", actor_id=admin.id, entity="user", entity_id=user_id)
     db.commit()
@@ -192,7 +192,7 @@ def update_payment_account(
 ):
     acct = db.get(PaymentAccount, account_id)
     if not acct:
-        raise HTTPException(404, "Payment account not found")
+        raise HTTPException(404, "የክፍያ አካውንቱ አልተገኘም / Payment account not found")
     if payload.account_number is not None:
         acct.account_number = payload.account_number.strip()
     if payload.account_holder is not None:
@@ -215,7 +215,7 @@ def delete_payment_account(
 ):
     acct = db.get(PaymentAccount, account_id)
     if not acct:
-        raise HTTPException(404, "Payment account not found")
+        raise HTTPException(404, "የክፍያ አካውንቱ አልተገኘም / Payment account not found")
     db.delete(acct)
     log(db, "admin.delete_payment_account", actor_id=admin.id, entity="payment_account", entity_id=account_id)
     db.commit()

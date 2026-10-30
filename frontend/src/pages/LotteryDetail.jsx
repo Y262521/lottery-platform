@@ -19,7 +19,7 @@ export default function LotteryDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t, lang } = useLang();
+  const { t, lang, tError } = useLang();
 
   const [lottery, setLottery]           = useState(null);
   const [accounts, setAccounts]         = useState({});
@@ -182,7 +182,7 @@ export default function LotteryDetail() {
       await apiClient.submitPayment(fd);
       setStep("done");
     } catch (e) {
-      setError(e.message);
+      setError(tError(e));
       refreshTakenNumbers();
     }
     finally { setBusy(false); }

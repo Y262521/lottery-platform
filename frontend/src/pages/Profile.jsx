@@ -18,7 +18,7 @@ function EyeIcon({ open }) {
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
-  const { t, lang } = useLang();
+  const { t, lang, tError } = useLang();
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
@@ -114,7 +114,7 @@ export default function Profile() {
         confirm_password: "",
       }));
     } catch (err) {
-      setError(typeof err.message === "string" ? err.message : "Update failed");
+      setError(tError(err));
     } finally {
       setBusy(false);
     }

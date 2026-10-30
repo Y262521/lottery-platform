@@ -17,7 +17,7 @@ function getDefaultDrawDate() {
 
 export default function AdminLotteryForm() {
   const navigate = useNavigate();
-  const { t, lang } = useLang();
+  const { t, lang, tError } = useLang();
   const coverInputRef = useRef(null);
   const prizeInputRef = useRef(null);
 
@@ -127,7 +127,7 @@ export default function AdminLotteryForm() {
 
       navigate(`/admin/lotteries/${lottery.id}`);
     } catch (e) {
-      setError(e.message);
+      setError(tError(e));
     } finally {
       setBusy(false);
       setStatusText("");

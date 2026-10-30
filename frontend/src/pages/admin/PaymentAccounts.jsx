@@ -5,7 +5,7 @@ import { useLang } from "../../context/LangContext";
 import { DIGITAL_WALLETS, ETHIOPIAN_BANKS } from "../../constants/banks";
 
 export default function AdminPaymentAccounts() {
-  const { t, lang } = useLang();
+  const { t, lang, tError } = useLang();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
@@ -31,7 +31,7 @@ export default function AdminPaymentAccounts() {
       const data = await apiClient.adminPaymentAccounts();
       setAccounts(data);
     } catch (err) {
-      setError(err.message);
+      setError(tError(err));
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ export default function AdminPaymentAccounts() {
       setShowModal(false);
       await load();
     } catch (err) {
-      setError(err.message);
+      setError(tError(err));
     } finally {
       setBusy(false);
     }
@@ -147,7 +147,7 @@ export default function AdminPaymentAccounts() {
       setMsg(t("accountDeletedSuccess"));
       await load();
     } catch (err) {
-      setError(err.message);
+      setError(tError(err));
     }
   }
 
@@ -156,7 +156,7 @@ export default function AdminPaymentAccounts() {
       await apiClient.updatePaymentAccount(acct.id, { is_active: !acct.is_active });
       await load();
     } catch (err) {
-      setError(err.message);
+      setError(tError(err));
     }
   }
 

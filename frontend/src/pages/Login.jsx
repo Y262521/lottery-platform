@@ -18,7 +18,7 @@ function EyeIcon({ open }) {
 
 export default function Login() {
   const { login } = useAuth();
-  const { t } = useLang();
+  const { t, tError } = useLang();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
@@ -39,7 +39,7 @@ export default function Login() {
       const target = from && from !== "/admin" && from !== "/login" ? from : "/";
       navigate(target, { replace: true });
     } catch (err) {
-      setError(typeof err.message === "string" ? err.message : t("signInTitle") + " failed");
+      setError(tError(err));
     } finally {
       setBusy(false);
     }

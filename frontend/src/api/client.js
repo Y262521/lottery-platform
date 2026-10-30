@@ -39,20 +39,34 @@ export async function api(path, { method = "GET", body, auth = true, form = fals
   if (!form) headers["Content-Type"] = "application/json";
   if (auth && token.access) headers.Authorization = `Bearer ${token.access}`;
 
-  let res = await fetch(API_BASE + path, {
-    method,
-    headers,
-    body: form ? body : body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(API_BASE + path, {
+      method,
+      headers,
+      body: form ? body : body ? JSON.stringify(body) : undefined,
+    });
+  } catch (netErr) {
+    const error = new Error("Failed to connect to server. Please check your internet connection.");
+    error.status = 0;
+    error.cause = netErr;
+    throw error;
+  }
 
   if (res.status === 401 && auth && token.refresh) {
     const fresh = await refreshAccess();
     if (fresh) {
       headers.Authorization = `Bearer ${fresh}`;
-      res = await fetch(API_BASE + path, {
-        method, headers,
-        body: form ? body : body ? JSON.stringify(body) : undefined,
-      });
+      try {
+        res = await fetch(API_BASE + path, {
+          method, headers,
+          body: form ? body : body ? JSON.stringify(body) : undefined,
+        });
+      } catch (netErr) {
+        const error = new Error("Failed to connect to server. Please check your internet connection.");
+        error.status = 0;
+        throw error;
+      }
     }
   }
 

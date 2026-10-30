@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { formatError } from "../utils/error";
 
 const translations = {
   en: {
@@ -325,8 +326,16 @@ const translations = {
     changeCoverPhoto: "Upload / Change Cover Photo",
     prizePhotos: "Prize Photos",
     uploadPrizePhotos: "Add Prize Photos",
-    coverPhotoUpdated: "Cover photo updated successfully ✓",
     prizePhotosUploaded: "Prize photos uploaded successfully ✓",
+
+    // Common error messages
+    errorNetwork: "Unable to connect to the server. Please check your internet connection or try again in a few moments.",
+    errorInvalidCredentials: "Incorrect phone number, email, or password. Please check your details and try again.",
+    errorAccountDisabled: "Your account is currently disabled. Please contact support.",
+    errorPhoneRequired: "Phone number is required.",
+    errorPhoneTaken: "This phone number is already registered. Please sign in instead.",
+    errorEmailTaken: "This email address is already registered. Please sign in instead.",
+    errorGeneric: "An unexpected error occurred. Please try again.",
   },
 
   am: {
@@ -655,6 +664,15 @@ const translations = {
     paymentRef:          "ማጣቀሻ",
     submittedOn:         "የቀረበ ቀን",
     lottery:             "እጣ",
+
+    // Common error messages
+    errorNetwork: "ከአገልጋይ ጋር መገናኘት አልተቻለም። እባክዎ የበይነመረብ ግንኙነትዎን ያረጋግጡ ወይም ጥቂት ቆይተው እንደገና ይሞክሩ።",
+    errorInvalidCredentials: "የተሳሳተ ስልክ ቁጥር/ኢሜይል ወይም የይለፍ ቃል። እባክዎ እንደገና ይሞክሩ።",
+    errorAccountDisabled: "መለያዎ ለጊዜው ታግዷል ወይም ተሰናክሏል። እባክዎ ድጋፍ ሰጪን ያነጋግሩ።",
+    errorPhoneRequired: "ስልክ ቁጥር ማስገባት ግዴታ ነው።",
+    errorPhoneTaken: "ይህ ስልክ ቁጥር ቀድሞ ተመዝግቧል። እባክዎ በዚሁ ስልክ ይግቡ።",
+    errorEmailTaken: "ይህ ኢሜይል ቀድሞ ተመዝግቧል። እባክዎ በዚሁ ኢሜይል ይግቡ።",
+    errorGeneric: "ስህተት አጋጥሟል። እባክዎ እንደገና ይሞክሩ።",
   },
 };
 
@@ -677,9 +695,10 @@ export function LangProvider({ children }) {
   }
 
   const t = (key) => translations[lang]?.[key] ?? translations.en[key] ?? key;
+  const tError = (err) => formatError(err, lang);
 
   return (
-    <LangContext.Provider value={{ lang, toggle, setLang: changeLang, t }}>
+    <LangContext.Provider value={{ lang, toggle, setLang: changeLang, t, tError, formatError: (err, targetLang) => formatError(err, targetLang || lang) }}>
       {children}
     </LangContext.Provider>
   );
@@ -690,3 +709,6 @@ export function useLang() {
   if (!ctx) throw new Error("useLang must be used within LangProvider");
   return ctx;
 }
+
+export { formatError };
+

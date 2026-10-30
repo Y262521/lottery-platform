@@ -24,9 +24,9 @@ def get_ticket(ticket_id: int, db: Session = Depends(get_db),
                user: User = Depends(get_current_user)):
     ticket = db.get(Ticket, ticket_id)
     if not ticket:
-        raise HTTPException(404, "Ticket not found")
+        raise HTTPException(404, "ቲኬቱ አልተገኘም / Ticket not found")
     if ticket.user_id != user.id and user.role not in (Role.ADMIN, Role.AUDITOR):
-        raise HTTPException(403, "Not your ticket")
+        raise HTTPException(403, "ይህ የእርስዎ ቲኬት አይደለም / You do not have permission for this ticket")
     return ticket
 
 

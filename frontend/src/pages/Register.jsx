@@ -19,7 +19,7 @@ function EyeIcon({ open }) {
 
 export default function Register() {
   const { login } = useAuth();
-  const { t } = useLang();
+  const { t, tError } = useLang();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ full_name: "", phone: "", email: "", password: "" });
@@ -33,7 +33,7 @@ export default function Register() {
     e.preventDefault();
     setError("");
     if (!form.phone.trim()) {
-      setError("Phone number is required");
+      setError(tError("Phone number is required"));
       return;
     }
     if (form.password.length < 8) {
@@ -52,7 +52,7 @@ export default function Register() {
       await login(form.phone.trim() || form.email.trim(), form.password);
       navigate("/", { replace: true });
     } catch (err) {
-      setError(typeof err.message === "string" ? err.message : t("registrationFailed"));
+      setError(tError(err));
     } finally {
       setBusy(false);
     }

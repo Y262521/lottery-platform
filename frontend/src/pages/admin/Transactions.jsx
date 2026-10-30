@@ -10,7 +10,7 @@ const STATUS_COLOR = {
 };
 
 export default function AdminTransactions() {
-  const { t, lang } = useLang();
+  const { t, lang, tError } = useLang();
   const [txns, setTxns] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -28,7 +28,7 @@ export default function AdminTransactions() {
       if (selectedTxn?.id === id) setSelectedTxn(null);
       load();
     } catch (e) {
-      setMsg({ type: "error", text: e.message });
+      setMsg({ type: "error", text: tError(e) });
     }
   }
 
@@ -40,7 +40,7 @@ export default function AdminTransactions() {
       if (selectedTxn?.id === id) setSelectedTxn(null);
       load();
     } catch (e) {
-      setMsg({ type: "error", text: e.message });
+      setMsg({ type: "error", text: tError(e) });
     }
   }
 

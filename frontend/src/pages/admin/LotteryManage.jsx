@@ -6,7 +6,7 @@ import { useLang } from "../../context/LangContext";
 export default function AdminLotteryManage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t, lang } = useLang();
+  const { t, lang, tError } = useLang();
   const [lottery, setLottery] = useState(null);
   const [result, setResult] = useState(null);
   const [tickets, setTickets] = useState([]);
@@ -95,7 +95,7 @@ export default function AdminLotteryManage() {
       setShowEditModal(false);
       await load();
     } catch (err) {
-      setEditError(err.message || "Failed to update draw");
+      setEditError(tError(err));
     } finally {
       setBusy(false);
     }
@@ -111,7 +111,7 @@ export default function AdminLotteryManage() {
 
   async function act(fn, label) {
     try { await fn(); setMsg(label + " ✓"); await load(); }
-    catch (e) { setMsg(e.message); }
+    catch (e) { setMsg(tError(e)); }
   }
 
   async function handleUploadCover(e) {
@@ -125,7 +125,7 @@ export default function AdminLotteryManage() {
       setMsg(t("coverPhotoUpdated"));
       await load();
     } catch (err) {
-      setMsg(err.message);
+      setMsg(tError(err));
     } finally {
       setBusy(false);
       e.target.value = "";
@@ -143,7 +143,7 @@ export default function AdminLotteryManage() {
       setMsg(t("prizePhotosUploaded"));
       await load();
     } catch (err) {
-      setMsg(err.message);
+      setMsg(tError(err));
     } finally {
       setBusy(false);
       e.target.value = "";
@@ -174,7 +174,7 @@ export default function AdminLotteryManage() {
       }
       setMsg(t("resultsPublished"));
       await load();
-    } catch (e) { setMsg(e.message); }
+    } catch (e) { setMsg(tError(e)); }
     finally { setBusy(false); }
   }
 
@@ -547,7 +547,7 @@ export default function AdminLotteryManage() {
                       await apiClient.uploadDrawVideos(id, fd);
                       setMsg(t("uploadVideo") + " ✓");
                       await load();
-                    } catch (err) { setMsg(err.message); }
+                    } catch (err) { setMsg(tError(err)); }
                   }}
                 />
               </label>

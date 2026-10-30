@@ -14,7 +14,7 @@ const STATUS_COLOR = {
 function tStatus(t, s) { return t(`status${s}`) || s; }
 
 export default function AdminLotteries() {
-  const { t } = useLang();
+  const { t, tError } = useLang();
   const [lotteries, setLotteries] = useState([]);
   const [filter, setFilter] = useState("");
   const [msg, setMsg] = useState("");
@@ -25,7 +25,7 @@ export default function AdminLotteries() {
 
   async function act(fn, label) {
     try { await fn(); setMsg(label + " ✓"); load(filter); }
-    catch (e) { setMsg(e.message); }
+    catch (e) { setMsg(tError(e)); }
   }
 
   const filters = ["", "DRAFT", "ACTIVE", "CLOSED", "DRAWN"];
