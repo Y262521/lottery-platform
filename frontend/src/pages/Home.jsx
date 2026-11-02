@@ -209,7 +209,7 @@ function CoverImage({ url, title, dim = false }) {
     <img
       src={mediaUrl(url)}
       alt={title}
-      className={`h-72 w-full object-cover${dim ? " opacity-60" : ""}`}
+      className={`h-72 w-full object-contain bg-ink-800${dim ? " opacity-60" : ""}`}
       loading="lazy"
       onError={(e) => {
         e.target.replaceWith(Object.assign(document.createElement("div"), {
