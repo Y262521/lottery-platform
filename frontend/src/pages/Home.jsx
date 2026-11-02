@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiClient, mediaUrl } from "../api/client";
+import { apiClient } from "../api/client";
 import { useLang } from "../context/LangContext";
 
 const STATUS_BADGE = {
