@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { apiClient, mediaUrl } from "../api/client";
 import { useLang } from "../context/LangContext";
 
-const STATUS_BADGE = {
-  ACTIVE: "bg-green-500/20 text-green-300",
+const STATUS_BADGE = {  ACTIVE: "bg-green-500/20 text-green-300",
   DRAWN:  "bg-ink-600 text-cream-300",
   CLOSED: "bg-ink-700 text-cream-400",
 };
@@ -153,7 +152,6 @@ function LotteryCard({ lottery: l }) {
 // ── Upcoming / Coming Soon card ───────────────────────────────────────────────
 function UpcomingCard({ lottery: l }) {
   const { lang } = useLang();
-  const cd = useCountdown(l.sales_open_at);
   if (!l?.id) return null;
 
   return (
@@ -177,29 +175,14 @@ function UpcomingCard({ lottery: l }) {
         </div>
         <p className="mt-2 line-clamp-2 text-sm text-cream-300">{l.prize_description}</p>
 
-        {/* Countdown */}
+        {/* Sales open date */}
         <div className="mt-4 rounded-xl bg-ink-800 px-4 py-3 text-center">
-          {cd.done ? (
-            <p className="text-green-300 text-sm font-semibold">
-              {lang === "am" ? "አሁን ክፍት ነው! ገጹን ያድሱ" : "Now open! Refresh the page."}
-            </p>
-          ) : (
-            <>
-              <p className="text-[10px] uppercase tracking-wider text-cream-400 mb-1">
-                {lang === "am" ? "ሽያጭ ይከፈታል" : "Sales open in"}
-              </p>
-              <div className="flex items-center justify-center gap-1 font-mono text-2xl font-bold text-yellow-300">
-                <span>{pad(cd.h)}</span>
-                <span className="text-cream-500 text-lg">:</span>
-                <span>{pad(cd.m)}</span>
-                <span className="text-cream-500 text-lg">:</span>
-                <span>{pad(cd.s)}</span>
-              </div>
-              <p className="text-[10px] text-cream-500 mt-1">
-                {new Date(l.sales_open_at).toLocaleString()}
-              </p>
-            </>
-          )}
+          <p className="text-[10px] uppercase tracking-wider text-cream-400 mb-1">
+            {lang === "am" ? "ሽያጭ የሚከፈትበት ቀን" : "Sales open on"}
+          </p>
+          <p className="text-sm font-semibold text-yellow-300">
+            {new Date(l.sales_open_at).toLocaleString()}
+          </p>
         </div>
 
         <div className="mt-auto pt-3 flex items-center justify-between text-sm">
