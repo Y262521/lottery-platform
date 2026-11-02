@@ -213,7 +213,7 @@ function UpcomingCard({ lottery: l }) {
 
         {/* Disabled Coming Soon button */}
         <div className="mt-3 w-full rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-2.5 text-center text-sm font-semibold text-yellow-300">
-          {lang === "am" ? "በቅርብ ጊዜ ይምጣ" : "Coming Soon"}
+          {lang === "am" ? "በቅርብ ጊዜ" : "Coming Soon"}
         </div>
       </div>
     </article>
