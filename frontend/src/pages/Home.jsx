@@ -209,17 +209,17 @@ function CoverImage({ url, title, dim = false }) {
     <img
       src={mediaUrl(url)}
       alt={title}
-      className={`h-96 w-full object-cover${dim ? " opacity-60" : ""}`}
+      className={`h-[480px] w-full object-cover${dim ? " opacity-60" : ""}`}
       loading="lazy"
       onError={(e) => {
         e.target.replaceWith(Object.assign(document.createElement("div"), {
-          className: "h-96 w-full flex items-center justify-center bg-ink-800 text-5xl",
+          className: "h-[480px] w-full flex items-center justify-center bg-ink-800 text-5xl",
           textContent: "🎟️",
         }));
       }}
     />
   ) : (
-    <div className="h-96 w-full flex items-center justify-center bg-ink-800 text-5xl">
+    <div className="h-[480px] w-full flex items-center justify-center bg-ink-800 text-5xl">
       🎟️
     </div>
   );
