@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     # Auth
     SECRET_KEY: str = "dev-insecure-secret-change-me"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours — long enough for admin sessions
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30      # 30 days
 
     # Database
     DATABASE_URL: str = "sqlite:///./lottery.db"
