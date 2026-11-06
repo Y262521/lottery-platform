@@ -55,7 +55,9 @@ export default function AdminReferrals() {
         user_id: modal.user_id,
         subject,
         message,
-        reply_options: [
+        // Only add reply_options for the initial "What do you prefer?" question
+        // Confirmation messages (sent after user replied) have no reply options
+        reply_options: modal._isConfirmation ? null : [
           lang === "am" ? "💰 ገንዘብ" : "💰 Cash",
           lang === "am" ? "🎟️ ነፃ ዕጣ" : "🎟️ Free Draw",
         ],
@@ -263,7 +265,7 @@ export default function AdminReferrals() {
                         </p>
                         <button className="btn-primary px-3 py-1.5 text-xs"
                           onClick={() => {
-                            setModal({ ...r, user_id: r.user_id });
+                            setModal({ ...r, user_id: r.user_id, _isConfirmation: true });
                             setSubject(lang === "am" ? "💰 ክፍያ ተልኳል" : "💰 Cash Sent");
                             setMessage(lang === "am"
                               ? `ሰላም ${r.full_name}!\n\nክፍያዎ ወደ አካዉንትዎ ተልኳል። ደህና ይሁኑ!`
@@ -282,7 +284,7 @@ export default function AdminReferrals() {
                         </p>
                         <button className="btn-primary px-3 py-1.5 text-xs"
                           onClick={() => {
-                            setModal({ ...r, user_id: r.user_id });
+                            setModal({ ...r, user_id: r.user_id, _isConfirmation: true });
                             setSubject(lang === "am" ? "🎟️ ነፃ ቲኬት" : "🎟️ Free Ticket");
                             setMessage(lang === "am"
                               ? `ሰላም ${r.full_name}!\n\nለሚቀጥለው ዕጣ 1 ቲኬት ነፃ መግዛት ይችላሉ! ዕጣ ሲጀምር ወደ ዕጣ ገጽ ሄደው ቲኬት ይግዙ — ክፍያ ካደረጉ በኋላ ያናግሩን ለማረጋገጥ።`
