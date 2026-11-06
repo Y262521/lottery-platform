@@ -186,7 +186,8 @@ class UserNotification(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
-class AuditLog(Base):    __tablename__ = "audit_logs"
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
 
     id:         Mapped[int]      = mapped_column(Integer, primary_key=True)
     actor_id:   Mapped[int|None] = mapped_column(ForeignKey("users.id"), nullable=True)
