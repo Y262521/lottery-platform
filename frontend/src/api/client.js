@@ -152,6 +152,7 @@ export const apiClient = {
 
   // referrals
   myReferralStats: () => api("/api/referrals/my-stats"),
+  saveRewardAccount: (b) => api("/api/referrals/reward-account", { method: "POST", body: b }),
   myNotifications: () => api("/api/referrals/notifications"),
   markNotificationRead: (id) => api(`/api/referrals/notifications/${id}/read`, { method: "POST" }),
   referralLeaderboard: () => api("/api/referrals/admin/leaderboard"),

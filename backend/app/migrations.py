@@ -201,6 +201,8 @@ def run_migrations() -> None:
                   "ix_users_referral_code")
             _exec(db, "ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_id INTEGER REFERENCES users(id)",
                   "users.referred_by_id")
+            _exec(db, "ALTER TABLE users ADD COLUMN IF NOT EXISTS reward_account JSONB",
+                  "users.reward_account")
         # Generate referral codes for existing users who don't have one
         _exec(db, """
             UPDATE users

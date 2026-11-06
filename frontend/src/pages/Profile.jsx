@@ -365,19 +365,24 @@ export default function Profile() {
 function RewardAccountSection({ lang }) {
   const [form, setForm] = useState({ telebirr_phone: "", bank_name: "", bank_account: "", bank_holder: "" });
   const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("reward_account") || "{}");
-      if (stored) setForm((f) => ({ ...f, ...stored }));
-    } catch { /* ignore */ }
+    // Load from backend
+    apiClient.myReferralStats().then((s) => {
+      if (s.reward_account) setForm((f) => ({ ...f, ...s.reward_account }));
+    }).catch(() => {});
   }, []);
 
-  function save(e) {
+  async function save(e) {
     e.preventDefault();
-    localStorage.setItem("reward_account", JSON.stringify(form));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setBusy(true);
+    try {
+      await apiClient.saveRewardAccount(form);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch { /* ignore */ }
+    finally { setBusy(false); }
   }
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -411,8 +416,8 @@ function RewardAccountSection({ lang }) {
             <input className="input" placeholder={lang === "am" ? "ስምዎ" : "Your name"} value={form.bank_holder} onChange={set("bank_holder")} />
           </div>
         </div>
-        <button className="btn-primary w-full" type="submit">
-          {saved ? "✓ " + (lang === "am" ? "ተቀምጧል" : "Saved!") : (lang === "am" ? "አስቀምጥ" : "Save")}
+        <button className="btn-primary w-full" type="submit" disabled={busy}>
+          {saved ? "✓ " + (lang === "am" ? "ተቀምጧል" : "Saved!") : busy ? "…" : (lang === "am" ? "አስቀምጥ" : "Save")}
         </button>
       </form>
     </div>

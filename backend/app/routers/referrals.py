@@ -43,7 +43,7 @@ def my_referral_stats(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    """Return the current user's referral code, link, and referral counts."""
+    """Return the current user's referral code, link, referral counts and reward account."""
     total = db.scalar(select(func.count()).select_from(User).where(User.referred_by_id == user.id)) or 0
     qualified = _qualified_count(db, user.id)
     return {
@@ -51,7 +51,20 @@ def my_referral_stats(
         "total_referrals": total,
         "qualified_referrals": qualified,
         "reward_threshold": REWARD_THRESHOLD,
+        "reward_account": user.reward_account or {},
     }
+
+
+@router.post("/reward-account")
+def save_reward_account(
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """User saves their preferred reward account (Telebirr / bank)."""
+    user.reward_account = payload
+    db.commit()
+    return {"ok": True, "reward_account": user.reward_account}
 
 
 @router.get("/notifications", response_model=list[NotificationOut])
@@ -84,7 +97,7 @@ def mark_read(
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 
-@router.get("/admin/leaderboard", response_model=list[ReferralStatsOut])
+@router.get("/admin/leaderboard")
 def referral_leaderboard(
     db: Session = Depends(get_db),
     _: User = Depends(require_roles(Role.ADMIN, Role.AUDITOR)),
@@ -109,15 +122,16 @@ def referral_leaderboard(
     for u in referrers:
         total = db.scalar(select(func.count()).select_from(User).where(User.referred_by_id == u.id)) or 0
         qualified = _qualified_count(db, u.id)
-        result.append(ReferralStatsOut(
-            user_id=u.id,
-            full_name=u.full_name,
-            phone=u.phone,
-            referral_code=u.referral_code,
-            total_referrals=total,
-            qualified_referrals=qualified,
-            has_reward_alert=qualified >= REWARD_THRESHOLD,
-        ))
+        result.append({
+            "user_id": u.id,
+            "full_name": u.full_name,
+            "phone": u.phone,
+            "referral_code": u.referral_code,
+            "total_referrals": total,
+            "qualified_referrals": qualified,
+            "has_reward_alert": qualified >= REWARD_THRESHOLD,
+            "reward_account": u.reward_account or {},
+        })
 
     result.sort(key=lambda x: x.qualified_referrals, reverse=True)
     return result

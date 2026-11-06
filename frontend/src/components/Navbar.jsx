@@ -138,7 +138,7 @@ function NotificationBell({ lang }) {
 
   return (
     <NavLink
-      to="/profile"
+      to="/referrals"
       className="relative flex items-center justify-center h-8 w-8 rounded-lg border border-ink-600 bg-ink-800 text-cream-300 hover:text-green-300 hover:border-ink-500 transition"
       title={lang === "am" ? "መልዕክቶች" : "Notifications"}
     >

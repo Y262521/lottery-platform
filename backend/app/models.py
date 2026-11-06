@@ -73,6 +73,8 @@ class User(Base):
     # Referral system
     referral_code:   Mapped[str|None] = mapped_column(String(20), unique=True, index=True, nullable=True)
     referred_by_id:  Mapped[int|None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    # Reward account — where to send cash prizes (stored as JSON)
+    reward_account:  Mapped[dict|None] = mapped_column(JSON, nullable=True)
     created_at:      Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     tickets:      Mapped[list["Ticket"]]             = relationship(back_populates="user")

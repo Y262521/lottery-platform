@@ -95,16 +95,23 @@ export default function AdminReferrals() {
           <div className="space-y-2">
             {alerts.map((u) => (
               <div key={u.user_id}
-                className="flex items-center justify-between rounded-lg bg-ink-800 px-4 py-3">
+                className="flex flex-col sm:flex-row sm:items-center justify-between rounded-lg bg-ink-800 px-4 py-3 gap-2">
                 <div>
                   <span className="font-semibold text-cream-50">{u.full_name}</span>
                   <span className="ml-2 text-sm text-cream-400">{u.phone}</span>
                   <span className="ml-2 pill bg-yellow-500/15 text-yellow-300">
                     {u.qualified_referrals} {lang === "am" ? "ሰዎች" : "referrals"}
                   </span>
+                  {/* Reward account */}
+                  {u.reward_account && (u.reward_account.telebirr_phone || u.reward_account.bank_account) && (
+                    <div className="mt-1 text-xs text-cream-400">
+                      {u.reward_account.telebirr_phone && <span>📱 {u.reward_account.telebirr_phone}</span>}
+                      {u.reward_account.bank_account && <span className="ml-3">🏦 {u.reward_account.bank_name} — {u.reward_account.bank_account} ({u.reward_account.bank_holder})</span>}
+                    </div>
+                  )}
                 </div>
-                <button className="btn-primary px-3 py-1.5 text-xs" onClick={() => openModal(u)}>
-                  {lang === "am" ? "መልዕክት ላክ" : "Send Reward"}
+                <button className="btn-primary px-3 py-1.5 text-xs shrink-0" onClick={() => openModal(u)}>
+                  {lang === "am" ? "ሽልማት ላክ" : "Send Reward"}
                 </button>
               </div>
             ))}
@@ -141,6 +148,17 @@ export default function AdminReferrals() {
                   <td className="px-4 py-3">
                     <div className="text-cream-100 font-medium">{u.full_name}</div>
                     <div className="text-xs text-cream-400">{u.phone}</div>
+                    {/* Reward account */}
+                    {u.reward_account && (u.reward_account.telebirr_phone || u.reward_account.bank_account) ? (
+                      <div className="mt-1 text-xs text-green-300">
+                        {u.reward_account.telebirr_phone && <span>📱 {u.reward_account.telebirr_phone} </span>}
+                        {u.reward_account.bank_account && <span>🏦 {u.reward_account.bank_name} {u.reward_account.bank_account}</span>}
+                      </div>
+                    ) : (
+                      <div className="mt-1 text-xs text-cream-500 italic">
+                        {lang === "am" ? "አካዉንት አልተሞላም" : "No reward account set"}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-mono text-green-300">{u.referral_code || "—"}</td>
                   <td className="px-4 py-3 font-mono text-cream-200">{u.total_referrals}</td>
@@ -176,6 +194,49 @@ export default function AdminReferrals() {
               {lang === "am" ? "ወደ" : "To:"} <span className="font-semibold text-green-300">{modal.full_name}</span>
             </p>
             <form onSubmit={sendNotification} className="space-y-3">
+              {/* Reward type selector */}
+              <div>
+                <label className="label">{lang === "am" ? "የሽልማት አይነት" : "Reward Type"}</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button"
+                    onClick={() => {
+                      setSubject(lang === "am" ? "🎟️ ነፃ ቲኬት ሽልማት" : "🎟️ Free Ticket Reward");
+                      setMessage(lang === "am"
+                        ? `ሰላም ${modal.full_name}!\n\nለሚቀጥለው ዕጣ 1 ነፃ ቲኬት አሸንፈዋል! ያናግሩን።`
+                        : `Hello ${modal.full_name}!\n\nYou have won 1 free ticket for the next draw! Please contact us to claim.`);
+                    }}
+                    className="rounded-xl border border-ink-600 p-3 text-center text-sm text-cream-300 hover:border-green-500 hover:bg-green-500/10 transition">
+                    🎟️ {lang === "am" ? "ነፃ ቲኬት" : "Free Ticket"}
+                  </button>
+                  <button type="button"
+                    onClick={() => {
+                      const acct = modal.reward_account || {};
+                      const acctInfo = acct.telebirr_phone
+                        ? `Telebirr: ${acct.telebirr_phone}`
+                        : acct.bank_account
+                          ? `${acct.bank_name} — ${acct.bank_account}`
+                          : (lang === "am" ? "አካዉንት አልተሞላም" : "No account set");
+                      setSubject(lang === "am" ? "💰 ገንዘብ ሽልማት" : "💰 Cash Reward");
+                      setMessage(lang === "am"
+                        ? `ሰላም ${modal.full_name}!\n\nሽልማትዎ ወደ አካዉንትዎ ተልኳል።\n${acctInfo}\n\nደህና ይሁኑ!`
+                        : `Hello ${modal.full_name}!\n\nYour cash reward has been sent to your account.\n${acctInfo}\n\nThank you!`);
+                    }}
+                    className="rounded-xl border border-ink-600 p-3 text-center text-sm text-cream-300 hover:border-yellow-500 hover:bg-yellow-500/10 transition">
+                    💰 {lang === "am" ? "ገንዘብ" : "Cash"}
+                  </button>
+                </div>
+                {modal.reward_account && (modal.reward_account.telebirr_phone || modal.reward_account.bank_account) ? (
+                  <div className="mt-2 rounded-lg bg-ink-800 px-3 py-2 text-xs text-green-300">
+                    {lang === "am" ? "አካዉንት:" : "Account:"}{" "}
+                    {modal.reward_account.telebirr_phone && <span>📱 {modal.reward_account.telebirr_phone} </span>}
+                    {modal.reward_account.bank_account && <span>🏦 {modal.reward_account.bank_name} — {modal.reward_account.bank_account} ({modal.reward_account.bank_holder})</span>}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-yellow-300">
+                    ⚠️ {lang === "am" ? "ተጠቃሚ አካዉንት አላስቀመጠም" : "User has not set a reward account yet"}
+                  </p>
+                )}
+              </div>
               <div>
                 <label className="label">{lang === "am" ? "ርዕስ" : "Subject"}</label>
                 <input className="input" required value={subject}
