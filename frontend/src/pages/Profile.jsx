@@ -446,7 +446,7 @@ function ReferralLinkSection({ lang }) {
   return (
     <div className="mt-6 card p-6">
       <h2 className="text-sm font-semibold uppercase tracking-wider text-green-300 mb-1">
-        {lang === "am" ? "የጋበዝ ሊንክ" : "Invitation Link"}
+        {lang === "am" ? "የመጋበዣ ሊንክ" : "Invitation Link"}
       </h2>
       <p className="text-xs text-cream-400 mb-3">
         {lang === "am"
