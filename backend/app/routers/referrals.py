@@ -102,25 +102,24 @@ def referral_leaderboard(
     db: Session = Depends(get_db),
     _: User = Depends(require_roles(Role.ADMIN, Role.AUDITOR)),
 ):
-    """All users with at least 1 referral, sorted by qualified referrals desc."""
-    users_with_referrals = db.scalars(
-        select(User).where(
-            select(func.count()).select_from(User).where(
-                User.referred_by_id == User.id
-            ).scalar_subquery() > 0
-        )
+    """All users who have referred at least one person, sorted by qualified referrals desc."""
+    # Get all unique referrer IDs
+    referrer_ids = db.scalars(
+        select(User.referred_by_id)
+        .where(User.referred_by_id.is_not(None))
+        .distinct()
     ).all()
 
-    # Also include anyone who has referred users
-    referrer_ids = db.scalars(
-        select(User.referred_by_id).where(User.referred_by_id.is_not(None)).distinct()
-    ).all()
+    if not referrer_ids:
+        return []
 
     referrers = db.scalars(select(User).where(User.id.in_(referrer_ids))).all()
 
     result = []
     for u in referrers:
-        total = db.scalar(select(func.count()).select_from(User).where(User.referred_by_id == u.id)) or 0
+        total = db.scalar(
+            select(func.count()).select_from(User).where(User.referred_by_id == u.id)
+        ) or 0
         qualified = _qualified_count(db, u.id)
         result.append({
             "user_id": u.id,
@@ -133,7 +132,7 @@ def referral_leaderboard(
             "reward_account": u.reward_account or {},
         })
 
-    result.sort(key=lambda x: x.qualified_referrals, reverse=True)
+    result.sort(key=lambda x: x["qualified_referrals"], reverse=True)
     return result
 
 
