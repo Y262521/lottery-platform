@@ -36,11 +36,11 @@ export default function AdminReferrals() {
   function openModal(user) {
     setModal(user);
     setSubject(lang === "am"
-      ? "🎉 ሽልማት — ቲኬት ለመግዛት ዝግጁ ነዎት!"
-      : "🎉 Reward — You're eligible for a free ticket!");
+      ? "🎉 ሽልማት — ቲኬት ወይም ገንዘብ ይቀበሉ!"
+      : "🎉 Reward — Claim your prize!");
     setMessage(lang === "am"
-      ? `ሰላም ${user.full_name}!\n\n${user.qualified_referrals} ሰዎችን ወደ ዮናስ እና ሮቤል ኦንላይን እጣ ጋብዘዋል። እንኳን ደስ አለዎት! ለሚቀጥለው ዕጣ 1 ቲኬት ለመግዛት ዝግጁ ነዎት። ያናግሩን።`
-      : `Hello ${user.full_name}!\n\nYou have successfully referred ${user.qualified_referrals} users to Yonas & Robel Online Lottery. As a thank you, you are eligible to purchase 1 free ticket on the next draw. Please contact us to claim your reward!`
+      ? `ሰላም ${user.full_name}!\n\n${user.qualified_referrals} ሰዎችን ወደ ዮናስ እና ሮቤል ኦንላይን እጣ ጋብዘዋል። እንኳን ደስ አለዎት!\n\nሽልማትዎን ለመቀበል ያናግሩን።`
+      : `Hello ${user.full_name}!\n\nYou have successfully referred ${user.qualified_referrals} users. Congratulations!\n\nPlease contact us to claim your reward.`
     );
   }
 

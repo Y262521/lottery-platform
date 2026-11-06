@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLang } from "../context/LangContext";
+import { apiClient } from "../api/client";
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
@@ -79,6 +81,7 @@ export default function Navbar() {
           </div>
           {user ? (
             <div className="flex items-center gap-1 sm:gap-1.5">
+              <NotificationBell lang={lang} />
               <NavLink
                 to="/profile"
                 className={({ isActive }) =>
@@ -89,8 +92,7 @@ export default function Navbar() {
                   }`
                 }
                 title={t("profile")}
-              >
-                <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+              >                <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
                 <span>👤 {t("profile")}</span>
                 <span className="hidden lg:inline text-cream-400 font-normal">
                   ({user.full_name || user.phone || user.email})
@@ -122,5 +124,33 @@ export default function Navbar() {
         {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
       </div>
     </header>
+  );
+}
+
+function NotificationBell({ lang }) {
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    apiClient.myNotifications()
+      .then((ns) => setUnread(ns.filter((n) => !n.is_read).length))
+      .catch(() => {});
+  }, []);
+
+  return (
+    <NavLink
+      to="/profile"
+      className="relative flex items-center justify-center h-8 w-8 rounded-lg border border-ink-600 bg-ink-800 text-cream-300 hover:text-green-300 hover:border-ink-500 transition"
+      title={lang === "am" ? "መልዕክቶች" : "Notifications"}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+      {unread > 0 && (
+        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-600 text-[9px] font-bold text-ink-900">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </NavLink>
   );
 }

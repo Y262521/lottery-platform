@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "../api/client";
-import { useAuth } from "../context/AuthContext";
 import { useLang } from "../context/LangContext";
 
 export default function Referrals() {
-  const { user } = useAuth();
   const { lang } = useLang();
   const [stats, setStats] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -17,8 +15,7 @@ export default function Referrals() {
 
   const baseUrl = window.location.origin;
   const refLink = stats?.referral_code
-    ? `${baseUrl}/register?ref=${stats.referral_code}`
-    : null;
+    ? `${baseUrl}/register?ref=${stats.referral_code}` : null;
 
   function copy() {
     if (!refLink) return;
@@ -30,7 +27,7 @@ export default function Referrals() {
   async function markRead(id) {
     try {
       await apiClient.markNotificationRead(id);
-      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
+      setNotifications((p) => p.map((n) => n.id === id ? { ...n, is_read: true } : n));
     } catch { /* ignore */ }
   }
 
@@ -42,28 +39,7 @@ export default function Referrals() {
         {lang === "am" ? "ሪፈራል ፕሮግራም" : "Referral Program"}
       </h1>
 
-      {/* How it works */}
-      <div className="card p-5 mb-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-cream-300 mb-3">
-          {lang === "am" ? "እንዴት ይሰራል?" : "How it works"}
-        </h2>
-        <ol className="space-y-2 text-sm text-cream-300">
-          <li className="flex gap-2">
-            <span className="text-green-400 font-bold">1.</span>
-            {lang === "am" ? "የእርስዎን ሊንክ ለጓደኞችዎ ያጋሩ" : "Share your invite link with friends"}
-          </li>
-          <li className="flex gap-2">
-            <span className="text-green-400 font-bold">2.</span>
-            {lang === "am" ? "ጓደኞችዎ ተመዝግበው ቲኬት ሲገዙ ይቆጠራሉ" : "They register and buy a ticket to count"}
-          </li>
-          <li className="flex gap-2">
-            <span className="text-green-400 font-bold">3.</span>
-            {lang === "am" ? "5 ሰዎች ሲጋብዙ አስተዳዳሪ ሽልማት ይልካሉ" : "Invite 5+ people and admin sends you a reward message"}
-          </li>
-        </ol>
-      </div>
-
-      {/* Referral link */}
+      {/* Invite link */}
       <div className="card p-5 mb-6">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-cream-300 mb-3">
           {lang === "am" ? "የእርስዎ ሊንክ" : "Your Invite Link"}
@@ -71,19 +47,14 @@ export default function Referrals() {
         {refLink ? (
           <>
             <div className="flex items-center gap-2">
-              <input
-                readOnly
-                value={refLink}
-                className="input flex-1 font-mono text-xs text-green-300"
-              />
+              <input readOnly value={refLink}
+                className="input flex-1 font-mono text-xs text-green-300" />
               <button className="btn-primary px-4 py-2.5 shrink-0" onClick={copy}>
                 {copied ? "✓" : (lang === "am" ? "ቅዳ" : "Copy")}
               </button>
             </div>
             <p className="mt-2 text-xs text-cream-400">
-              {lang === "am"
-                ? "ኮድ: " + stats.referral_code
-                : "Code: " + stats.referral_code}
+              {lang === "am" ? "ኮድ: " : "Code: "}{stats.referral_code}
             </p>
           </>
         ) : (
@@ -122,7 +93,7 @@ export default function Referrals() {
         </div>
       )}
 
-      {/* Notifications from admin */}
+      {/* Notifications */}
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wider text-cream-300 mb-3 flex items-center gap-2">
           {lang === "am" ? "ከአስተዳዳሪ መልዕክቶች" : "Messages from Admin"}
@@ -156,10 +127,8 @@ export default function Referrals() {
                     </p>
                   </div>
                   {!n.is_read && (
-                    <button
-                      className="btn-ghost px-2 py-1 text-xs shrink-0"
-                      onClick={() => markRead(n.id)}
-                    >
+                    <button className="btn-ghost px-2 py-1 text-xs shrink-0"
+                      onClick={() => markRead(n.id)}>
                       {lang === "am" ? "ተነቢቷል" : "Mark read"}
                     </button>
                   )}

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useLang } from "../context/LangContext";
 import { apiClient } from "../api/client";
-
 function EyeIcon({ open }) {
   return open ? (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -352,6 +351,166 @@ export default function Profile() {
           </form>
         )}
       </div>
+
+      {/* ── Reward Account ── */}
+      <RewardAccountSection lang={lang} />
+
+      {/* ── Referral & Notifications ── */}
+      <ReferralSection lang={lang} />
     </div>
+  );
+}
+
+// ── Reward Account Section ─────────────────────────────────────────────────
+function RewardAccountSection({ lang }) {
+  const [form, setForm] = useState({ telebirr_phone: "", bank_name: "", bank_account: "", bank_holder: "" });
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("reward_account") || "{}");
+      if (stored) setForm((f) => ({ ...f, ...stored }));
+    } catch { /* ignore */ }
+  }, []);
+
+  function save(e) {
+    e.preventDefault();
+    localStorage.setItem("reward_account", JSON.stringify(form));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  return (
+    <div className="mt-6 card p-6">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-green-300 mb-1">
+        {lang === "am" ? "የሽልማት ሂሳብ" : "Reward Account"}
+      </h2>
+      <p className="text-xs text-cream-400 mb-4">
+        {lang === "am"
+          ? "ሽልማት ወደ የትኛው አካዉንት ይላካ? አስተዳዳሪ ክፍያ ሲልክ ከዚህ ይጠቀማሉ።"
+          : "Where should admin send your reward? Admin will use this to transfer cash directly."}
+      </p>
+      <form onSubmit={save} className="space-y-3">
+        <div>
+          <label className="label">{lang === "am" ? "Telebirr ስልክ" : "Telebirr Phone"}</label>
+          <input className="input" type="tel" placeholder="09..." value={form.telebirr_phone} onChange={set("telebirr_phone")} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="label">{lang === "am" ? "ባንክ ስም" : "Bank Name"}</label>
+            <input className="input" placeholder="CBE, Awash..." value={form.bank_name} onChange={set("bank_name")} />
+          </div>
+          <div>
+            <label className="label">{lang === "am" ? "አካዉንት ቁጥር" : "Account No."}</label>
+            <input className="input font-mono" placeholder="1000..." value={form.bank_account} onChange={set("bank_account")} />
+          </div>
+          <div>
+            <label className="label">{lang === "am" ? "የሂሳብ ባለቤት" : "Account Holder"}</label>
+            <input className="input" placeholder={lang === "am" ? "ስምዎ" : "Your name"} value={form.bank_holder} onChange={set("bank_holder")} />
+          </div>
+        </div>
+        <button className="btn-primary w-full" type="submit">
+          {saved ? "✓ " + (lang === "am" ? "ተቀምጧል" : "Saved!") : (lang === "am" ? "አስቀምጥ" : "Save")}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+// ── Referral + Notifications mini-section ─────────────────────────────────
+function ReferralSection({ lang }) {
+  const [stats, setStats] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    apiClient.myReferralStats().then(setStats).catch(() => {});
+    apiClient.myNotifications().then(setNotifications).catch(() => {});
+  }, []);
+
+  const refLink = stats?.referral_code
+    ? `${window.location.origin}/register?ref=${stats.referral_code}` : null;
+
+  function copy() {
+    if (!refLink) return;
+    navigator.clipboard?.writeText(refLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function markRead(id) {
+    try {
+      await apiClient.markNotificationRead(id);
+      setNotifications((p) => p.map((n) => n.id === id ? { ...n, is_read: true } : n));
+    } catch { /* ignore */ }
+  }
+
+  const unread = notifications.filter((n) => !n.is_read).length;
+
+  return (
+    <>
+      {/* Referral link */}
+      <div className="mt-6 card p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-green-300 mb-3">
+          {lang === "am" ? "የእርስዎ ሪፈራል ሊንክ" : "Your Referral Link"}
+        </h2>
+        {refLink ? (
+          <>
+            <div className="flex items-center gap-2">
+              <input readOnly value={refLink}
+                className="input flex-1 font-mono text-xs text-green-300" />
+              <button className="btn-primary px-4 py-2.5 shrink-0" onClick={copy}>
+                {copied ? "✓" : (lang === "am" ? "ቅዳ" : "Copy")}
+              </button>
+            </div>
+            {stats && (
+              <div className="mt-3 flex gap-4 text-sm text-cream-400">
+                <span>{lang === "am" ? "ጠቅላላ:" : "Invited:"} <b className="text-cream-100">{stats.total_referrals}</b></span>
+                <span>{lang === "am" ? "ቲኬት ገዙ:" : "Bought ticket:"} <b className={stats.qualified_referrals >= stats.reward_threshold ? "text-yellow-300" : "text-green-300"}>{stats.qualified_referrals}</b></span>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="text-cream-400 text-sm">Loading…</p>
+        )}
+      </div>
+
+      {/* Notifications */}
+      {notifications.length > 0 && (
+        <div className="mt-6 card p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-green-300 mb-3 flex items-center gap-2">
+            {lang === "am" ? "ከአስተዳዳሪ መልዕክቶች" : "Messages from Admin"}
+            {unread > 0 && (
+              <span className="rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-bold text-ink-900">
+                {unread}
+              </span>
+            )}
+          </h2>
+          <div className="space-y-3">
+            {notifications.map((n) => (
+              <div key={n.id} className={`rounded-xl border p-4 ${!n.is_read ? "border-green-500/40 bg-green-500/5" : "border-ink-600 bg-ink-800/40"}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-cream-50">{n.subject}</span>
+                      {!n.is_read && <span className="pill bg-green-500/15 text-green-300 text-[10px]">{lang === "am" ? "አዲስ" : "New"}</span>}
+                    </div>
+                    <p className="mt-1 text-sm text-cream-300 whitespace-pre-line">{n.message}</p>
+                    <p className="mt-2 text-xs text-cream-500">{new Date(n.created_at).toLocaleString()}</p>
+                  </div>
+                  {!n.is_read && (
+                    <button className="btn-ghost px-2 py-1 text-xs shrink-0" onClick={() => markRead(n.id)}>
+                      {lang === "am" ? "ተነቢቷል" : "Mark read"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
