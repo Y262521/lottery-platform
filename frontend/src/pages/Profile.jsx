@@ -450,8 +450,8 @@ function ReferralLinkSection({ lang }) {
       </h2>
       <p className="text-xs text-cream-400 mb-3">
         {lang === "am"
-          ? "ጓደኞችዎን ጋብዙ — 5 ሰዎች ሲገዙ ሽልማት ያገኛሉ"
-          : "Invite friends — earn a reward when 5 of them buy tickets"}      </p>
+          ? "10 ሰው ሲጋብዙ እና ሲያስቆርጡ፦ የ200 ብር የገንዘብ ሽልማት ወይም 1 ነፃ ዕጣ ትኬት ይሸለማሉ!"
+          : "Invite 10 people who buy tickets — win 200 ETB cash reward or 1 free lottery ticket!"}      </p>
 
       {refLink ? (
         <>
