@@ -201,7 +201,9 @@ def run_migrations() -> None:
             _exec(db, "ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS user_reply VARCHAR(100)",
                   "user_notifications.user_reply")
             _exec(db, "ALTER TABLE user_notifications ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP",
-                  "user_notifications.replied_at")        if _table_exists(db, "users"):
+                  "user_notifications.replied_at")
+
+        if _table_exists(db, "users"):
             _exec(db, "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20)",
                   "users.referral_code")
             _exec(db, "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL",
