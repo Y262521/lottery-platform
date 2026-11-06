@@ -44,7 +44,6 @@ export default function Navbar() {
           <NavLink to="/" end className={link}>{t("home")}</NavLink>
           <NavLink to="/organizers" className={link}>{t("organizers")}</NavLink>
           {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
-          {user && <NavLink to="/referrals" className={link}>{lang === "am" ? "ሪፈራል" : "Referrals"}</NavLink>}
           {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
         </div>
 
@@ -119,7 +118,6 @@ export default function Navbar() {
         <NavLink to="/" end className={link}>{t("home")}</NavLink>
         <NavLink to="/organizers" className={link}>{t("organizers")}</NavLink>
         {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
-        {user && <NavLink to="/referrals" className={link}>{lang === "am" ? "ሪፈራል" : "Referrals"}</NavLink>}
         {user && <NavLink to="/profile" className={link}>{t("profile")}</NavLink>}
         {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
       </div>
@@ -138,7 +136,7 @@ function NotificationBell({ lang }) {
 
   return (
     <NavLink
-      to="/referrals"
+      to="/notifications"
       className="relative flex items-center justify-center h-8 w-8 rounded-lg border border-ink-600 bg-ink-800 text-cream-300 hover:text-green-300 hover:border-ink-500 transition"
       title={lang === "am" ? "መልዕክቶች" : "Notifications"}
     >

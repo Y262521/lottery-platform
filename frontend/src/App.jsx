@@ -20,6 +20,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminPaymentAccounts from "./pages/admin/PaymentAccounts";
 import AdminReferrals from "./pages/admin/Referrals";
 import Referrals from "./pages/Referrals";
+import Notifications from "./pages/Notifications";
 
 export default function App() {
   const { t } = useLang();
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/admin/payment-accounts" element={<AdminRoute><AdminPaymentAccounts /></AdminRoute>} />
           <Route path="/admin/referrals" element={<AdminRoute><AdminReferrals /></AdminRoute>} />
           <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

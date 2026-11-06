@@ -354,9 +354,6 @@ export default function Profile() {
 
       {/* ── Reward Account ── */}
       <RewardAccountSection lang={lang} />
-
-      {/* ── Referral & Notifications ── */}
-      <ReferralSection lang={lang} />
     </div>
   );
 }
