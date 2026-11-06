@@ -6,11 +6,11 @@ export default function AdminReferrals() {
   const { lang } = useLang();
   const [leaderboard, setLeaderboard] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [replies, setReplies] = useState([]);
+  const [tab, setTab] = useState("leaderboard"); // leaderboard | replies
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
-
-  // Send notification modal state
-  const [modal, setModal] = useState(null); // { user_id, full_name }
+  const [modal, setModal] = useState(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -18,12 +18,14 @@ export default function AdminReferrals() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [lb, al] = await Promise.all([
+      const [lb, al, rp] = await Promise.all([
         apiClient.referralLeaderboard(),
         apiClient.referralAlerts(),
+        apiClient.referralReplies(),
       ]);
       setLeaderboard(lb);
       setAlerts(al.users || []);
+      setReplies(rp);
     } catch (e) {
       setMsg(e.message);
     } finally {
@@ -36,11 +38,11 @@ export default function AdminReferrals() {
   function openModal(user) {
     setModal(user);
     setSubject(lang === "am"
-      ? "🎉 ሽልማት — ቲኬት ወይም ገንዘብ ይቀበሉ!"
-      : "🎉 Reward — Claim your prize!");
+      ? "🎁 ሽልማት — ምን ይፈልጋሉ?"
+      : "🎁 Reward — What do you prefer?");
     setMessage(lang === "am"
-      ? `ሰላም ${user.full_name}!\n\n${user.qualified_referrals} ሰዎችን ወደ ዮናስ እና ሮቤል ኦንላይን እጣ ጋብዘዋል። እንኳን ደስ አለዎት!\n\nሽልማትዎን ለመቀበል ያናግሩን።`
-      : `Hello ${user.full_name}!\n\nYou have successfully referred ${user.qualified_referrals} users. Congratulations!\n\nPlease contact us to claim your reward.`
+      ? `ሰላም ${user.full_name}!\n\n${user.qualified_referrals} ሰዎችን ጋብዘዋል። እንኳን ደስ አለዎት!\n\nሽልማትዎን ለመቀበል ምን ይፈልጋሉ?`
+      : `Hello ${user.full_name}!\n\nYou have successfully referred ${user.qualified_referrals} users. Congratulations!\n\nWhat would you prefer as your reward?`
     );
   }
 
@@ -53,8 +55,12 @@ export default function AdminReferrals() {
         user_id: modal.user_id,
         subject,
         message,
+        reply_options: [
+          lang === "am" ? "💰 ገንዘብ" : "💰 Cash",
+          lang === "am" ? "🎟️ ነፃ ዕጣ" : "🎟️ Free Draw",
+        ],
       });
-      setMsg(lang === "am" ? "መልዕክት ተልኳል ✓" : "Notification sent ✓");
+      setMsg(lang === "am" ? "መልዕክት ተልኳል ✓" : "Message sent ✓");
       setModal(null);
       await load();
     } catch (err) {
@@ -80,6 +86,26 @@ export default function AdminReferrals() {
           {msg}
         </div>
       )}
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button onClick={() => setTab("leaderboard")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition ${tab === "leaderboard" ? "bg-green-600 text-ink-900" : "border border-ink-600 text-cream-300 hover:bg-ink-700"}`}>
+          {lang === "am" ? "ሪፈሮሎች" : "Referrers"}
+        </button>
+        <button onClick={() => setTab("replies")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition flex items-center gap-2 ${tab === "replies" ? "bg-green-600 text-ink-900" : "border border-ink-600 text-cream-300 hover:bg-ink-700"}`}>
+          {lang === "am" ? "ምላሾች" : "Replies"}
+          {replies.length > 0 && (
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${tab === "replies" ? "bg-ink-900 text-green-300" : "bg-green-600 text-ink-900"}`}>
+              {replies.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── Leaderboard Tab ── */}
+      {tab === "leaderboard" && (<>
 
       {/* Alert banner */}
       {alerts.length > 0 && (
@@ -183,8 +209,99 @@ export default function AdminReferrals() {
         </div>
       )}
 
-      {/* Send notification modal */}
-      {modal && (
+      </>) /* end leaderboard tab */}
+
+      {/* ── Replies Tab ── */}
+      {tab === "replies" && (
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-cream-300 mb-3">
+            {lang === "am" ? "ተጠቃሚዎች ምን ፈለጉ" : "User Replies — What They Want"}
+          </h2>
+          {replies.length === 0 ? (
+            <div className="card p-8 text-center text-cream-400">
+              {lang === "am" ? "ምንም ምላሽ የለም" : "No replies yet. Ask users first."}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {replies.map((r) => (
+                <div key={r.notif_id} className="card p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-cream-50">{r.full_name}</div>
+                      <div className="text-xs text-cream-400 mt-0.5">{r.phone}</div>
+                      {/* Reward account */}
+                      {r.reward_account && (r.reward_account.telebirr_phone || r.reward_account.bank_account) && (
+                        <div className="mt-1 text-xs text-green-300">
+                          {r.reward_account.telebirr_phone && <span>📱 {r.reward_account.telebirr_phone} </span>}
+                          {r.reward_account.bank_account && <span>🏦 {r.reward_account.bank_name} — {r.reward_account.bank_account}</span>}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      {/* Their choice */}
+                      <span className={`pill text-sm font-bold ${
+                        r.user_reply?.includes("Cash") || r.user_reply?.includes("ገንዘብ")
+                          ? "bg-yellow-500/15 text-yellow-300"
+                          : "bg-green-500/15 text-green-300"
+                      }`}>
+                        {r.user_reply}
+                      </span>
+                      <div className="text-xs text-cream-500 mt-1">
+                        {r.replied_at ? new Date(r.replied_at).toLocaleString() : ""}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action based on reply */}
+                  <div className="mt-3 border-t border-ink-600 pt-3 flex flex-wrap gap-2">
+                    {(r.user_reply?.includes("Cash") || r.user_reply?.includes("ገንዘብ")) ? (
+                      <>
+                        <p className="text-xs text-cream-400 w-full">
+                          {lang === "am"
+                            ? "➡️ ገንዘብ ወደ አካዉንታቸው ያስተላልፉ ከዚያ ስክሪንሾት ላኩ"
+                            : "➡️ Transfer cash to their account above, then send them a screenshot"}
+                        </p>
+                        <button className="btn-primary px-3 py-1.5 text-xs"
+                          onClick={() => {
+                            setModal({ ...r, user_id: r.user_id });
+                            setSubject(lang === "am" ? "💰 ክፍያ ተልኳል" : "💰 Cash Sent");
+                            setMessage(lang === "am"
+                              ? `ሰላም ${r.full_name}!\n\nክፍያዎ ወደ አካዉንትዎ ተልኳል። ደህና ይሁኑ!`
+                              : `Hello ${r.full_name}!\n\nYour cash reward has been sent to your account. Thank you!`);
+                            setTab("leaderboard");
+                          }}>
+                          {lang === "am" ? "ማረጋገጫ ላክ" : "Send Confirmation"}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs text-cream-400 w-full">
+                          {lang === "am"
+                            ? "➡️ ነፃ ቲኬት ልኩ — ቀጣዩ ዕጣ ላይ 1 ቲኬት ለመግዛት ፈቃደ ስጧቸው"
+                            : "➡️ Give them a free draw — send message that they can buy 1 ticket for free"}
+                        </p>
+                        <button className="btn-primary px-3 py-1.5 text-xs"
+                          onClick={() => {
+                            setModal({ ...r, user_id: r.user_id });
+                            setSubject(lang === "am" ? "🎟️ ነፃ ቲኬት" : "🎟️ Free Ticket");
+                            setMessage(lang === "am"
+                              ? `ሰላም ${r.full_name}!\n\nለሚቀጥለው ዕጣ 1 ቲኬት ነፃ መግዛት ይችላሉ! ዕጣ ሲጀምር ወደ ዕጣ ገጽ ሄደው ቲኬት ይግዙ — ክፍያ ካደረጉ በኋላ ያናግሩን ለማረጋገጥ።`
+                              : `Hello ${r.full_name}!\n\nYou can buy 1 ticket for free on the next draw! Go to the lottery page, buy a ticket, then contact us to confirm your free ticket.`);
+                            setTab("leaderboard");
+                          }}>
+                          {lang === "am" ? "ነፃ ቲኬት ላክ" : "Send Free Ticket Message"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Send notification modal */}      {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/80 backdrop-blur-sm px-4">
           <div className="card w-full max-w-md p-6">
             <h2 className="text-lg font-bold text-cream-50 mb-1">

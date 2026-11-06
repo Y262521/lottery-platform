@@ -6,6 +6,7 @@ export default function Notifications() {
   const { lang } = useLang();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [replying, setReplying] = useState(null); // id being replied to
 
   useEffect(() => {
     apiClient.myNotifications()
@@ -21,9 +22,19 @@ export default function Notifications() {
     } catch { /* ignore */ }
   }
 
+  async function sendReply(id, reply) {
+    setReplying(id);
+    try {
+      await apiClient.replyToNotification(id, reply);
+      setNotifications((p) => p.map((n) =>
+        n.id === id ? { ...n, user_reply: reply, is_read: true } : n
+      ));
+    } catch { /* ignore */ }
+    finally { setReplying(null); }
+  }
+
   async function markAllRead() {
-    const unread = notifications.filter((n) => !n.is_read);
-    for (const n of unread) {
+    for (const n of notifications.filter((n) => !n.is_read)) {
       await markRead(n.id);
     }
   }
@@ -45,7 +56,7 @@ export default function Notifications() {
         </div>
         {unread > 0 && (
           <button className="btn-ghost text-xs px-3 py-1.5" onClick={markAllRead}>
-            {lang === "am" ? "ሁሉንም እንደ ተነቢቷ ምልክት አድርግ" : "Mark all as read"}
+            {lang === "am" ? "ሁሉንም አንብብ" : "Mark all as read"}
           </button>
         )}
       </div>
@@ -65,15 +76,16 @@ export default function Notifications() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {notifications.map((n) => (
             <div key={n.id}
               className={`card p-5 transition ${!n.is_read ? "border-green-500/40 bg-green-500/5" : ""}`}>
+
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-cream-50">{n.subject}</span>
-                    {!n.is_read && (
+                    {!n.is_read && !n.user_reply && (
                       <span className="pill bg-green-500/15 text-green-300 text-[10px]">
                         {lang === "am" ? "አዲስ" : "New"}
                       </span>
@@ -86,15 +98,48 @@ export default function Notifications() {
                     {new Date(n.created_at).toLocaleString()}
                   </p>
                 </div>
-                {!n.is_read && (
-                  <button
-                    className="btn-ghost px-2 py-1 text-xs shrink-0"
-                    onClick={() => markRead(n.id)}
-                  >
+                {!n.is_read && !n.reply_options && (
+                  <button className="btn-ghost px-2 py-1 text-xs shrink-0" onClick={() => markRead(n.id)}>
                     {lang === "am" ? "ተነቢቷል" : "Mark read"}
                   </button>
                 )}
               </div>
+
+              {/* Reply buttons — shown only when reply_options exist and user hasn't replied yet */}
+              {n.reply_options && !n.user_reply && (
+                <div className="mt-4 border-t border-ink-600 pt-4">
+                  <p className="text-xs text-cream-400 mb-3">
+                    {lang === "am" ? "መልስዎን ይምረጡ:" : "Choose your answer:"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {n.reply_options.map((opt) => (
+                      <button
+                        key={opt}
+                        disabled={replying === n.id}
+                        onClick={() => sendReply(n.id, opt)}
+                        className="rounded-xl border border-ink-600 bg-ink-700 px-5 py-2.5 text-sm font-semibold text-cream-100 hover:border-green-500 hover:bg-green-500/15 hover:text-green-300 transition disabled:opacity-50"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Show reply if already replied */}
+              {n.user_reply && (
+                <div className="mt-4 border-t border-ink-600 pt-3 flex items-center gap-2">
+                  <span className="text-xs text-cream-400">
+                    {lang === "am" ? "መልስዎ:" : "Your answer:"}
+                  </span>
+                  <span className="pill bg-green-500/15 text-green-300 font-semibold">
+                    {n.user_reply}
+                  </span>
+                  <span className="text-xs text-cream-500">
+                    {n.replied_at ? new Date(n.replied_at).toLocaleString() : ""}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -179,13 +179,18 @@ class UserNotification(Base):
     """In-app notifications sent by admin to a specific user."""
     __tablename__ = "user_notifications"
 
-    id:         Mapped[int]      = mapped_column(Integer, primary_key=True)
-    user_id:    Mapped[int]      = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
-    sender_id:  Mapped[int|None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    subject:    Mapped[str]      = mapped_column(String(255), nullable=False)
-    message:    Mapped[str]      = mapped_column(Text, nullable=False)
-    is_read:    Mapped[bool]     = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    id:           Mapped[int]      = mapped_column(Integer, primary_key=True)
+    user_id:      Mapped[int]      = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    sender_id:    Mapped[int|None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    subject:      Mapped[str]      = mapped_column(String(255), nullable=False)
+    message:      Mapped[str]      = mapped_column(Text, nullable=False)
+    # Optional quick-reply choices shown as buttons to the user
+    reply_options: Mapped[list|None] = mapped_column(JSON, nullable=True)  # e.g. ["Cash", "Free Draw"]
+    # User's reply
+    user_reply:   Mapped[str|None] = mapped_column(String(100), nullable=True)
+    replied_at:   Mapped[datetime|None] = mapped_column(DateTime, nullable=True)
+    is_read:      Mapped[bool]     = mapped_column(Boolean, default=False, nullable=False)
+    created_at:   Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
 class AuditLog(Base):

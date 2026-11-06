@@ -155,8 +155,10 @@ export const apiClient = {
   saveRewardAccount: (b) => api("/api/referrals/reward-account", { method: "POST", body: b }),
   myNotifications: () => api("/api/referrals/notifications"),
   markNotificationRead: (id) => api(`/api/referrals/notifications/${id}/read`, { method: "POST" }),
+  replyToNotification: (id, reply) => api(`/api/referrals/notifications/${id}/reply`, { method: "POST", body: { reply } }),
   referralLeaderboard: () => api("/api/referrals/admin/leaderboard"),
   referralAlerts: () => api("/api/referrals/admin/alerts"),
+  referralReplies: () => api("/api/referrals/admin/replies"),
   sendRewardNotification: (b) => api("/api/referrals/admin/notify", { method: "POST", body: b }),
 
   lotteryTickets: (lotteryId) => api(`/api/tickets/lottery/${lotteryId}`),

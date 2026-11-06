@@ -95,6 +95,29 @@ def mark_read(
     return {"ok": True}
 
 
+@router.post("/notifications/{notif_id}/reply")
+def reply_to_notification(
+    notif_id: int,
+    payload: dict,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """User replies to a notification (e.g. 'Cash' or 'Free Draw')."""
+    from datetime import datetime, timezone
+    notif = db.get(UserNotification, notif_id)
+    if not notif or notif.user_id != user.id:
+        raise HTTPException(404, "Notification not found")
+    reply = payload.get("reply", "").strip()
+    if not reply:
+        raise HTTPException(400, "Reply cannot be empty")
+    notif.user_reply = reply
+    notif.replied_at = datetime.now(timezone.utc)
+    notif.is_read = True
+    db.commit()
+    db.refresh(notif)
+    return {"ok": True, "reply": notif.user_reply}
+
+
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 
 @router.get("/admin/leaderboard")
@@ -177,6 +200,7 @@ def send_reward_notification(
         sender_id=admin.id,
         subject=payload.subject,
         message=payload.message,
+        reply_options=payload.reply_options,
         is_read=False,
     )
     db.add(notif)
@@ -185,3 +209,31 @@ def send_reward_notification(
     db.commit()
     db.refresh(notif)
     return notif
+
+
+@router.get("/admin/replies")
+def pending_replies(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_roles(Role.ADMIN, Role.AUDITOR)),
+):
+    """All notifications where the user has replied — admin needs to act on them."""
+    rows = db.scalars(
+        select(UserNotification)
+        .where(UserNotification.user_reply.is_not(None))
+        .order_by(UserNotification.replied_at.desc())
+        .limit(200)
+    ).all()
+    results = []
+    for n in rows:
+        user = db.get(User, n.user_id)
+        results.append({
+            "notif_id": n.id,
+            "user_id": n.user_id,
+            "full_name": user.full_name if user else "—",
+            "phone": user.phone if user else "—",
+            "reward_account": user.reward_account if user else {},
+            "subject": n.subject,
+            "user_reply": n.user_reply,
+            "replied_at": n.replied_at,
+        })
+    return results

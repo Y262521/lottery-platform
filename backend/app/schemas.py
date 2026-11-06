@@ -230,6 +230,7 @@ class SendNotificationRequest(BaseModel):
     user_id: int
     subject: str = Field(min_length=1, max_length=255)
     message: str = Field(min_length=1)
+    reply_options: list[str] | None = None  # e.g. ["💰 Cash", "🎟️ Free Draw"]
 
 
 class NotificationOut(BaseModel):
@@ -239,6 +240,9 @@ class NotificationOut(BaseModel):
     sender_id: int | None
     subject: str
     message: str
+    reply_options: list | None
+    user_reply: str | None
+    replied_at: datetime | None
     is_read: bool
     created_at: datetime
 
