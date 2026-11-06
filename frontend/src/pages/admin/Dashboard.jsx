@@ -4,10 +4,14 @@ import { apiClient } from "../../api/client";
 import { useLang } from "../../context/LangContext";
 
 export default function AdminDashboard() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [metrics, setMetrics] = useState(null);
+  const [referralAlerts, setReferralAlerts] = useState(0);
 
-  useEffect(() => { apiClient.metrics().then(setMetrics).catch(() => {}); }, []);
+  useEffect(() => {
+    apiClient.metrics().then(setMetrics).catch(() => {});
+    apiClient.referralAlerts().then((r) => setReferralAlerts(r.count || 0)).catch(() => {});
+  }, []);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
@@ -27,11 +31,33 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Referral alert banner */}
+      {referralAlerts > 0 && (
+        <div className="mt-6 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔔</span>
+            <p className="text-yellow-300 font-semibold text-sm">
+              {lang === "am"
+                ? `${referralAlerts} ተጠቃሚ${referralAlerts > 1 ? "ዎች" : ""} ሽልማት ይገባቸዋል! 5 ወይም ከዚያ በላይ ሰዎች ጋብዘዋል።`
+                : `${referralAlerts} user${referralAlerts > 1 ? "s" : ""} deserve a reward! They invited 5+ people who bought tickets.`}
+            </p>
+          </div>
+          <Link to="/admin/referrals" className="btn-primary px-3 py-1.5 text-xs shrink-0">
+            {lang === "am" ? "ይመልከቱ" : "View"}
+          </Link>
+        </div>
+      )}
+
       <div className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <NavCard to="/admin/lotteries" icon="🎟️" title={t("lotteries")} desc={t("manageDesc")} />
         <NavCard to="/admin/transactions" icon="💰" title={t("transactions")} desc={t("transactionsDesc")} />
         <NavCard to="/admin/users" icon="👥" title={t("users")} desc={t("usersDesc")} />
         <NavCard to="/admin/payment-accounts" icon="💳" title={t("paymentAccounts")} desc={t("paymentAccountsDesc")} />
+        <NavCard to="/admin/referrals" icon="🔗"
+          title={lang === "am" ? "ሪፈራሎች" : "Referrals"}
+          desc={lang === "am" ? "ሪፈራሎችን ይከታተሉ እና ሽልማት ይላኩ" : "Track referrals and send rewards"}
+          badge={referralAlerts > 0 ? referralAlerts : null}
+        />
       </div>
     </div>
   );
@@ -46,9 +72,14 @@ function Metric({ label, value, highlight }) {
   );
 }
 
-function NavCard({ to, icon, title, desc }) {
+function NavCard({ to, icon, title, desc, badge }) {
   return (
-    <Link to={to} className="card p-6 hover:border-green-500/50 transition">
+    <Link to={to} className="card p-6 hover:border-green-500/50 transition relative">
+      {badge && (
+        <span className="absolute top-3 right-3 rounded-full bg-yellow-500 px-2 py-0.5 text-[10px] font-bold text-ink-900">
+          {badge}
+        </span>
+      )}
       <div className="text-4xl mb-3">{icon}</div>
       <h3 className="font-bold text-cream-50">{title}</h3>
       <p className="mt-1 text-sm text-cream-300">{desc}</p>

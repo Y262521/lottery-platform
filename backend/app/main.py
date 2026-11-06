@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from .config import settings
 from .database import init_db
 from .media import UPLOAD_DIR
-from .routers import admin, auth, lotteries, payments, results, tickets
+from .routers import admin, auth, lotteries, payments, results, tickets, referrals
 
 
 @asynccontextmanager
@@ -56,6 +56,7 @@ app.include_router(tickets.router)
 app.include_router(payments.router)
 app.include_router(results.router)
 app.include_router(admin.router)
+app.include_router(referrals.router)
 
 
 from fastapi.exceptions import RequestValidationError

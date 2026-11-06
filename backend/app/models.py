@@ -70,10 +70,14 @@ class User(Base):
     hashed_password: Mapped[str]      = mapped_column(String(255), nullable=False)
     role:            Mapped[Role]     = mapped_column(SAEnum(Role), default=Role.USER, nullable=False)
     is_active:       Mapped[bool]     = mapped_column(Boolean, default=True, nullable=False)
+    # Referral system
+    referral_code:   Mapped[str|None] = mapped_column(String(20), unique=True, index=True, nullable=True)
+    referred_by_id:  Mapped[int|None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at:      Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     tickets:      Mapped[list["Ticket"]]             = relationship(back_populates="user")
     transactions: Mapped[list["PaymentTransaction"]] = relationship(back_populates="user")
+    referred_users: Mapped[list["User"]]             = relationship("User", foreign_keys="User.referred_by_id")
 
 
 class LotteryPost(Base):
@@ -169,8 +173,20 @@ class DrawResult(Base):
     lottery: Mapped["LotteryPost"] = relationship(back_populates="draw_result")
 
 
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
+class UserNotification(Base):
+    """In-app notifications sent by admin to a specific user."""
+    __tablename__ = "user_notifications"
+
+    id:         Mapped[int]      = mapped_column(Integer, primary_key=True)
+    user_id:    Mapped[int]      = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    sender_id:  Mapped[int|None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    subject:    Mapped[str]      = mapped_column(String(255), nullable=False)
+    message:    Mapped[str]      = mapped_column(Text, nullable=False)
+    is_read:    Mapped[bool]     = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class AuditLog(Base):    __tablename__ = "audit_logs"
 
     id:         Mapped[int]      = mapped_column(Integer, primary_key=True)
     actor_id:   Mapped[int|None] = mapped_column(ForeignKey("users.id"), nullable=True)

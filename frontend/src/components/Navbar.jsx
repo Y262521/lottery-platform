@@ -42,6 +42,7 @@ export default function Navbar() {
           <NavLink to="/" end className={link}>{t("home")}</NavLink>
           <NavLink to="/organizers" className={link}>{t("organizers")}</NavLink>
           {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
+          {user && <NavLink to="/referrals" className={link}>{lang === "am" ? "ሪፈራል" : "Referrals"}</NavLink>}
           {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
         </div>
 
@@ -116,6 +117,7 @@ export default function Navbar() {
         <NavLink to="/" end className={link}>{t("home")}</NavLink>
         <NavLink to="/organizers" className={link}>{t("organizers")}</NavLink>
         {user && <NavLink to="/my-tickets" className={link}>{t("myTickets")}</NavLink>}
+        {user && <NavLink to="/referrals" className={link}>{lang === "am" ? "ሪፈራል" : "Referrals"}</NavLink>}
         {user && <NavLink to="/profile" className={link}>{t("profile")}</NavLink>}
         {isAdmin && <NavLink to="/admin" className={link}>{t("admin")}</NavLink>}
       </div>

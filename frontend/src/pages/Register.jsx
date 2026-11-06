@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useLang } from "../context/LangContext";
@@ -19,10 +20,12 @@ function EyeIcon({ open }) {
 
 export default function Register() {
   const { login } = useAuth();
-  const { t, tError } = useLang();
+  const { t, tError, lang } = useLang();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refFromUrl = searchParams.get("ref") || "";
 
-  const [form, setForm] = useState({ full_name: "", phone: "", email: "", password: "" });
+  const [form, setForm] = useState({ full_name: "", phone: "", email: "", password: "", referral_code: refFromUrl });
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -47,6 +50,7 @@ export default function Register() {
         phone: form.phone.trim(),
         email: form.email.trim() ? form.email.trim() : undefined,
         password: form.password,
+        referral_code: form.referral_code.trim().toUpperCase() || undefined,
       };
       await apiClient.register(payload);
       await login(form.phone.trim() || form.email.trim(), form.password);
@@ -120,6 +124,24 @@ export default function Register() {
               </button>
             </div>
             <p className="mt-1 text-xs text-cream-400">{t("atLeast8")}</p>
+          </div>
+
+          {/* Referral code — auto-filled from URL ?ref= */}
+          <div>
+            <label className="label">
+              {lang === "am" ? "የጋበዝዎ ኮድ (አማራጭ)" : "Referral Code (optional)"}
+            </label>
+            <input
+              className="input font-mono uppercase"
+              placeholder="e.g. A3F2B1C9"
+              value={form.referral_code}
+              onChange={set("referral_code")}
+            />
+            {refFromUrl && (
+              <p className="mt-1 text-xs text-green-300">
+                {lang === "am" ? "✓ ሪፈራል ኮድ ከሊንክ ተሞልቷል" : "✓ Referral code filled from invite link"}
+              </p>
+            )}
           </div>
 
           {error && (

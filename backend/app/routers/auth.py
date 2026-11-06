@@ -14,11 +14,11 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
+    import secrets as _secrets
     phone = payload.phone.strip() if payload.phone else ""
     if not phone:
         raise HTTPException(400, "ስልክ ቁጥር ማስገባት ግዴታ ነው / Phone number is required")
 
-    # Check if phone number already registered
     existing_phone = db.scalar(select(User).where(User.phone == phone))
     if existing_phone:
         raise HTTPException(409, "ይህ ስልክ ቁጥር ቀድሞ ተመዝግቧል / Phone number is already registered")
@@ -29,12 +29,27 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         if existing_email:
             raise HTTPException(409, "ይህ ኢሜይል ቀድሞ ተመዝግቧል / Email is already registered")
 
+    # Look up referrer
+    referred_by_id = None
+    if payload.referral_code:
+        referrer = db.scalar(select(User).where(User.referral_code == payload.referral_code.upper()))
+        if referrer:
+            referred_by_id = referrer.id
+
+    # Generate unique referral code for the new user
+    while True:
+        code = _secrets.token_hex(4).upper()  # 8-char hex e.g. "A3F2B1C9"
+        if not db.scalar(select(User).where(User.referral_code == code)):
+            break
+
     user = User(
         email=email,
         phone=phone,
         full_name=payload.full_name.strip(),
         hashed_password=hash_password(payload.password),
         role=Role.USER,
+        referral_code=code,
+        referred_by_id=referred_by_id,
     )
     db.add(user)
     db.flush()

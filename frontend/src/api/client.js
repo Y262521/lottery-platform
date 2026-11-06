@@ -149,6 +149,15 @@ export const apiClient = {
   savePaymentAccount: (b) => api("/api/admin/payment-accounts", { method: "POST", body: b }),
   updatePaymentAccount: (id, b) => api(`/api/admin/payment-accounts/${id}`, { method: "PATCH", body: b }),
   deletePaymentAccount: (id) => api(`/api/admin/payment-accounts/${id}`, { method: "DELETE" }),
+
+  // referrals
+  myReferralStats: () => api("/api/referrals/my-stats"),
+  myNotifications: () => api("/api/referrals/notifications"),
+  markNotificationRead: (id) => api(`/api/referrals/notifications/${id}/read`, { method: "POST" }),
+  referralLeaderboard: () => api("/api/referrals/admin/leaderboard"),
+  referralAlerts: () => api("/api/referrals/admin/alerts"),
+  sendRewardNotification: (b) => api("/api/referrals/admin/notify", { method: "POST", body: b }),
+
   lotteryTickets: (lotteryId) => api(`/api/tickets/lottery/${lotteryId}`),
 };
 

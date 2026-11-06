@@ -18,6 +18,8 @@ import AdminLotteryManage from "./pages/admin/LotteryManage";
 import AdminTransactions from "./pages/admin/Transactions";
 import AdminUsers from "./pages/admin/Users";
 import AdminPaymentAccounts from "./pages/admin/PaymentAccounts";
+import AdminReferrals from "./pages/admin/Referrals";
+import Referrals from "./pages/Referrals";
 
 export default function App() {
   const { t } = useLang();
@@ -45,6 +47,8 @@ export default function App() {
           <Route path="/admin/transactions" element={<AdminRoute><AdminTransactions /></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/admin/payment-accounts" element={<AdminRoute><AdminPaymentAccounts /></AdminRoute>} />
+          <Route path="/admin/referrals" element={<AdminRoute><AdminReferrals /></AdminRoute>} />
+          <Route path="/referrals" element={<ProtectedRoute><Referrals /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

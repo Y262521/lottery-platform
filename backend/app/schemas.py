@@ -11,6 +11,7 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
     email: EmailStr | None = None
     password: str = Field(min_length=8, max_length=128)
+    referral_code: str | None = None  # code of the person who referred this user
 
 
 class UserOut(BaseModel):
@@ -21,6 +22,8 @@ class UserOut(BaseModel):
     phone: str | None = None
     role: Role
     is_active: bool
+    referral_code: str | None = None
+    referred_by_id: int | None = None
     created_at: datetime
 
 
@@ -220,3 +223,32 @@ class PaymentAccountOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
+
+# ── Notifications ─────────────────────────────────────────────────────────────
+class SendNotificationRequest(BaseModel):
+    user_id: int
+    subject: str = Field(min_length=1, max_length=255)
+    message: str = Field(min_length=1)
+
+
+class NotificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    sender_id: int | None
+    subject: str
+    message: str
+    is_read: bool
+    created_at: datetime
+
+
+# ── Referrals ─────────────────────────────────────────────────────────────────
+class ReferralStatsOut(BaseModel):
+    user_id: int
+    full_name: str
+    phone: str | None
+    referral_code: str | None
+    total_referrals: int          # all users they referred
+    qualified_referrals: int      # referrals who bought at least 1 ticket
+    has_reward_alert: bool        # True if qualified_referrals >= 5

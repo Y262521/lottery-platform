@@ -193,5 +193,20 @@ def run_migrations() -> None:
                   AND ticket_no NOT LIKE '%-PENDING-%'
             """, "free ticket numbers of CANCELLED tickets")
 
+        # v2.3: referral system
+        if _table_exists(db, "users"):
+            _exec(db, "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20)",
+                  "users.referral_code")
+            _exec(db, "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL",
+                  "ix_users_referral_code")
+            _exec(db, "ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by_id INTEGER REFERENCES users(id)",
+                  "users.referred_by_id")
+        # Generate referral codes for existing users who don't have one
+        _exec(db, """
+            UPDATE users
+            SET referral_code = UPPER(SUBSTRING(MD5(CAST(id AS TEXT) || 'ref'), 1, 8))
+            WHERE referral_code IS NULL
+        """, "backfill referral codes")
+
     finally:
         db.close()
