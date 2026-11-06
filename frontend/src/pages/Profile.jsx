@@ -446,13 +446,12 @@ function ReferralLinkSection({ lang }) {
   return (
     <div className="mt-6 card p-6">
       <h2 className="text-sm font-semibold uppercase tracking-wider text-green-300 mb-1">
-        {lang === "am" ? "የእርስዎ ሪፈራል ሊንክ" : "Your Referral Link"}
+        {lang === "am" ? "የጋበዝ ሊንክ" : "Invitation Link"}
       </h2>
       <p className="text-xs text-cream-400 mb-3">
         {lang === "am"
           ? "ጓደኞችዎን ጋብዙ — 5 ሰዎች ሲገዙ ሽልማት ያገኛሉ"
-          : "Invite friends — earn a reward when 5 of them buy tickets"}
-      </p>
+          : "Invite friends — earn a reward when 5 of them buy tickets"}      </p>
 
       {refLink ? (
         <>

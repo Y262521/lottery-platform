@@ -42,7 +42,7 @@ export default function Referrals() {
       {/* Invite link */}
       <div className="card p-5 mb-6">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-cream-300 mb-3">
-          {lang === "am" ? "የእርስዎ ሊንክ" : "Your Invite Link"}
+      {lang === "am" ? "የጋበዝ ሊንክ" : "Invitation Link"}
         </h2>
         {refLink ? (
           <>
